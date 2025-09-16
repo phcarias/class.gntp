@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel do Administrador - Sistema de Frequência Escolar</title>
+    <link rel="stylesheet" href="/public/style/administrador_main.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>Sistema de Frequência Escolar</h1>
+        </div>
+        <div class="header-right">
+            <span class="user-info">Olá, <strong>Administrador</strong></span>
+            <button class="btn-logout" title="Sair">
+                <span class="material-icons">logout</span>
+            </button>
+        </div>
+    </header>
+
+    <nav class="sidebar">
+        <ul>
+            <li class="active"><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#alunos">Alunos</a></li>
+            <li><a href="#professores">Professores</a></li>
+            <li><a href="#turmas">Turmas</a></li>
+            <li><a href="#disciplinas">Disciplinas</a></li>
+            <li><a href="#usuarios">Usuários</a></li>
+            <li><a href="#relatorios">Relatórios</a></li>
+            <li><a href="#configuracoes">Configurações</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <!-- Dashboard -->
+        <section id="dashboard" class="dashboard-section">
+            <h2>Dashboard Administrativo</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <span class="material-icons">people</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total de Alunos</h3>
+                        <p class="stat-number">1,245</p>
+                        <p class="stat-change">+15 este mês</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <span class="material-icons">school</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total de Professores</h3>
+                        <p class="stat-number">45</p>
+                        <p class="stat-change">+2 este mês</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <span class="material-icons">class</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Turmas Ativas</h3>
+                        <p class="stat-number">32</p>
+                        <p class="stat-change">Todas ativas</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <span class="material-icons">trending_up</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Frequência Média</h3>
+                        <p class="stat-number">89.2%</p>
+                        <p class="stat-change">+2.1% vs mês anterior</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h3>Ações Rápidas</h3>
+                <div class="actions-grid">
+                    <button class="action-btn">
+                        <span class="material-icons">person_add</span>
+                        Novo Aluno
+                    </button>
+                    <button class="action-btn">
+                        <span class="material-icons">person_add</span>
+                        Novo Professor
+                    </button>
+                    <button class="action-btn">
+                        <span class="material-icons">add</span>
+                        Nova Turma
+                    </button>
+                    <button class="action-btn">
+                        <span class="material-icons">description</span>
+                        Gerar Relatório
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gerenciamento de Alunos -->
+        <section id="alunos" class="management-section">
+            <h2>Gerenciamento de Alunos</h2>
+            <div class="section-header">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar aluno..." />
+                    <span class="material-icons">search</span>
+                </div>
+                <button class="btn-primary">
+                    <span class="material-icons">person_add</span>
+                    Novo Aluno
+                </button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Nome</th>
+                        <th>Turma</th>
+                        <th>Frequência</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>20240001</td>
+                        <td>Maria Silva</td>
+                        <td>3º Ano A</td>
+                        <td>92%</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-icon" title="Editar">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon" title="Visualizar">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                            <button class="btn-icon danger" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>20240002</td>
+                        <td>João Pereira</td>
+                        <td>2º Ano B</td>
+                        <td>85%</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-icon" title="Editar">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon" title="Visualizar">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                            <button class="btn-icon danger" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>20240003</td>
+                        <td>Ana Costa</td>
+                        <td>3º Ano A</td>
+                        <td>78%</td>
+                        <td><span class="status warning">Atenção</span></td>
+                        <td class="actions">
+                            <button class="btn-icon" title="Editar">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon" title="Visualizar">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                            <button class="btn-icon danger" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Gerenciamento de Professores -->
+        <section id="professores" class="management-section">
+            <h2>Gerenciamento de Professores</h2>
+            <div class="section-header">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar professor..." />
+                    <span class="material-icons">search</span>
+                </div>
+                <button class="btn-primary">
+                    <span class="material-icons">person_add</span>
+                    Novo Professor
+                </button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Disciplinas</th>
+                        <th>Turmas</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PROF001</td>
+                        <td>Carlos Oliveira</td>
+                        <td>Matemática, Física</td>
+                        <td>3ºA, 2ºB</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-icon" title="Editar">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon danger" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>PROF002</td>
+                        <td>Beatriz Santos</td>
+                        <td>Português, Literatura</td>
+                        <td>1ºA, 3ºB</td>
+                        <td><span class="status active">Ativo</span></td>
+                        <td class="actions">
+                            <button class="btn-icon" title="Editar">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon danger" title="Excluir">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Gerenciamento de Turmas -->
+        <section id="turmas" class="management-section">
+            <h2>Gerenciamento de Turmas</h2>
+            <div class="section-header">
+                <button class="btn-primary">
+                    <span class="material-icons">add</span>
+                    Nova Turma
+                </button>
+            </div>
+
+            <div class="cards-grid">
+                <div class="turma-card">
+                    <h3>3º Ano A</h3>
+                    <div class="turma-info">
+                        <p><strong>Professor:</strong> Carlos Oliveira</p>
+                        <p><strong>Disciplinas:</strong> Matemática, Física</p>
+                        <p><strong>Horário:</strong> Seg-Qua-Sex, 08:00-12:00</p>
+                        <p><strong>Alunos:</strong> 35</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small">Editar</button>
+                        <button class="btn-small danger">Excluir</button>
+                    </div>
+                </div>
+
+                <div class="turma-card">
+                    <h3>2º Ano B</h3>
+                    <div class="turma-info">
+                        <p><strong>Professor:</strong> Beatriz Santos</p>
+                        <p><strong>Disciplinas:</strong> Português, Literatura</p>
+                        <p><strong>Horário:</strong> Ter-Qui, 14:00-18:00</p>
+                        <p><strong>Alunos:</strong> 28</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small">Editar</button>
+                        <button class="btn-small danger">Excluir</button>
+                    </div>
+                </div>
+
+                <div class="turma-card">
+                    <h3>1º Ano C</h3>
+                    <div class="turma-info">
+                        <p><strong>Professor:</strong> João Mendes</p>
+                        <p><strong>Disciplinas:</strong> História, Geografia</p>
+                        <p><strong>Horário:</strong> Seg-Ter-Qua, 07:00-11:00</p>
+                        <p><strong>Alunos:</strong> 32</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-small">Editar</button>
+                        <button class="btn-small danger">Excluir</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Relatórios -->
+        <section id="relatorios" class="reports-section">
+            <h2>Relatórios</h2>
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Relatório de Frequência</h3>
+                    <p>Gere relatórios detalhados de frequência por período, turma ou aluno</p>
+                    <div class="report-options">
+                        <select>
+                            <option>Selecionar turma</option>
+                            <option>3º Ano A</option>
+                            <option>2º Ano B</option>
+                        </select>
+                        <input type="date" />
+                        <input type="date" />
+                        <button class="btn-primary">Gerar PDF</button>
+                        <button class="btn-secondary">Exportar CSV</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Relatório de Desempenho</h3>
+                    <p>Analise o desempenho geral dos alunos e turmas</p>
+                    <div class="report-options">
+                        <select>
+                            <option>Selecionar período</option>
+                            <option>1º Bimestre</option>
+                            <option>2º Bimestre</option>
+                        </select>
+                        <button class="btn-primary">Gerar Relatório</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configurações -->
+        <section id="configuracoes" class="settings-section">
+            <h2>Configurações do Sistema</h2>
+            
+            <div class="settings-grid">
+                <div class="setting-card">
+                    <h3>Regras de Frequência</h3>
+                    <div class="setting-form">
+                        <label>Limite máximo de faltas:</label>
+                        <input type="number" value="25" min="0" max="100" />
+                        
+                        <label>Carga horária mínima por disciplina:</label>
+                        <input type="number" value="120" min="0" step="10" />
+                        
+                        <label>Percentual mínimo de frequência:</label>
+                        <input type="number" value="75" min="0" max="100" />
+                        
+                        <button class="btn-primary">Salvar Configurações</button>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <h3>Calendário Escolar</h3>
+                    <div class="setting-form">
+                        <label>Início do ano letivo:</label>
+                        <input type="date" value="2024-02-05" />
+                        
+                        <label>Término do ano letivo:</label>
+                        <input type="date" value="2024-12-15" />
+                        
+                        <label>Dias letivos totais:</label>
+                        <input type="number" value="200" readonly />
+                        
+                        <button class="btn-primary">Atualizar Calendário</button>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <h3>Configurações de Usuários</h3>
+                    <div class="setting-form">
+                        <label>Tempo de sessão (minutos):</label>
+                        <input type="number" value="30" min="5" max="120" />
+                        
+                        <label>Máximo de tentativas de login:</label>
+                        <input type="number" value="3" min="1" max="10" />
+                        
+                        <label>Complexidade de senha:</label>
+                        <select>
+                            <option>Mínima (6 caracteres)</option>
+                            <option selected>Média (8 caracteres com números)</option>
+                            <option>Forte (12 caracteres com números e símbolos)</option>
+                        </select>
+                        
+                        <button class="btn-primary">Aplicar Configurações</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>
+    </footer>
+
+    <script>
+        // Navegação simples entre seções
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                document.querySelectorAll('.main-content section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById(targetId).style.display = 'block';
+                
+                // Atualiza menu ativo
+                document.querySelectorAll('.sidebar li').forEach(item => {
+                    item.classList.remove('active');
+                });
+                link.parentElement.classList.add('active');
+            });
+        });
+
+        // Mostrar apenas a seção ativa inicialmente
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.main-content section').forEach((section, index) => {
+                if (index !== 0) {
+                    section.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

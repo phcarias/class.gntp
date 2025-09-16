@@ -1,0 +1,102 @@
+      * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4a90e2, #357ABD);
+            color: #333;
+        }
+
+        .container-login {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .caixa-login {
+            background: #fff;
+            padding: 2.5rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .caixa-login h1 {
+            margin-bottom: 1.5rem;
+            color: #357ABD;
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+
+        .formulario-login {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            text-align: left;
+        }
+
+        .formulario-login label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .formulario-login input[type="text"],
+        .formulario-login input[type="password"],
+        .formulario-login select {
+            padding: 0.65rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.3s ease;
+            outline-offset: 2px;
+        }
+
+        .formulario-login input[type="text"]:focus,
+        .formulario-login input[type="password"]:focus,
+        .formulario-login select:focus {
+            border-color: #357ABD;
+            outline: none;
+        }
+
+        .botao-entrar {
+            margin-top: 1rem;
+            background-color: #357ABD;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .botao-entrar:hover,
+        .botao-entrar:focus {
+            background-color: #2a5d9f;
+            outline: none;
+        }
+
+        @media (max-width: 450px) {
+            .caixa-login {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        #imagem_logo {
+
+            width: 300px;
+            
+
+        }

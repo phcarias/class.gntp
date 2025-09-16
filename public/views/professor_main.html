@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Professor - Sistema de Frequência Escolar</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="stylesheet" href="/public/style/professor_main.css" />
+    
+</head>
+<body>
+    <header class="cabecalho">
+        <div class="lado-esquerdo-cabecalho">
+            <h1>Sistema de Frequência Escolar</h1>
+        </div>
+        <div class="lado-direito-cabecalho">
+            <span class="info-usuario">Olá, <strong>Professor João</strong></span>
+            <button class="botao-sair" title="Sair">
+                <span class="material-icons">logout</span>
+            </button>
+        </div>
+    </header>
+
+    <nav class="menu-lateral">
+        <ul>
+            <li class="ativo"><a href="#">Minhas Turmas</a></li>
+            <li><a href="#">Histórico de Frequência</a></li>
+            <li><a href="#">Avisos</a></li>
+            <li><a href="#">Configurações</a></li>
+        </ul>
+    </nav>
+
+    <main class="conteudo-principal">
+        <section class="secao-turmas">
+            <h2>Minhas Turmas</h2>
+            <div class="lista-turmas">
+                <article class="cartao-turma">
+                    <header>
+                        <h3>Matemática - 3º Ano A</h3>
+                        <p><strong>Horário:</strong> Seg, Qua e Sex - 08:00 às 09:30</p>
+                    </header>
+                    <button class="botao-frequencia">Marcar Frequência</button>
+                </article>
+
+                <article class="cartao-turma">
+                    <header>
+                        <h3>História - 2º Ano B</h3>
+                        <p><strong>Horário:</strong> Ter e Qui - 10:00 às 11:30</p>
+                    </header>
+                    <button class="botao-frequencia">Marcar Frequência</button>
+                </article>
+            </div>
+        </section>
+
+        <section class="secao-frequencia">
+            <h2>Controle de Frequência</h2>
+            <form class="formulario-frequencia" action="#" method="POST">
+                <div class="info-frequencia">
+                    <p><strong>Turma:</strong> Matemática - 3º Ano A</p>
+                    <p><strong>Data da Aula:</strong> <input type="date" name="data-aula" required /></p>
+                </div>
+
+                <table class="tabela-frequencia">
+                    <thead>
+                        <tr>
+                            <th>Aluno</th>
+                            <th>Presente</th>
+                            <th>Faltou</th>
+                            <th>Justificativa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Maria Silva</td>
+                            <td><input type="radio" name="presenca-maria" value="presente" required /></td>
+                            <td><input type="radio" name="presenca-maria" value="falta" /></td>
+                            <td><input type="text" name="justificativa-maria" placeholder="Motivo da falta" /></td>
+                        </tr>
+                        <tr>
+                            <td>João Pereira</td>
+                            <td><input type="radio" name="presenca-joao" value="presente" required /></td>
+                            <td><input type="radio" name="presenca-joao" value="falta" /></td>
+                            <td><input type="text" name="justificativa-joao" placeholder="Motivo da falta" /></td>
+                        </tr>
+                        <tr>
+                            <td>Ana Costa</td>
+                            <td><input type="radio" name="presenca-ana" value="presente" required /></td>
+                            <td><input type="radio" name="presenca-ana" value="falta" /></td>
+                            <td><input type="text" name="justificativa-ana" placeholder="Motivo da falta" /></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button type="submit" class="botao-salvar">Salvar Frequência</button>
+            </form>
+        </section>
+
+        <section class="secao-historico">
+            <h2>Histórico de Frequência</h2>
+            <div class="filtros-historico">
+                <label for="filtro-turma">Turma:</label>
+                <select id="filtro-turma" name="filtro-turma">
+                    <option value="" selected>Selecione</option>
+                    <option value="matematica-3a">Matemática - 3º Ano A</option>
+                    <option value="historia-2b">História - 2º Ano B</option>
+                </select>
+
+                <label for="filtro-aluno">Aluno:</label>
+                <select id="filtro-aluno" name="filtro-aluno">
+                    <option value="" selected>Todos</option>
+                    <option value="maria">Maria Silva</option>
+                    <option value="joao">João Pereira</option>
+                    <option value="ana">Ana Costa</option>
+                </select>
+
+                <label for="filtro-periodo">Período:</label>
+                <input type="month" id="filtro-periodo" name="filtro-periodo" />
+                <button class="botao-filtrar">Filtrar</button>
+            </div>
+
+            <table class="tabela-historico">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Aluno</th>
+                        <th>Presença</th>
+                        <th>Justificativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>10/04/2024</td>
+                        <td>Maria Silva</td>
+                        <td>Presente</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>10/04/2024</td>
+                        <td>João Pereira</td>
+                        <td>Faltou</td>
+                        <td>Consulta médica</td>
+                    </tr>
+                    <tr>
+                        <td>11/04/2024</td>
+                        <td>Ana Costa</td>
+                        <td>Presente</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer class="rodape">
+        <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,378 @@
+    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cabeçalho */
+        .cabecalho {
+            background-color: #357ABD;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .cabecalho h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .lado-direito-cabecalho {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .info-usuario {
+            font-weight: 600;
+        }
+
+        .botao-sair {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .botao-sair:hover,
+        .botao-sair:focus {
+            color: #cce0ff;
+            outline: none;
+        }
+
+        /* Menu Lateral */
+        .menu-lateral {
+            background-color: #2a5d9f;
+            color: white;
+            width: 220px;
+            min-height: calc(100vh - 64px);
+            padding-top: 1rem;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .menu-lateral ul {
+            list-style: none;
+        }
+
+        .menu-lateral ul li {
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .menu-lateral ul li a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .menu-lateral ul li a:hover,
+        .menu-lateral ul li.ativo a {
+            background-color: #1f497d;
+        }
+
+        /* Conteúdo Principal */
+        .conteudo-principal {
+            margin-left: 220px;
+            padding: 2rem 3rem;
+            flex-grow: 1;
+            background-color: #f5f7fa;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* Seções */
+        .conteudo-principal section {
+            margin-bottom: 3rem;
+            background: white;
+            padding: 1.8rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .conteudo-principal h2 {
+            margin-bottom: 1rem;
+            color: #357ABD;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        /* Lista de Turmas */
+        .lista-turmas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .cartao-turma {
+            background-color: #e9f0fb;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            flex: 1 1 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(53,122,189,0.2);
+        }
+
+        .cartao-turma header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            color: #1f497d;
+        }
+
+        .cartao-turma header p {
+            font-size: 0.9rem;
+            color: #3a5a8a;
+            margin-bottom: 1rem;
+        }
+
+        .botao-frequencia {
+            align-self: flex-start;
+            background-color: #357ABD;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .botao-frequencia:hover,
+        .botao-frequencia:focus {
+            background-color: #2a5d9f;
+            outline: none;
+        }
+
+        /* Formulário de Frequência */
+        .formulario-frequencia {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .info-frequencia p {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .info-frequencia input[type="date"] {
+            padding: 0.4rem 0.6rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: 1.8px solid #ccc;
+            transition: border-color 0.3s ease;
+        }
+
+        .info-frequencia input[type="date"]:focus {
+            border-color: #357ABD;
+            outline: none;
+        }
+
+        /* Tabela de Frequência */
+        .tabela-frequencia {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        .tabela-frequencia th,
+        .tabela-frequencia td {
+            border: 1px solid #ddd;
+            padding: 0.6rem 0.8rem;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .tabela-frequencia th {
+            background-color: #357ABD;
+            color: white;
+            font-weight: 700;
+        }
+
+        .tabela-frequencia td input[type="radio"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .tabela-frequencia td input[type="text"] {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            border: 1.5px solid #ccc;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .tabela-frequencia td input[type="text"]:focus {
+            border-color: #357ABD;
+            outline: none;
+        }
+
+        /* Botão Salvar */
+        .botao-salvar {
+            align-self: flex-start;
+            background-color: #357ABD;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .botao-salvar:hover,
+        .botao-salvar:focus {
+            background-color: #2a5d9f;
+            outline: none;
+        }
+
+        /* Histórico de Frequência */
+        .filtros-historico {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 1.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filtros-historico label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .filtros-historico select,
+        .filtros-historico input[type="month"] {
+            padding: 0.4rem 0.7rem;
+            border-radius: 6px;
+            border: 1.5px solid #ccc;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .filtros-historico select:focus,
+        .filtros-historico input[type="month"]:focus {
+            border-color: #357ABD;
+            outline: none;
+        }
+
+        .botao-filtrar {
+            background-color: #357ABD;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .botao-filtrar:hover,
+        .botao-filtrar:focus {
+            background-color: #2a5d9f;
+            outline: none;
+        }
+
+        .tabela-historico {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .tabela-historico th,
+        .tabela-historico td {
+            border: 1px solid #ddd;
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        .tabela-historico th {
+            background-color: #357ABD;
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Rodapé */
+        .rodape {
+            background-color: #2a5d9f;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .rodape p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .menu-lateral {
+                width: 100%;
+                position: static;
+                min-height: auto;
+            }
+
+            .conteudo-principal {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .lista-turmas {
+                flex-direction: column;
+            }
+
+            .filtros-historico {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .cabecalho {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .conteudo-principal section {
+                padding: 1rem;
+            }
+
+            .tabela-frequencia,
+            .tabela-historico {
+                font-size: 0.8rem;
+            }
+
+            .tabela-frequencia th,
+            .tabela-frequencia td,
+            .tabela-historico th,
+            .tabela-historico td {
+                padding: 0.4rem;
+            }
+        }
