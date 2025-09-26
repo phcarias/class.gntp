@@ -154,7 +154,7 @@ exports.login = async (req, res) => {
     return res.status(422).json({ msg: "Senha inválida" }); // Retorna um erro 422 se a senha estiver incorreta
   }
 
-  //09 Fazer um env secret para evitar se hackeado
+  //09 Fazer um env secret para evitar ser hackeado
   try {
     const secret = process.env.SECRET; // Obtém a chave secreta a partir das variáveis de ambiente
 

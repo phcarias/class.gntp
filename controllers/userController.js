@@ -1,5 +1,6 @@
 const User = require("../models/UserModel");
 const { checkToken } = require("../middlewares/authMiddleware");
+const userSchema = require("../models/UserModel")
 
 
 //10 Antes da função
@@ -19,7 +20,7 @@ exports.getUserPublic = async (req, res) => {
 
 //12
 // Rota privada depois da função criada
-exports.getUserPrivate =  async (req, res) => {
+exports.getUserPrivate = async (req, res) => {
   const id = req.params.id; // Obtém o ID do usuário a partir dos parâmetros da URL
 
   // check if user exists
@@ -29,9 +30,20 @@ exports.getUserPrivate =  async (req, res) => {
     return res.status(404).json({ msg: "Usuário não encontrado!" }); // Retorna um erro 404 se o usuário não for encontrado
   }
 
-  res.status(200).json({ 
+  res.status(200).json({
     msg: "Voce está ná Área Restrita",
-    user 
-    }); // Retorna mensagem e os dados do usuário encontrado
+    user
+  }); // Retorna mensagem e os dados do usuário encontrado
+};
+
+exports.getAllUsers = async (req, res) => {
+
+  try {
+    const user = await userSchema.find();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao buscar usuarios", error });
+  }
+
 };
 
