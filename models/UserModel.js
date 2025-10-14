@@ -1,10 +1,6 @@
-//01
 const mongoose = require("mongoose");
 
-//02
-
 const userSchema = new mongoose.Schema({
-
   name: {
     type: String,
     required: true,
@@ -28,22 +24,25 @@ const userSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['admin', 'professor', 'aluno'],
-    required: true
+    required: true,
   }, // Tipo de usuário
 
-  active: { type: Boolean, default: true },  // Usuário ativo ou inativo
+  active: { type: Boolean, default: true }, // Usuário ativo ou inativo
 
   imagem: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Picture'
+    ref: 'Picture',
   },
 
+  roleData: {
+    type: mongoose.Schema.Types.Mixed, // Permite armazenar dados específicos de cada tipo
+    default: {}, // Inicializa como um objeto vazio
+  },
 
   createdAt: {
     type: Date,
     default: Date.now,
   },
-
 });
 
-module.exports = mongoose.model("User", userSchema, "user"); 
+module.exports = mongoose.model("User", userSchema, "user");
