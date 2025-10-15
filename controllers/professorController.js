@@ -7,7 +7,7 @@ exports.getAllProfs = async (req, res) => {
         res.json(professor)
     }
     catch (erro) {
-        console.error("Erro ao procurar todos os profs!", erro.message);
+        console.error("Erro ao procurar todos os professores!", erro.message);
     }
 
 }

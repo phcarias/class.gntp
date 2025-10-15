@@ -11,6 +11,7 @@ const userRoutes = require("./routes/userRoutes");
 const alunoRoutes = require("./routes/alunoRoutes");
 const professorRoutes = require("./routes/professorRoutes")
 const turmaRoutes = require("./routes/turmaRoutes")
+const adminRoutes = require("./routes/adminRoutes")
 
 
 dotenv.config();
@@ -21,7 +22,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Arquivos estáticos
 
-app.use("/", emailRoutes);
+
+app.use("/email", emailRoutes);
 app.use("/pictures", pictureRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes); 
@@ -29,7 +31,17 @@ app.use("/user", userRoutes);
 app.use("/aluno", alunoRoutes);
 app.use("/professor", professorRoutes);
 app.use("/turma", turmaRoutes);
+app.use("/admin", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "views", "login.html"));
+});
+
+app.get("/admin", (req,res) => {
+    res.sendFile(path.join(__dirname, "public", "views", "administrador_main.html"));
+});
 
 
 const porta = process.env.PORT || 3000;

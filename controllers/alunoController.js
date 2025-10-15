@@ -1,4 +1,4 @@
-const UserAluno = require("../models/AlunoModel");
+const UserAluno = require("../models/UserModel");
 
 
 exports.getAlunos = async (req, res) => {
@@ -13,6 +13,4 @@ exports.getAlunos = async (req, res) => {
     catch (erro) {
         console.error("Erro ao procurar todos os profs!", erro.message);
     }
-
-
 }
