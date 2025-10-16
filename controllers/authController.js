@@ -104,6 +104,8 @@ exports.login = async (req, res) => {
       return res.status(404).json({ msg: "Usuário não encontrado!" });
     }
 
+    const type = user.type;
+
     // Verificar se a senha está correta
     const checkPassword = await bcrypt.compare(password, user.password);
     if (!checkPassword) {
@@ -120,7 +122,7 @@ exports.login = async (req, res) => {
       secret
     );
 
-    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token });
+    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token, type });
   } catch (error) {
     console.error('Erro ao realizar login:', error);
     res.status(500).json({ msg: "Erro interno do servidor" });

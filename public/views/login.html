@@ -4,31 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login - Sistema de Frequência Escolar</title>
-    <link rel="stylesheet" href="/public/style/login.css" />
+    <link rel="stylesheet" href="../style/login.css" />
 </head>
 <body>
     <div class="container-login">
         <div class="caixa-login">
-            <div id="logo"><img id="imagem_logo" src="/img/logo_v2.jpeg" alt=""></div>
+            <div id="logo"><img id="imagem_logo" src="../img/logo_v2.jpeg" alt=""></div>
             <h1></h1>
-            <form class="formulario-login" action="#" method="POST">
+            <form class="formulario-login" method="POST">
                 <label for="usuario">Usuário</label>
                 <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" required autofocus />
 
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required />
 
-                <label for="perfil">Perfil</label>
-                <select id="perfil" name="perfil" required>
-                    <option value="" disabled selected>Selecione seu perfil</option>
-                    <option value="administrador">Administrador</option>
-                    <option value="professor">Professor</option>
-                    <option value="aluno">Aluno</option>
-                </select>
 
                 <button type="submit" class="botao-entrar">Entrar</button>
             </form>
         </div>
     </div>
+
+    <script src="../js/auth.js"></script>
+
 </body>
 </html>
