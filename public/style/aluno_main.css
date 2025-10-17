@@ -96,7 +96,7 @@ body, html {
     margin-left: 220px;
     padding: 2rem 3rem;
     flex-grow: 1;
-    background-color: #f5f7fa;
+    background-color: #dddddd;
     min-height: calc(100vh - 64px);
 }
 
@@ -130,6 +130,7 @@ body, html {
     padding: 1.5rem;
     display: flex;
     align-items: center;
+    border-left: 4px solid #3498db;
     gap: 1rem;
     box-shadow: 0 2px 8px rgba(53,122,189,0.15);
     transition: transform 0.3s ease;
