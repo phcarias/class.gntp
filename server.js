@@ -31,7 +31,7 @@ app.use("/user", userRoutes);
 app.use("/aluno", alunoRoutes);
 app.use("/professor", professorRoutes);
 app.use("/turma", turmaRoutes);
-app.use("/admin", adminRoutes);
+app.use("/administrador", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 

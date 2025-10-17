@@ -186,3 +186,52 @@ exports.removeTurmas = async (req, res) => {
     res.status(500).json({ msg: "Erro ao remover turmas!", error });
   }
 };
+
+exports.getAlunosStats = async (req, res) => {
+  try {
+    // Total de alunos
+    const totalAlunos = await User.countDocuments({ type: "aluno" });
+
+    // Alunos matriculados este mês
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Considerando que o campo de data de matrícula é 'createdAt'
+    const alunosMatriculadosEsteMes = await User.countDocuments({
+      type: "aluno",
+      createdAt: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+    });
+
+    res.status(200).json({
+      totalAlunos,
+      alunosMatriculadosEsteMes
+    });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao buscar estatísticas de alunos!", error });
+  }
+};
+exports.getProfessoresStats = async (req, res) => {
+  try {
+    // Total de professores
+    const totalProfessores = await User.countDocuments({ type: "professor" });
+
+    // Professores cadastrados este mês
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Considerando que o campo de data de cadastro é 'createdAt'
+    const professoresCadastradosEsteMes = await User.countDocuments({
+      type: "professor",
+      createdAt: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+    });
+
+    res.status(200).json({
+      totalProfessores,
+      professoresCadastradosEsteMes
+    });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao buscar estatísticas de professores!", error });
+  }
+};

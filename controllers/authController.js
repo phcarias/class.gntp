@@ -122,7 +122,7 @@ exports.login = async (req, res) => {
       secret
     );
 
-    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token, type });
+    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token, type, _id: user._id, name: user.name });
   } catch (error) {
     console.error('Erro ao realizar login:', error);
     res.status(500).json({ msg: "Erro interno do servidor" });

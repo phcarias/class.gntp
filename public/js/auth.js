@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('userId', data._id);
+                localStorage.setItem('username', data.name);
+                localStorage.setItem('type', data.type);
+
                 // Redirecionamento baseado no tipo de usuário
                 if (data.type === 'admin') {
                     window.location.href = '/admin';
