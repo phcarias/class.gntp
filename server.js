@@ -40,7 +40,7 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/admin", (req,res) => {
-    res.sendFile(path.join(__dirname, "public", "views", "administrador_main.html"));
+    res.sendFile(path.join(__dirname, "public", "views", "administrador.html"));
 });
 
 
