@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Painel do Administrador - Sistema de Frequência Escolar</title>
-    <link rel="stylesheet" href="/public/style/administrador_main.css" />
+    <link rel="stylesheet" href="../style/administrador.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 <body>
@@ -404,33 +404,6 @@
         <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>
     </footer>
 
-    <script>
-        // Navegação simples entre seções
-        document.querySelectorAll('.sidebar a').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = link.getAttribute('href').substring(1);
-                document.querySelectorAll('.main-content section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                document.getElementById(targetId).style.display = 'block';
-                
-                // Atualiza menu ativo
-                document.querySelectorAll('.sidebar li').forEach(item => {
-                    item.classList.remove('active');
-                });
-                link.parentElement.classList.add('active');
-            });
-        });
-
-        // Mostrar apenas a seção ativa inicialmente
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.main-content section').forEach((section, index) => {
-                if (index !== 0) {
-                    section.style.display = 'none';
-                }
-            });
-        });
-    </script>
+    <script src="../js/admin.js"></script>
 </body>
 </html>
