@@ -130,6 +130,7 @@
             flex: 1 1 300px;
             display: flex;
             flex-direction: column;
+            border-left: 4px solid #3498db;
             justify-content: space-between;
             box-shadow: 0 2px 8px rgba(53,122,189,0.2);
         }
