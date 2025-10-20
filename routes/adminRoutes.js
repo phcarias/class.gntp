@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { checkToken, checkAdmin } = require("../middlewares/authMiddleware");
-const { getAllUsers } = require("../controllers/userController");
 const adminController = require("../controllers/adminController");
 
 // Rota protegida para administradores
@@ -10,6 +9,10 @@ const adminController = require("../controllers/adminController");
 router.get("/alunosstats", checkToken, checkAdmin, adminController.getAlunosStats);
 
 router.get("/professoresstats", checkToken, checkAdmin, adminController.getProfessoresStats);
+
+router.get("/turmasativas", checkToken, checkAdmin, adminController.getTurmasStats);
+
+router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFrequenciaMedia);
 
 // Rota protegida para qualquer usuário autenticado
 //router.get("/profile", checkToken, (req, res) => {

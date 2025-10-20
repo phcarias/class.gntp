@@ -7,9 +7,6 @@ const app = express();
 const emailRoutes = require("./routes/emailRoutes");
 const pictureRouter = require("./routes/pictureRoutes");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
-const alunoRoutes = require("./routes/alunoRoutes");
-const professorRoutes = require("./routes/professorRoutes")
 const turmaRoutes = require("./routes/turmaRoutes")
 const adminRoutes = require("./routes/adminRoutes")
 
@@ -28,9 +25,6 @@ app.use("/email", emailRoutes);
 app.use("/pictures", pictureRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes); 
-app.use("/user", userRoutes); 
-app.use("/aluno", alunoRoutes);
-app.use("/professor", professorRoutes);
 app.use("/turma", turmaRoutes);
 app.use("/administrador", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
