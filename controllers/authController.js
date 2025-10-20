@@ -52,13 +52,12 @@ exports.register = async (req, res) => {
     const roleData = {};
     if (type === 'aluno') {
       roleData.matricula = matricula;
-      roleData.curso = curso || '';
-      roleData.periodo = periodo || 1;
-      roleData.turmas = turmas || [];
+      roleData.turmas = (turmas || []).map(turmaId => ({ turma: turmaId })); // Referenciando ao modelo de Turma
+      roleData.responsavelEmail = responsavelEmail || null;
     } else if (type === 'professor') {
       roleData.matricula = matricula;
       roleData.disciplinas = disciplinas || [];
-      roleData.turmas = turmas || [];
+      roleData.turmas = (turmas || []).map(turmaId => ({ turma: turmaId })); // Referenciando ao modelo de Turma
     }
 
     // Criar o usuário base

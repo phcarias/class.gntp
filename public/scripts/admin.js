@@ -26,7 +26,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+    // Modal para adicionar novo aluno
+    const modalNovoAluno = document.getElementById('modal-novo-aluno');
+    const btnNovoAluno = document.getElementById('btn-novo-aluno');
+    const closeModalNovoAluno = document.getElementById('close-modal-novo-aluno');
+    const formNovoAluno = document.getElementById('form-novo-aluno');
 
+    // Abrir modal
+    btnNovoAluno.addEventListener('click', () => {
+        modalNovoAluno.style.display = 'block';
+    });
+
+    // Fechar modal
+    closeModalNovoAluno.addEventListener('click', () => {
+        modalNovoAluno.style.display = 'none';
+    });
+
+    // Fechar modal ao clicar fora dele
+    window.addEventListener('click', (e) => {
+        if (e.target === modalNovoAluno) {
+            modalNovoAluno.style.display = 'none';
+        }
+    });
+
+    // Submeter formulário para adicionar aluno
+    formNovoAluno.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const alunoData = {
+            name: formNovoAluno.nome.value,
+            email: formNovoAluno.email.value,
+            matricula: formNovoAluno.matricula.value,
+            curso: formNovoAluno.curso.value,
+            periodo: formNovoAluno.periodo.value,
+        };
+
+        try {
+            const res = await fetch(`${api}/administrador/alunos`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(alunoData),
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                alert(`Erro ao adicionar aluno: ${error.msg}`);
+                return;
+            }
+
+            alert('Aluno adicionado com sucesso!');
+            modalNovoAluno.style.display = 'none';
+            formNovoAluno.reset();
+        } catch (error) {
+            console.error('Erro ao adicionar aluno:', error);
+            alert('Erro ao adicionar aluno. Tente novamente mais tarde.');
+        }
+    });
+    
     //funções p/ dashboard admin
 
     async function getAlunosStats() {

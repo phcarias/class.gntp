@@ -86,11 +86,92 @@
             <div class="quick-actions">
                 <h3>Ações Rápidas</h3>
                 <div class="actions-grid">
-                    <button class="action-btn">
+                    <button class="action-btn" id="btn-novo-aluno">
                         <span class="material-icons">person_add</span>
                         Novo Aluno
                     </button>
+                    <!-- Modal para Novo Aluno (Atualizado) -->
+                    <div id="modal-novo-aluno" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close-modal" id="close-modal-novo-aluno">&times;</span>
+                            <h3>Registrar Novo Aluno</h3>
+                            <form id="form-novo-aluno">
+                                <label for="nome-aluno">Nome Completo:</label>
+                                <input type="text" id="nome-aluno" name="nome" placeholder="Digite o nome completo" required />
+
+                                <label for="email-aluno">E-mail:</label>
+                                <input type="email" id="email-aluno" name="email" placeholder="Digite o e-mail" required />
+
+                                <label for="senha-aluno">Senha:</label>
+                                <input type="password" id="senha-aluno" name="senha" placeholder="Digite uma senha" required />
+
+                                <label for="confirmar-senha-aluno">Confirmar Senha:</label>
+                                <input type="password" id="confirmar-senha-aluno" name="confirmar-senha" placeholder="Confirme a senha" required />
+
+                                <label for="matricula-aluno">Matrícula:</label>
+                                <input type="text" id="matricula-aluno" name="matricula" placeholder="Digite a matrícula" required />
+
+                                <label for="turma-aluno">Turma:</label>
+                                <select id="turma-aluno" name="turma" required>
+                                    <option value="" disabled selected>Selecione uma turma</option>
+                                </select>
+
+                                <label for="periodo-aluno">Período:</label>
+                                <input type="number" id="periodo-aluno" name="periodo" placeholder="Digite o período" min="1" />
+
+                                <button type="submit" class="btn-primary">Registrar</button>
+                            </form>
+                        <script>
+                            // Fetch turmas from the backend and populate the dropdown
+                            document.addEventListener("DOMContentLoaded", () => {
+                                fetch('localhost:9090/turma/getturmas') // Replace with your actual API endpoint
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error("Erro na resposta da API");
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        const turmaSelect = document.getElementById("turma-aluno");
+                                        data.forEach(turma => {
+                                            const option = document.createElement("option");
+                                            option.value = turma.id;
+                                            option.textContent = turma.nome;
+                                            turmaSelect.appendChild(option);
+                                        });
+                                    })
+                                    .catch(error => console.error("Erro ao carregar turmas:", error));
+                            });
+                        </script>
+                        </div>
+                    </div>
+                    <!-- Modal para Novo Aluno -->
+                    <div id="modal-novo-aluno" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close-modal" id="close-modal-novo-aluno">&times;</span>
+                            <h3>Adicionar Novo Aluno</h3>
+                            <form id="form-novo-aluno">
+                                <label for="nome-aluno">Nome:</label>
+                                <input type="text" id="nome-aluno" name="nome" placeholder="Digite o nome do aluno" required />
+
+                                <label for="email-aluno">E-mail:</label>
+                                <input type="email" id="email-aluno" name="email" placeholder="Digite o e-mail do aluno" required />
+
+                                <label for="matricula-aluno">Matrícula:</label>
+                                <input type="text" id="matricula-aluno" name="matricula" placeholder="Digite a matrícula" required />
+
+                                <label for="curso-aluno">Curso:</label>
+                                <input type="text" id="curso-aluno" name="curso" placeholder="Digite o curso" />
+
+                                <label for="periodo-aluno">Período:</label>
+                                <input type="number" id="periodo-aluno" name="periodo" placeholder="Digite o período" min="1" />
+
+                                <button type="submit" class="btn-primary">Salvar</button>
+                            </form>
+                        </div>
+                    </div>
                     <button class="action-btn">
+
                         <span class="material-icons">person_add</span>
                         Novo Professor
                     </button>
@@ -404,6 +485,6 @@
         <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>
     </footer>
 
-    <script src="../js/admin.js"></script>
+    <script src="../scripts/admin.js"></script>
 </body>
 </html>
