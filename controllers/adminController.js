@@ -1,5 +1,6 @@
 const User = require("../models/UserModel");
 const bcrypt = require("bcrypt");
+const Turma = require("../models/TurmaModel");
 
 exports.updateAdmin = async (req, res) => {
   const { id } = req.params;
@@ -233,5 +234,79 @@ exports.getProfessoresStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ msg: "Erro ao buscar estatísticas de professores!", error });
+  }
+};
+
+exports.getTurmasStats = async (req, res) => {
+  try {
+    // Total de turmas
+    const totalTurmas = await Turma.countDocuments();
+
+    // Total de turmas desativadas
+    const turmasDesativadas = await Turma.countDocuments({ active: false });
+
+    res.status(200).json({
+      totalTurmas,
+      turmasDesativadas
+    });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao buscar estatísticas de turmas!", error });
+  }
+};
+
+exports.getFrequenciaMedia = async (req, res) => {
+  try {
+    // Busca todos os alunos
+    const alunos = await User.find({ type: "aluno" }).populate("roleData.turmas");
+
+    if (!alunos || alunos.length === 0) {
+      return res.status(404).json({ msg: "Nenhum aluno encontrado!" });
+    }
+
+    let totalFrequencia = 0;
+    let totalAulas = 0;
+    let totalFrequenciaMesAnterior = 0;
+    let totalAulasMesAnterior = 0;
+
+    const now = new Date();
+    const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    // Itera sobre os alunos para calcular a frequência média
+    for (const aluno of alunos) {
+      if (aluno.roleData && aluno.roleData.turmas) {
+        for (const turma of aluno.roleData.turmas) {
+          if (turma.frequencia && turma.totalAulas) {
+            totalFrequencia += turma.frequencia;
+            totalAulas += turma.totalAulas;
+          }
+
+          // Considera apenas os dados do mês anterior
+          if (
+            turma.updatedAt >= firstDayOfLastMonth &&
+            turma.updatedAt <= lastDayOfLastMonth &&
+            turma.frequencia &&
+            turma.totalAulas
+          ) {
+            totalFrequenciaMesAnterior += turma.frequencia;
+            totalAulasMesAnterior += turma.totalAulas;
+          }
+        }
+      }
+    }
+
+    const frequenciaMedia = totalAulas === 0 ? 0 : (totalFrequencia / totalAulas) * 100;
+    const frequenciaMediaMesAnterior =
+      totalAulasMesAnterior === 0 ? 0 : (totalFrequenciaMesAnterior / totalAulasMesAnterior) * 100;
+
+    const diferencaFrequencia = frequenciaMedia - frequenciaMediaMesAnterior;
+
+    res.status(200).json({
+      frequenciaMedia: frequenciaMedia.toFixed(2),
+      frequenciaMediaMesAnterior: frequenciaMediaMesAnterior.toFixed(2),
+      diferencaFrequencia: diferencaFrequencia.toFixed(2),
+    });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao calcular a frequência média!", error });
   }
 };

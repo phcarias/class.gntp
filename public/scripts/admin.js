@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     getAlunosStats();
     getProfessoresStats();
+    getTurmasAtivas();
+    getFrequenciaMedia();
+
 
 
 
@@ -46,6 +49,50 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('total-alunos').textContent = stats.totalAlunos;
         document.getElementById('alunos-change').textContent = "+" + stats.alunosMatriculadosEsteMes + " este mês";
     }
+    async function getTurmasAtivas() {
+
+        console.log('Buscando número de turmas ativas...');
+
+        // Substitua a URL abaixo pela rota real da sua API
+        const res = await fetch(`${api}/administrador/turmasativas`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Adiciona o token no cabeçalho
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!res.ok) {
+            console.log('Erro na requisição:', res.status, await res.text());
+            return;
+        }
+        const stats = await res.json();
+        document.getElementById('total-turmas').textContent = stats.totalTurmas;
+        document.getElementById('turmas-change').textContent = "-" + stats.turmasDesativadas + " turma desativada(s)";
+
+
+    }
+    async function getFrequenciaMedia() {
+
+        console.log('Buscando frequência média...');
+
+        // Substitua a URL abaixo pela rota real da sua API
+        const res = await fetch(`${api}/administrador/frequenciamedia`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Adiciona o token no cabeçalho
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!res.ok) {
+            console.log('Erro na requisição:', res.status, await res.text());
+            return;
+        }
+        const stats = await res.json();
+        document.getElementById('frequencia-media').textContent = stats.frequenciaMedia + "%";
+        document.getElementById('frequencia_anterior').textContent = 
+            (stats.diferencaFrequencia >= 0 ? "+" : "") + stats.diferencaFrequencia + "% em relação ao mês anterior";
+    }
+
 
     async function getProfessoresStats() {
 
