@@ -21,6 +21,7 @@ require("./config/db");
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Arquivos estáticos
+app.use("/turma", turmaRoutes);
 
 
 app.use("/email", emailRoutes);

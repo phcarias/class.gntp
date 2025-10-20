@@ -105,12 +105,18 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#e6f2
     grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
     gap:18px;
 }
+#lista-turmas {
+    display: block; /* Certifique-se de que o container está visível */
+}
 .cartao-turma{
     background:linear-gradient(180deg,var(--card),#fbfdff);
     padding:16px;border-radius:12px;border:1px solid rgba(30,136,229,0.06);
     box-shadow:0 8px 20px rgba(13,57,114,0.06);
     transition:transform .12s ease,box-shadow .12s ease;
     display:flex;flex-direction:column;justify-content:space-between;
+}
+.cartao-turma {
+    display: block; /* Certifique-se de que os cartões estão visíveis */
 }
 .cartao-turma header h3{margin:0 0 8px 0;color:#072038;font-size:1.05rem}
 .cartao-turma header p{margin:0;color:var(--muted);font-size:0.95rem}
