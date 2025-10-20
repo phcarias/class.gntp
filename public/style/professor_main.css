@@ -1,379 +1,143 @@
-    * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+:root{
+    --bg:#eef6ff;
+    --primary:#1e88e5;
+    --primary-dark:#1667b6;
+    --accent:#42a5f5;
+    --muted:#5f6e7a;
+    --card:#ffffff;
+    --shadow: 0 8px 24px rgba(13,57,114,0.08);
+    --radius:12px;
+    --gap:16px;
+    --glass: rgba(255,255,255,0.6);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
 
-        body, html {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#e6f2ff);color:#052033}
 
-        /* Cabeçalho */
-        .cabecalho {
-            background-color: #357ABD;
-            color: white;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+/* Header */
+.cabecalho{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 24px;
+    background:linear-gradient(90deg,var(--primary),var(--accent));
+    color:#fff;
+    box-shadow: var(--shadow);
+    border-bottom-left-radius:12px;
+    border-bottom-right-radius:12px;
+}
+.cabecalho h1{margin:0;font-size:1.125rem;letter-spacing:0.2px}
+.lado-direito-cabecalho{display:flex;align-items:center;gap:12px}
+.info-usuario{font-size:0.95rem;opacity:0.95}
+.botao-sair{
+    background:rgba(255,255,255,0.08);
+    border:none;color:#fff;cursor:pointer;padding:8px;border-radius:8px;
+    display:inline-flex;align-items:center;gap:6px;font-weight:700;
+}
+.botao-sair:hover{background:rgba(255,255,255,0.12)}
 
-        .cabecalho h1 {
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
+/* Lateral menu */
+.menu-lateral{
+    width:220px;
+    position:fixed;
+    top:96px;
+    left:18px;
+    bottom:18px;
+    padding:18px 14px;
+    background:linear-gradient(180deg,rgba(30,136,229,0.04),rgba(66,165,245,0.02));
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    overflow:auto;
+}
+.menu-lateral ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.menu-lateral li a{
+    display:block;padding:10px 12px;border-radius:10px;color:var(--primary-dark);font-weight:700;
+    transition:background .12s ease,transform .08s ease,box-shadow .12s ease;
+}
+.menu-lateral li a:hover{background:rgba(30,136,229,0.06);transform:translateY(-1px)}
+.menu-lateral li.ativo a{
+    background:linear-gradient(90deg,var(--primary),var(--accent));
+    color:#fff;
+    box-shadow:0 8px 22px rgba(30,136,229,0.14);
+}
 
-        .lado-direito-cabecalho {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+/* Main content */
+.conteudo-principal{
+    margin-left:260px;
+    padding:28px;
+    min-height:calc(100vh - 140px);
+}
 
-        .info-usuario {
-            font-weight: 600;
-        }
+/* Filtro */
+.filtro-turmas{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:14px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+    box-shadow:var(--shadow);
+    flex-wrap:wrap;
+}
+.filtro-turmas label{font-weight:700;color:var(--muted);white-space:nowrap}
+.filtro-turmas input[type="date"]{
+    padding:10px 12px;border:1px solid #e4eefc;border-radius:10px;
+    background:#fbfeff;color:#072038;
+    box-shadow:inset 0 1px 0 rgba(10,30,60,0.02);min-width:200px;
+}
+.botao-filtrar, .botao-limpar{
+    padding:9px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800;letter-spacing:0.3px;
+}
+.botao-filtrar{
+    background:var(--primary);color:#fff;box-shadow:0 10px 24px rgba(30,136,229,0.12);
+}
+.botao-filtrar:hover{background:var(--primary-dark)}
+.botao-limpar{
+    background:transparent;color:var(--primary-dark);border:1px solid rgba(30,136,229,0.12)
+}
+.ajuda-filtro{flex-basis:100%;margin:6px 0 0 0;color:var(--muted);font-size:0.95rem}
 
-        .botao-sair {
-            background: transparent;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-            transition: color 0.3s ease;
-        }
+/* Lista de turmas */
+.lista-turmas{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:18px;
+}
+.cartao-turma{
+    background:linear-gradient(180deg,var(--card),#fbfdff);
+    padding:16px;border-radius:12px;border:1px solid rgba(30,136,229,0.06);
+    box-shadow:0 8px 20px rgba(13,57,114,0.06);
+    transition:transform .12s ease,box-shadow .12s ease;
+    display:flex;flex-direction:column;justify-content:space-between;
+}
+.cartao-turma header h3{margin:0 0 8px 0;color:#072038;font-size:1.05rem}
+.cartao-turma header p{margin:0;color:var(--muted);font-size:0.95rem}
+.cartao-turma .botao-frequencia{
+    margin-top:12px;padding:10px 12px;border-radius:10px;border:none;background:var(--accent);color:#fff;
+    cursor:pointer;font-weight:800;align-self:flex-start;
+    box-shadow:0 8px 20px rgba(66,165,245,0.12);
+}
+.cartao-turma:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(15,55,120,0.08)}
 
-        .botao-sair:hover,
-        .botao-sair:focus {
-            color: #cce0ff;
-            outline: none;
-        }
+/* Mensagem quando não há turmas */
+.mensagem-nenhuma{
+    padding:12px;border-radius:10px;background:#fff6fb;border:1px solid rgba(51,102,204,0.06);
+    color:var(--primary-dark);font-weight:700;
+}
 
-        /* Menu Lateral */
-        .menu-lateral {
-            background-color: #2a5d9f;
-            color: white;
-            width: 220px;
-            min-height: calc(100vh - 64px);
-            padding-top: 1rem;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            overflow-y: auto;
-        }
+/* rodapé */
+.rodape{margin-left:260px;padding:18px 28px;color:#29445f;font-size:0.95rem}
 
-        .menu-lateral ul {
-            list-style: none;
-        }
+/* Responsividade */
+@media (max-width:900px){
+    .menu-lateral{position:static;width:100%;display:flex;overflow-x:auto;padding:10px;top:auto;border-radius:8px;flex-direction:row}
+    .conteudo-principal{margin-left:0;padding:18px}
+    .filtro-turmas{flex-wrap:wrap}
+    .rodape{margin-left:0}
+}
 
-        .menu-lateral ul li {
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .menu-lateral ul li a {
-            display: block;
-            padding: 1rem 1.5rem;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
-        }
-
-        .menu-lateral ul li a:hover,
-        .menu-lateral ul li.ativo a {
-            background-color: #1f497d;
-        }
-
-        /* Conteúdo Principal */
-        .conteudo-principal {
-            margin-left: 220px;
-            padding: 2rem 3rem;
-            flex-grow: 1;
-            background-color: #f5f7fa;
-            min-height: calc(100vh - 64px);
-        }
-
-        /* Seções */
-        .conteudo-principal section {
-            margin-bottom: 3rem;
-            background: white;
-            padding: 1.8rem 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .conteudo-principal h2 {
-            margin-bottom: 1rem;
-            color: #357ABD;
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-
-        /* Lista de Turmas */
-        .lista-turmas {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-        }
-
-        .cartao-turma {
-            background-color: #e9f0fb;
-            border-radius: 10px;
-            padding: 1rem 1.5rem;
-            flex: 1 1 300px;
-            display: flex;
-            flex-direction: column;
-            border-left: 4px solid #3498db;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(53,122,189,0.2);
-        }
-
-        .cartao-turma header h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.3rem;
-            color: #1f497d;
-        }
-
-        .cartao-turma header p {
-            font-size: 0.9rem;
-            color: #3a5a8a;
-            margin-bottom: 1rem;
-        }
-
-        .botao-frequencia {
-            align-self: flex-start;
-            background-color: #357ABD;
-            color: white;
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .botao-frequencia:hover,
-        .botao-frequencia:focus {
-            background-color: #2a5d9f;
-            outline: none;
-        }
-
-        /* Formulário de Frequência */
-        .formulario-frequencia {
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-        }
-
-        .info-frequencia p {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 0.3rem;
-        }
-
-        .info-frequencia input[type="date"] {
-            padding: 0.4rem 0.6rem;
-            font-size: 1rem;
-            border-radius: 6px;
-            border: 1.8px solid #ccc;
-            transition: border-color 0.3s ease;
-        }
-
-        .info-frequencia input[type="date"]:focus {
-            border-color: #357ABD;
-            outline: none;
-        }
-
-        /* Tabela de Frequência */
-        .tabela-frequencia {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-        }
-
-        .tabela-frequencia th,
-        .tabela-frequencia td {
-            border: 1px solid #ddd;
-            padding: 0.6rem 0.8rem;
-            text-align: center;
-            font-size: 0.95rem;
-        }
-
-        .tabela-frequencia th {
-            background-color: #357ABD;
-            color: white;
-            font-weight: 700;
-        }
-
-        .tabela-frequencia td input[type="radio"] {
-            transform: scale(1.2);
-            cursor: pointer;
-        }
-
-        .tabela-frequencia td input[type="text"] {
-            width: 100%;
-            padding: 0.3rem 0.5rem;
-            border-radius: 6px;
-            border: 1.5px solid #ccc;
-            font-size: 0.9rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .tabela-frequencia td input[type="text"]:focus {
-            border-color: #357ABD;
-            outline: none;
-        }
-
-        /* Botão Salvar */
-        .botao-salvar {
-            align-self: flex-start;
-            background-color: #357ABD;
-            color: white;
-            border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 1rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .botao-salvar:hover,
-        .botao-salvar:focus {
-            background-color: #2a5d9f;
-            outline: none;
-        }
-
-        /* Histórico de Frequência */
-        .filtros-historico {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem 1.5rem;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .filtros-historico label {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .filtros-historico select,
-        .filtros-historico input[type="month"] {
-            padding: 0.4rem 0.7rem;
-            border-radius: 6px;
-            border: 1.5px solid #ccc;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .filtros-historico select:focus,
-        .filtros-historico input[type="month"]:focus {
-            border-color: #357ABD;
-            outline: none;
-        }
-
-        .botao-filtrar {
-            background-color: #357ABD;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .botao-filtrar:hover,
-        .botao-filtrar:focus {
-            background-color: #2a5d9f;
-            outline: none;
-        }
-
-        .tabela-historico {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .tabela-historico th,
-        .tabela-historico td {
-            border: 1px solid #ddd;
-            padding: 0.8rem;
-            text-align: left;
-        }
-
-        .tabela-historico th {
-            background-color: #357ABD;
-            color: white;
-            font-weight: 700;
-        }
-
-        /* Rodapé */
-        .rodape {
-            background-color: #2a5d9f;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-            margin-top: auto;
-        }
-
-        .rodape p {
-            margin: 0;
-            font-size: 0.9rem;
-        }
-
-        /* Responsivo */
-        @media (max-width: 768px) {
-            .menu-lateral {
-                width: 100%;
-                position: static;
-                min-height: auto;
-            }
-
-            .conteudo-principal {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .lista-turmas {
-                flex-direction: column;
-            }
-
-            .filtros-historico {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .cabecalho {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .conteudo-principal section {
-                padding: 1rem;
-            }
-
-            .tabela-frequencia,
-            .tabela-historico {
-                font-size: 0.8rem;
-            }
-
-            .tabela-frequencia th,
-            .tabela-frequencia td,
-            .tabela-historico th,
-            .tabela-historico td {
-                padding: 0.4rem;
-            }
-        }
+/* foco e acessibilidade */
+input:focus, button:focus{outline:none;box-shadow:0 0 0 4px rgba(66,165,245,0.12);}
+a{color:inherit}
