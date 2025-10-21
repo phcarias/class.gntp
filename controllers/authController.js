@@ -130,6 +130,11 @@ exports.login = async (req, res) => {
 
     const type = user.type;
 
+    // Verificar se o tipo de usuário é professor ou admin
+    if (type !== "professor" && type !== "admin") {
+      return res.status(403).json({ msg: "Acesso negado. Apenas professores e administradores podem acessar." });
+    }
+
     // Verificar se a senha está correta
     const checkPassword = await bcrypt.compare(password, user.password);
     if (!checkPassword) {
@@ -146,10 +151,15 @@ exports.login = async (req, res) => {
       secret
     );
 
-    res.status(200).json({ msg: "Autenticação realizada com sucesso!", token, type, _id: user._id, name: user.name });
+    res.status(200).json({ 
+      msg: "Autenticação realizada com sucesso!", 
+      token, 
+      type, 
+      _id: user._id, 
+      name: user.name 
+    });
   } catch (error) {
     console.error('Erro ao realizar login:', error);
     res.status(500).json({ msg: "Erro interno do servidor" });
   }
 };
-

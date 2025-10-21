@@ -6,6 +6,7 @@
     <title>Aluno - Sistema de Frequência Escolar</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="stylesheet" href="/public/style/aluno_main.css" />
+    <script type="module" src="/public/scripts/alunos.js"></script>
 
 </head>
 <body>
@@ -24,7 +25,7 @@
     <nav class="menu-lateral">
         <ul>
             <li class="ativo"><a href="#">Minha Frequência</a></li>
-            <li><a href="#">Calendário de Aulas</a></li>
+            <li><a href="#Calendario de aulas">Calendário de Aulas</a></li>
             <li><a href="#">Histórico Completo</a></li>
             <li><a href="#">Meus Dados</a></li>
         </ul>
@@ -172,114 +173,7 @@
         </section>
 
         <!-- Calendário de Aulas -->
-        <section class="secao-calendario">
-            <h2>Próximas Aulas</h2>
-            <div class="calendario">
-                <div class="cabecalho-calendario">
-                    <h3>Outubro 2024</h3>
-                </div>
-                <div class="grade-calendario">
-                    <div class="dia-calendario">
-                        <span class="numero-dia">15</span>
-                        <span class="nome-dia">Ter</span>
-                        <div class="aulas-dia">
-                            <div class="item-aula">
-                                <span class="hora-aula">08:00</span>
-                                <span class="nome-aula">Matemática</span>
-                            </div>
-                            <div class="item-aula">
-                                <span class="hora-aula">10:00</span>
-                                <span class="nome-aula">História</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dia-calendario hoje">
-                        <span class="numero-dia">16</span>
-                        <span class="nome-dia">Qua</span>
-                        <div class="aulas-dia">
-                            <div class="item-aula">
-                                <span class="hora-aula">08:00</span>
-                                <span class="nome-aula">Português</span>
-                            </div>
-                            <div class="item-aula">
-                                <span class="hora-aula">14:00</span>
-                                <span class="nome-aula">Geografia</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dia-calendario">
-                        <span class="numero-dia">17</span>
-                        <span class="nome-dia">Qui</span>
-                        <div class="aulas-dia">
-                            <div class="item-aula">
-                                <span class="hora-aula">09:00</span>
-                                <span class="nome-aula">Matemática</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dia-calendario faltou">
-                        <span class="numero-dia">18</span>
-                        <span class="nome-dia">Sex</span>
-                        <div class="aulas-dia">
-                            <div class="item-aula">
-                                <span class="hora-aula">08:00</span>
-                                <span class="nome-aula">História</span>
-                                <span class="marcador-falta">Faltou</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dias com Ausência -->
-        <section class="secao-faltas">
-            <h2>Dias com Ausência Registrada</h2>
-            <div class="lista-faltas">
-                <div class="item-falta">
-                    <div class="data-falta">
-                        <span class="dia-falta">18</span>
-                        <span class="mes-falta">Out</span>
-                    </div>
-                    <div class="detalhes-falta">
-                        <h4>Sexta-feira</h4>
-                        <p><strong>Disciplina:</strong> História</p>
-                        <p><strong>Horário:</strong> 08:00 - 09:30</p>
-                        <p class="justificativa-falta"><strong>Justificativa:</strong> Consulta médica</p>
-                    </div>
-                </div>
-
-                <div class="item-falta">
-                    <div class="data-falta">
-                        <span class="dia-falta">05</span>
-                        <span class="mes-falta">Out</span>
-                    </div>
-                    <div class="detalhes-falta">
-                        <h4>Sábado</h4>
-                        <p><strong>Disciplina:</strong> Geografia</p>
-                        <p><strong>Horário:</strong> 14:00 - 15:30</p>
-                        <p class="justificativa-falta"><strong>Justificativa:</strong> Não justificada</p>
-                    </div>
-                </div>
-
-                <div class="item-falta">
-                    <div class="data-falta">
-                        <span class="dia-falta">28</span>
-                        <span class="mes-falta">Set</span>
-                    </div>
-                    <div class="detalhes-falta">
-                        <h4>Segunda-feira</h4>
-                        <p><strong>Disciplina:</strong> Português</p>
-                        <p><strong>Horário:</strong> 10:00 - 11:30</p>
-                        <p class="justificativa-falta"><strong>Justificativa:</strong> Problemas de transporte</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+        
 
     <footer class="rodape">
         <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>

@@ -81,11 +81,20 @@ const weekdayMap = {0:'Dom',1:'Seg',2:'Ter',3:'Qua',4:'Qui',5:'Sex',6:'Sab'};
                 console.error("Erro ao carregar turmas:", error); // Verifica erros
             }
         }
-        
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Você precisa estar logado para acessar esta página.");
+                window.location.href = "/public/views/login.html";
+            }
+        });
+
+    
         document.addEventListener("DOMContentLoaded", carregarTurmas);
 
 
         btnFiltrar.addEventListener('click', () => filtrarPorData(inputData.value));
         btnLimpar.addEventListener('click', () => { inputData.value = ''; mostrarTodasTurmas(); });
         inputData.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); filtrarPorData(inputData.value); } });
-        
+        module.exports = router;
