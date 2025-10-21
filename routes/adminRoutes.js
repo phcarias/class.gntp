@@ -14,9 +14,6 @@ router.get("/turmasativas", checkToken, checkAdmin, adminController.getTurmasSta
 
 router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFrequenciaMedia);
 
-// Rota protegida para qualquer usuário autenticado
-//router.get("/profile", checkToken, (req, res) => {
-//res.json({ msg: "Bem-vindo à área protegida!", user: req.user });
-//});
+router.get("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
 
 module.exports = router;

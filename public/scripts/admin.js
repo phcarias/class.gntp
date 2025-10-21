@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
 
     api = 'http://localhost:9090'; // Defina a URL base da sua API aqui
@@ -213,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Adicionar/remover horários
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target.classList.contains('btn-add-horario')) {
             const horariosList = document.getElementById('horarios-turma-list');
             const row = document.createElement('div');
