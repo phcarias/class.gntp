@@ -2,9 +2,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const Picture = require("../models/PictureModel");
+const TurmaModel = require("../models/TurmaModel");
 
 exports.register = async (req, res) => {
-  const { name, email, password, confirmpassword, type, active, matricula, curso, periodo, disciplinas, turmas } = req.body;
+  const { name, email, password, confirmpassword, type, active, matricula, disciplinas, turmas, responsavelEmail } = req.body;
   const file = req.file;
 
   // Validações básicas
@@ -47,7 +48,6 @@ exports.register = async (req, res) => {
     // Criar hash da senha
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
-
     // Definir os dados específicos do tipo de usuário no roleData
     const roleData = {};
     if (type === 'aluno') {
@@ -72,6 +72,31 @@ exports.register = async (req, res) => {
     });
 
     await newUser.save();
+    // Adicionar os professores às turmas especificadas, se houver
+    if (type === 'professor' && turmas && turmas.length > 0) {
+      await Promise.all(
+      turmas.map(async (turmaId) => {
+        const turma = await TurmaModel.findById(turmaId);
+        if (turma) {
+        turma.professores.push(newUser._id);
+        await turma.save();
+        }
+      })
+      );
+    }
+        // Adicionar o aluno às turmas especificadas, se houver
+    if (type === 'aluno' && turmas && turmas.length > 0) {
+      await Promise.all(
+      turmas.map(async (turmaId) => {
+        const turma = await TurmaModel.findById(turmaId);
+        if (turma) {
+        turma.alunos.push(newUser._id);
+        await turma.save();
+        }
+      })
+      );
+    }
+
 
     res.status(201).json({
       msg: "Usuário criado com sucesso!",

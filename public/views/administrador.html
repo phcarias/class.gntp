@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../style/administrador.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
+
 <body>
     <header class="header">
         <div class="header-left">
@@ -78,7 +80,7 @@
                     <div class="stat-content">
                         <h3>Frequência Média</h3>
                         <p class="stat-number" id="frequencia-media">...</p>
-                        <p class="stat-change"id="frequencia_anterior">...</p>
+                        <p class="stat-change" id="frequencia_anterior">...</p>
                     </div>
                 </div>
             </div>
@@ -90,95 +92,154 @@
                         <span class="material-icons">person_add</span>
                         Novo Aluno
                     </button>
-                    <!-- Modal para Novo Aluno (Atualizado) -->
+                    <!-- Apenas UM modal e UM formulário! -->
                     <div id="modal-novo-aluno" class="modal" style="display: none;">
                         <div class="modal-content">
                             <span class="close-modal" id="close-modal-novo-aluno">&times;</span>
                             <h3>Registrar Novo Aluno</h3>
                             <form id="form-novo-aluno">
                                 <label for="nome-aluno">Nome Completo:</label>
-                                <input type="text" id="nome-aluno" name="nome" placeholder="Digite o nome completo" required />
+                                <input type="text" id="nome-aluno" name="name" required
+                                    placeholder="Ex: Ana Beatriz da Silva" />
 
                                 <label for="email-aluno">E-mail:</label>
-                                <input type="email" id="email-aluno" name="email" placeholder="Digite o e-mail" required />
+                                <input type="email" id="email-aluno" name="email" required
+                                    placeholder="Ex: ana.silva@email.com" />
 
                                 <label for="senha-aluno">Senha:</label>
-                                <input type="password" id="senha-aluno" name="senha" placeholder="Digite uma senha" required />
+                                <input type="password" id="senha-aluno" name="password" required
+                                    placeholder="Crie uma senha forte" />
 
                                 <label for="confirmar-senha-aluno">Confirmar Senha:</label>
-                                <input type="password" id="confirmar-senha-aluno" name="confirmar-senha" placeholder="Confirme a senha" required />
+                                <input type="password" id="confirmar-senha-aluno" name="confirmpassword" required
+                                    placeholder="Repita a senha" />
 
                                 <label for="matricula-aluno">Matrícula:</label>
-                                <input type="text" id="matricula-aluno" name="matricula" placeholder="Digite a matrícula" required />
+                                <input type="text" id="matricula-aluno" name="matricula" required
+                                    placeholder="Ex: ALU2025001" />
 
-                                <label for="turma-aluno">Turma:</label>
-                                <select id="turma-aluno" name="turma" required>
-                                    <option value="" disabled selected>Selecione uma turma</option>
+                                <label for="turma-aluno">Turmas:</label>
+                                <select id="turma-aluno" name="turmas"  multiple>
+                                    <!-- Opções carregadas via JS -->
                                 </select>
+                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
 
-                                <label for="periodo-aluno">Período:</label>
-                                <input type="number" id="periodo-aluno" name="periodo" placeholder="Digite o período" min="1" />
+                                <label for="responsavel-email-aluno">E-mail do Responsável:</label>
+                                <input type="email" id="responsavel-email-aluno" name="responsavelEmail" required
+                                    placeholder="Ex: mae.ana@email.com" />
+
 
                                 <button type="submit" class="btn-primary">Registrar</button>
                             </form>
-                        <script>
-                            // Fetch turmas from the backend and populate the dropdown
-                            document.addEventListener("DOMContentLoaded", () => {
-                                fetch('localhost:9090/turma/getturmas') // Replace with your actual API endpoint
-                                    .then(response => {
-                                        if (!response.ok) {
-                                            throw new Error("Erro na resposta da API");
-                                        }
-                                        return response.json();
-                                    })
-                                    .then(data => {
-                                        const turmaSelect = document.getElementById("turma-aluno");
-                                        data.forEach(turma => {
-                                            const option = document.createElement("option");
-                                            option.value = turma.id;
-                                            option.textContent = turma.nome;
-                                            turmaSelect.appendChild(option);
-                                        });
-                                    })
-                                    .catch(error => console.error("Erro ao carregar turmas:", error));
-                            });
-                        </script>
                         </div>
                     </div>
-                    <!-- Modal para Novo Aluno -->
-                    <div id="modal-novo-aluno" class="modal" style="display: none;">
-                        <div class="modal-content">
-                            <span class="close-modal" id="close-modal-novo-aluno">&times;</span>
-                            <h3>Adicionar Novo Aluno</h3>
-                            <form id="form-novo-aluno">
-                                <label for="nome-aluno">Nome:</label>
-                                <input type="text" id="nome-aluno" name="nome" placeholder="Digite o nome do aluno" required />
 
-                                <label for="email-aluno">E-mail:</label>
-                                <input type="email" id="email-aluno" name="email" placeholder="Digite o e-mail do aluno" required />
-
-                                <label for="matricula-aluno">Matrícula:</label>
-                                <input type="text" id="matricula-aluno" name="matricula" placeholder="Digite a matrícula" required />
-
-                                <label for="curso-aluno">Curso:</label>
-                                <input type="text" id="curso-aluno" name="curso" placeholder="Digite o curso" />
-
-                                <label for="periodo-aluno">Período:</label>
-                                <input type="number" id="periodo-aluno" name="periodo" placeholder="Digite o período" min="1" />
-
-                                <button type="submit" class="btn-primary">Salvar</button>
-                            </form>
-                        </div>
-                    </div>
-                    <button class="action-btn">
-
+                    <button class="action-btn" id="btn-novo-professor">
                         <span class="material-icons">person_add</span>
                         Novo Professor
                     </button>
-                    <button class="action-btn">
+                    <div id="modal-novo-professor" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close-modal" id="close-modal-novo-professor">&times;</span>
+                            <h3>Registrar Novo Professor</h3>
+                            <form id="form-novo-professor">
+                                <label for="nome-professor">Nome Completo:</label>
+                                <input type="text" id="nome-professor" name="name" required placeholder="Ex: Carlos Oliveira" />
+
+                                <label for="email-professor">E-mail:</label>
+                                <input type="email" id="email-professor" name="email" required placeholder="Ex: carlos@email.com" />
+
+                                <label for="senha-professor">Senha:</label>
+                                <input type="password" id="senha-professor" name="password" required placeholder="Crie uma senha forte" />
+
+                                <label for="confirmar-senha-professor">Confirmar Senha:</label>
+                                <input type="password" id="confirmar-senha-professor" name="confirmpassword" required placeholder="Repita a senha" />
+
+                                <label for="matricula-professor">Matrícula:</label>
+                                <input type="text" id="matricula-professor" name="matricula" required placeholder="Ex: PROF2025001" />
+
+                                <label for="disciplinas-professor">Disciplinas:</label>
+                                <input type="text" id="disciplinas-professor" name="disciplinas" required placeholder="Ex: Matemática, Física" />
+
+                                <label for="turma-professor">Turmas:</label>
+                                <select id="turma-professor" name="turmas" multiple>
+                                    <!-- Opções carregadas via JS -->
+                                </select>
+                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
+
+                                <button type="submit" class="btn-primary">Registrar</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <button class="action-btn" id="btn-nova-turma">
                         <span class="material-icons">add</span>
                         Nova Turma
                     </button>
+                    <div id="modal-nova-turma" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close-modal" id="close-modal-nova-turma">&times;</span>
+                            <h3>Criar Nova Turma</h3>
+                            <form id="form-nova-turma">
+                                <label for="codigo-turma">Código da Turma:</label>
+                                <input type="text" id="codigo-turma" name="codigo" required placeholder="Ex: 3A2025" />
+
+                                <label for="disciplinas-turma">Disciplinas:</label>
+                                <input type="text" id="disciplinas-turma" name="disciplinas" required placeholder="Ex: Matemática, Física" />
+
+                                <label for="professores-turma">Professores:</label>
+                                <select id="professores-turma" name="professores" multiple>
+                                    <!-- Opções carregadas via JS -->
+                                </select>
+                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de um professor</small>
+
+                                <label for="alunos-turma">Alunos:</label>
+                                <select id="alunos-turma" name="alunos" multiple>
+                                    <!-- Opções carregadas via JS -->
+                                </select>
+                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de um aluno</small>
+
+                                <label for="horarios-turma">Horários (dia, início, fim):</label>
+                                <div id="horarios-turma-list">
+                                    <div class="horario-row">
+                                        <select name="diaSemana[]" required>
+                                            <option value="">Dia da semana</option>
+                                            <option value="segunda">Segunda</option>
+                                            <option value="terca">Terça</option>
+                                            <option value="quarta">Quarta</option>
+                                            <option value="quinta">Quinta</option>
+                                            <option value="sexta">Sexta</option>
+                                            <option value="sabado">Sábado</option>
+                                        </select>
+                                        <input type="time" name="horarioInicio[]" required />
+                                        <input type="time" name="horarioFim[]" required />
+                                        <button type="button" class="btn-add-horario">+</button>
+                                    </div>
+                                </div>
+
+                                <label for="carga-horaria-turma">Carga Horária Total:</label>
+                                <input type="number" id="carga-horaria-turma" name="cargaHoraria" required min="1" placeholder="Ex: 120" />
+
+                                <label for="periodo-inicio-turma">Início do Período Letivo:</label>
+                                <input type="date" id="periodo-inicio-turma" name="periodoInicio" required />
+
+                                <label for="periodo-fim-turma">Fim do Período Letivo:</label>
+                                <input type="date" id="periodo-fim-turma" name="periodoFim" required />
+
+                                <label for="limite-faltas-turma">Limite Máximo de Faltas (%):</label>
+                                <input type="number" id="limite-faltas-turma" name="limiteFaltas" min="0" max="100" value="25" />
+
+                                <label for="ativo-turma">Turma Ativa?</label>
+                                <select id="ativo-turma" name="ativo">
+                                    <option value="true" selected>Sim</option>
+                                    <option value="false">Não</option>
+                                </select>
+
+                                <button type="submit" class="btn-primary">Criar Turma</button>
+                            </form>
+                        </div>
+                    </div>
+
                     <button class="action-btn">
                         <span class="material-icons">description</span>
                         Gerar Relatório
@@ -424,20 +485,20 @@
         <!-- Configurações -->
         <section id="configuracoes" class="settings-section">
             <h2>Configurações do Sistema</h2>
-            
+
             <div class="settings-grid">
                 <div class="setting-card">
                     <h3>Regras de Frequência</h3>
                     <div class="setting-form">
                         <label>Limite máximo de faltas:</label>
                         <input type="number" value="25" min="0" max="100" />
-                        
+
                         <label>Carga horária mínima por disciplina:</label>
                         <input type="number" value="120" min="0" step="10" />
-                        
+
                         <label>Percentual mínimo de frequência:</label>
                         <input type="number" value="75" min="0" max="100" />
-                        
+
                         <button class="btn-primary">Salvar Configurações</button>
                     </div>
                 </div>
@@ -447,13 +508,13 @@
                     <div class="setting-form">
                         <label>Início do ano letivo:</label>
                         <input type="date" value="2024-02-05" />
-                        
+
                         <label>Término do ano letivo:</label>
                         <input type="date" value="2024-12-15" />
-                        
+
                         <label>Dias letivos totais:</label>
                         <input type="number" value="200" readonly />
-                        
+
                         <button class="btn-primary">Atualizar Calendário</button>
                     </div>
                 </div>
@@ -463,17 +524,17 @@
                     <div class="setting-form">
                         <label>Tempo de sessão (minutos):</label>
                         <input type="number" value="30" min="5" max="120" />
-                        
+
                         <label>Máximo de tentativas de login:</label>
                         <input type="number" value="3" min="1" max="10" />
-                        
+
                         <label>Complexidade de senha:</label>
                         <select>
                             <option>Mínima (6 caracteres)</option>
                             <option selected>Média (8 caracteres com números)</option>
                             <option>Forte (12 caracteres com números e símbolos)</option>
                         </select>
-                        
+
                         <button class="btn-primary">Aplicar Configurações</button>
                     </div>
                 </div>
@@ -487,4 +548,5 @@
 
     <script src="../scripts/admin.js"></script>
 </body>
+
 </html>

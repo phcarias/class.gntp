@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const User = require("../models/UserModel"); // Modelo de Usuário
 const Turma = require("../models/TurmaModel"); // Modelo de Turma
+const turmaController = require("../controllers/turmaController");
 
-<<<<<<< HEAD
 // Rota para listar professores
 router.get("/professores", async (req, res) => {
     try {
@@ -29,17 +29,16 @@ router.get("/alunos", async (req, res) => {
 router.get("/listar", async (req, res) => {
     try {
         const turmas = await Turma.find();
-        console.log("Turmas encontradas no banco de dados:", turmas); // Verifica os dados no terminal
         res.status(200).json(turmas);
     } catch (error) {
         console.error("Erro ao listar turmas:", error); // Verifica erros no terminal
         res.status(500).json({ erro: "Erro ao listar turmas", detalhes: error.message });
     }
 });
-=======
+
+
 router.post("/criarturma", turmaController.createTurma);
 router.get("/getturmas", turmaController.getTurmas);
->>>>>>> d29e85a05d81b29c1a96248434824e541fcac0ae
 
 module.exports = router;
 
