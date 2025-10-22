@@ -7,13 +7,11 @@ const adminController = require("../controllers/adminController");
 //router.get("/admin/users", checkToken, checkAdmin, getAllUsers);
 
 router.get("/alunosstats", checkToken, checkAdmin, adminController.getAlunosStats);
-
 router.get("/professoresstats", checkToken, checkAdmin, adminController.getProfessoresStats);
-
 router.get("/turmasativas", checkToken, checkAdmin, adminController.getTurmasStats);
-
 router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFrequenciaMedia);
-
 router.get("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
+router.get("/getalunos", checkToken, checkAdmin, adminController.getAlunos);
+router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
 
 module.exports = router;

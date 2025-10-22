@@ -95,8 +95,7 @@ exports.updatePassword = async (req, res) => {
 };
 
 exports.updateAluno = async (req, res) => {
-  const { id } = req.params; // ID do usuário (aluno)
-  const { name, email, active, roleData } = req.body;
+  const { id, name, email, active, roleData } = req.body;
 
   try {
     // Busca o usuário e garante que é do tipo aluno
@@ -105,24 +104,61 @@ exports.updateAluno = async (req, res) => {
       return res.status(404).json({ msg: "Aluno não encontrado!" });
     }
 
-    // Atualiza campos permitidos
+    // Atualiza campos permitidos + validações de unicidade
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email, _id: { $ne: id } });
+      if (emailExists) return res.status(422).json({ msg: "Por favor, utilize outro e-mail!" });
+      user.email = email;
+    }
     if (name) user.name = name;
-    if (email) user.email = email;
     if (typeof active === "boolean") user.active = active;
 
     // Atualiza dados específicos do aluno (roleData)
     if (roleData) {
-      // Aqui depende do formato do seu schema:
-      // Se matricula/curso/turma forem arrays, você pode atribuir arrays.
-      // Se forem strings, só aceita um valor.
-      if (roleData.matricula) user.roleData.matricula = roleData.matricula;
-      if (roleData.curso) user.roleData.curso = roleData.curso;
-      if (roleData.periodo) user.roleData.periodo = roleData.periodo;
-      if (roleData.turmas) user.roleData.turmas = roleData.turmas;
+      // Matricula (com validação de unicidade)
+      if (roleData.matricula && roleData.matricula !== user.roleData?.matricula) {
+        const matriculaExists = await User.findOne({
+          "roleData.matricula": roleData.matricula,
+          _id: { $ne: id },
+        });
+        if (matriculaExists) {
+          return res.status(422).json({ msg: "Matrícula já cadastrada!" });
+        }
+        user.roleData.matricula = roleData.matricula;
+      }
+
+      // Corrige a chave para responsavelEmail
+      if (roleData.responsavelEmail !== undefined) {
+        user.roleData.responsavelEmail = roleData.responsavelEmail;
+      }
+
+      // Turmas: normaliza para [{ turma: ObjectId }] e sincroniza TurmaModel.alunos
+      if (roleData.turmas) {
+        const incomingIds = Array.isArray(roleData.turmas)
+          ? roleData.turmas.map((t) =>
+              typeof t === "object" && t !== null ? String(t.turma || t._id || t.id) : String(t)
+            )
+          : [];
+        const newIds = [...new Set(incomingIds.filter(Boolean))];
+
+        const currentIds = (user.roleData?.turmas || []).map((t) =>
+          String(typeof t === "object" && t !== null ? t.turma : t)
+        );
+
+        const toAdd = newIds.filter((tid) => !currentIds.includes(tid));
+        const toRemove = currentIds.filter((tid) => !newIds.includes(tid));
+
+        await Promise.all([
+          // use o modelo já importado como 'Turma'
+          ...toAdd.map((tid) => Turma.findByIdAndUpdate(tid, { $addToSet: { alunos: user._id } })),
+          ...toRemove.map((tid) => Turma.findByIdAndUpdate(tid, { $pull: { alunos: user._id } })),
+        ]);
+
+        user.roleData.turmas = newIds.map((tid) => ({ turma: tid }));
+      }
     }
 
     await user.save();
-
     res.status(200).json({ msg: "Dados do aluno atualizados com sucesso!", user });
   } catch (error) {
     res.status(500).json({ msg: "Erro ao atualizar aluno!", error });
@@ -212,6 +248,22 @@ exports.getAlunosStats = async (req, res) => {
     res.status(500).json({ msg: "Erro ao buscar estatísticas de alunos!", error });
   }
 };
+
+exports.getAlunos = async (req, res) => {
+  try {
+    const alunos = await User.find({ type: 'aluno' })
+      .select('name email type active roleData createdAt')
+      .populate({
+        path: 'roleData.turmas.turma',
+        model: Turma
+      });   
+
+    res.status(200).json(alunos);
+  } catch (error) {
+    console.error('Erro ao buscar alunos:', error);
+    res.status(500).json({ erro: 'Erro ao buscar alunos', detalhes: error.message });
+  }
+};
 exports.getProfessoresStats = async (req, res) => {
   try {
     // Total de professores
@@ -254,60 +306,61 @@ exports.getTurmasStats = async (req, res) => {
   }
 };
 
+// ...existing code...
+// Ajuste o modelo/campos conforme seu schema (ex.: Chamada/Aula/Presenca, campo de data e flag 'presente')
 exports.getFrequenciaMedia = async (req, res) => {
   try {
-    // Busca todos os alunos
-    const alunos = await User.find({ type: "aluno" }).populate("roleData.turmas");
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = agora.getMonth(); // 0-11
 
-    if (!alunos || alunos.length === 0) {
-      return res.status(404).json({ msg: "Nenhum aluno encontrado!" });
-    }
+    const startThis = new Date(ano, mes, 1, 0, 0, 0, 0);
+    const endThis = new Date(ano, mes + 1, 0, 23, 59, 59, 999);
 
-    let totalFrequencia = 0;
-    let totalAulas = 0;
-    let totalFrequenciaMesAnterior = 0;
-    let totalAulasMesAnterior = 0;
+    const startPrev = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
+    const endPrev = new Date(ano, mes, 0, 23, 59, 59, 999);
 
-    const now = new Date();
-    const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    // Substitua 'Chamada' pelo seu modelo de presença e ajuste 'data' e 'registros.presente'
+    const Chamada = require('../models/frequenciaModel');
 
-    // Itera sobre os alunos para calcular a frequência média
-    for (const aluno of alunos) {
-      if (aluno.roleData && aluno.roleData.turmas) {
-        for (const turma of aluno.roleData.turmas) {
-          if (turma.frequencia && turma.totalAulas) {
-            totalFrequencia += turma.frequencia;
-            totalAulas += turma.totalAulas;
-          }
-
-          // Considera apenas os dados do mês anterior
-          if (
-            turma.updatedAt >= firstDayOfLastMonth &&
-            turma.updatedAt <= lastDayOfLastMonth &&
-            turma.frequencia &&
-            turma.totalAulas
-          ) {
-            totalFrequenciaMesAnterior += turma.frequencia;
-            totalAulasMesAnterior += turma.totalAulas;
+    async function computeRange(start, end) {
+      const agg = await Chamada.aggregate([
+        { $match: { data: { $gte: start, $lte: end } } },
+        { $unwind: '$registros' },
+        {
+          $group: {
+            _id: null,
+            totalRegistros: { $sum: 1 },
+            totalPresentes: {
+              $sum: { $cond: [{ $eq: ['$registros.presente', true] }, 1, 0] }
+            }
           }
         }
-      }
+      ]);
+      if (!agg.length) return { totalRegistros: 0, totalPresentes: 0 };
+      return agg[0];
     }
 
-    const frequenciaMedia = totalAulas === 0 ? 0 : (totalFrequencia / totalAulas) * 100;
-    const frequenciaMediaMesAnterior =
-      totalAulasMesAnterior === 0 ? 0 : (totalFrequenciaMesAnterior / totalAulasMesAnterior) * 100;
+    const cur = await computeRange(startThis, endThis);
+    const prev = await computeRange(startPrev, endPrev);
 
-    const diferencaFrequencia = frequenciaMedia - frequenciaMediaMesAnterior;
+    const freqAtual = cur.totalRegistros > 0
+      ? Math.round((cur.totalPresentes / cur.totalRegistros) * 100)
+      : 0;
 
-    res.status(200).json({
-      frequenciaMedia: frequenciaMedia.toFixed(2),
-      frequenciaMediaMesAnterior: frequenciaMediaMesAnterior.toFixed(2),
-      diferencaFrequencia: diferencaFrequencia.toFixed(2),
+    const freqAnterior = prev.totalRegistros > 0
+      ? Math.round((prev.totalPresentes / prev.totalRegistros) * 100)
+      : 0;
+
+    const diferenca = freqAtual - freqAnterior;
+
+    return res.status(200).json({
+      frequenciaMedia: freqAtual,
+      diferencaFrequencia: diferenca
     });
   } catch (error) {
-    res.status(500).json({ msg: "Erro ao calcular a frequência média!", error });
+    console.error('Erro getFrequenciaMedia:', error);
+    return res.status(500).json({ msg: 'Erro ao calcular frequência média', error });
   }
 };
 

@@ -22,8 +22,57 @@ document.addEventListener('DOMContentLoaded', function () {
     getAlunosStats();
     getProfessoresStats();
     getTurmasAtivas();
-    getFrequenciaMedia();
+    getFrequenciaMedia().catch(console.error);
+    loadAlunos();
 
+    async function loadAlunos() {
+        try {
+            const res = await fetch(`${api}/administrador/getalunos`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!res.ok) {
+                console.error('Erro ao buscar alunos:', res.status);
+                return;
+            }
+            const alunos = await res.json();
+            console.log(alunos)
+            const tbody = document.querySelector('#alunos .data-table tbody');
+            tbody.innerHTML = '';
+            alunos.forEach(aluno => {
+                const turmas = aluno.roleData?.turmas?.map(t => t.turma?.codigo).join(', ') || 'N/A';
+                const matricula = aluno.roleData?.matricula || 'N/A';
+                
+                const statusClass = aluno.active ? 'active' : 'inactive';
+                const statusText = aluno.active ? 'Ativo' : 'Inativo';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${matricula}</td>
+                    <td>${aluno.name}</td>
+                    <td>${turmas}</td>
+                    <td>N/A</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td class="actions">
+                        <button class="btn-icon" title="Editar">
+                            <span class="material-icons">edit</span>
+                        </button>
+                        <button class="btn-icon" title="Visualizar">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                        <button class="btn-icon danger" title="Excluir">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar alunos:', error);
+        }
+    }
 
 
 
@@ -350,6 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     }
+
     async function getFrequenciaMedia() {
 
         console.log('Buscando frequência média...');
@@ -366,9 +416,11 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Erro na requisição:', res.status, await res.text());
             return;
         }
+
         const stats = await res.json();
+        console.log('Estatísticas de frequência média:', stats);
         document.getElementById('frequencia-media').textContent = stats.frequenciaMedia + "%";
-        document.getElementById('frequencia_anterior').textContent =
+        document.getElementById('frequencia-anterior').textContent =
             (stats.diferencaFrequencia >= 0 ? "+" : "") + stats.diferencaFrequencia + "% em relação ao mês anterior";
     }
 

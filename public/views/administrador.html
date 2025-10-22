@@ -80,7 +80,7 @@
                     <div class="stat-content">
                         <h3>Frequência Média</h3>
                         <p class="stat-number" id="frequencia-media">...</p>
-                        <p class="stat-change" id="frequencia_anterior">...</p>
+                        <p class="stat-change" id="frequencia-anterior">...</p>
                     </div>
                 </div>
             </div>
@@ -270,7 +270,6 @@
                     Novo Aluno
                 </button>
             </div>
-
             <table class="data-table">
                 <thead>
                     <tr>
@@ -283,60 +282,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>20240001</td>
-                        <td>Maria Silva</td>
-                        <td>3º Ano A</td>
-                        <td>92%</td>
-                        <td><span class="status active">Ativo</span></td>
-                        <td class="actions">
-                            <button class="btn-icon" title="Editar">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon" title="Visualizar">
-                                <span class="material-icons">visibility</span>
-                            </button>
-                            <button class="btn-icon danger" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>202400localhost:9090/admin2</td>
-                        <td>João Pereira</td>
-                        <td>2º Ano B</td>
-                        <td>85%</td>
-                        <td><span class="status active">Ativo</span></td>
-                        <td class="actions">
-                            <button class="btn-icon" title="Editar">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon" title="Visualizar">
-                                <span class="material-icons">visibility</span>
-                            </button>
-                            <button class="btn-icon danger" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>20240003</td>
-                        <td>Ana Costa</td>
-                        <td>3º Ano A</td>
-                        <td>78%</td>
-                        <td><span class="status warning">Atenção</span></td>
-                        <td class="actions">
-                            <button class="btn-icon" title="Editar">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon" title="Visualizar">
-                                <span class="material-icons">visibility</span>
-                            </button>
-                            <button class="btn-icon danger" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </section>
@@ -554,6 +499,57 @@
     <footer class="footer">
         <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>
     </footer>
+
+    <!-- Modal: Ver Aluno -->
+    <div id="modal-ver-aluno" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal-ver-aluno">&times;</span>
+            <h3>Detalhes do Aluno</h3>
+            <div class="details-grid">
+                <p><strong>Matrícula:</strong> <span id="view-matricula">-</span></p>
+                <p><strong>Nome:</strong> <span id="view-nome">-</span></p>
+                <p><strong>E-mail:</strong> <span id="view-email">-</span></p>
+                <p><strong>Responsável:</strong> <span id="view-responsavel">-</span></p>
+                <p><strong>Turmas:</strong> <span id="view-turmas">-</span></p>
+                <p><strong>Status:</strong> <span id="view-status">-</span></p>
+                <p><strong>Criado em:</strong> <span id="view-created">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Aluno -->
+    <div id="modal-editar-aluno" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal-editar-aluno">&times;</span>
+            <h3>Editar Aluno</h3>
+            <form id="form-editar-aluno">
+                <input type="hidden" id="edit-aluno-id" />
+                <label>Nome</label>
+                <input type="text" id="edit-nome" />
+
+                <label>E-mail</label>
+                <input type="email" id="edit-email" />
+
+                <label>Matrícula</label>
+                <input type="text" id="edit-matricula" />
+
+                <label>E-mail do Responsável</label>
+                <input type="email" id="edit-responsavelEmail" />
+
+                <label>Status</label>
+                <select id="edit-active">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
+                </select>
+
+                <label>Turmas</label>
+                <select id="edit-turmas" multiple></select>
+                <small>Segure Ctrl (Windows) para múltipla seleção</small>
+
+                <button type="submit" class="btn-primary">Salvar</button>
+            </form>
+        </div>
+    </div>
 
     <script src="../scripts/admin.js"></script>
 </body>
