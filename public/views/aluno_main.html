@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link rel="stylesheet" href="/public/style/aluno_main.css" />
     <script type="module" src="/public/scripts/alunos.js"></script>
-
+    
 </head>
 <body>
     <header class="cabecalho">
@@ -24,156 +24,54 @@
 
     <nav class="menu-lateral">
         <ul>
-            <li class="ativo"><a href="#">Minha Frequência</a></li>
-            <li><a href="#Calendario de aulas">Calendário de Aulas</a></li>
-            <li><a href="#">Histórico Completo</a></li>
-            <li><a href="#">Meus Dados</a></li>
+            <li class="ativo"><a href="#resumo-frequencia">Minha Frequência</a></li>
+            <li><a href="#calendario-aulas">Calendário de Aulas</a></li>
+            <li><a href="#historico-completo">Histórico Completo</a></li>
+            <li><a href="#meus-dados">Meus Dados</a></li>
         </ul>
     </nav>
 
     <main class="conteudo-principal">
         <!-- Resumo de Frequência -->
-        <section class="secao-resumo">
+        <section id="resumo-frequencia" class="secao-resumo">
             <h2>Resumo da Minha Frequência</h2>
             <div class="grade-cartoes">
-                <div class="cartao-resumo">
-                    <div class="icone-cartao">
-                        <span class="material-icons">school</span>
-                    </div>
-                    <div class="conteudo-cartao">
-                        <h3>Total de Aulas</h3>
-                        <p class="numero-cartao">120</p>
-                        <p class="rotulo-cartao">aulas no período</p>
-                    </div>
-                </div>
-
-                <div class="cartao-resumo">
-                    <div class="icone-cartao">
-                        <span class="material-icons">check_circle</span>
-                    </div>
-                    <div class="conteudo-cartao">
-                        <h3>Presenças</h3>
-                        <p class="numero-cartao">105</p>
-                        <p class="rotulo-cartao">aulas presentes</p>
-                    </div>
-                </div>
-
-                <div class="cartao-resumo">
-                    <div class="icone-cartao">
-                        <span class="material-icons">cancel</span>
-                    </div>
-                    <div class="conteudo-cartao">
-                        <h3>Faltas</h3>
-                        <p class="numero-cartao">15</p>
-                        <p class="rotulo-cartao">aulas faltadas</p>
-                    </div>
-                </div>
-
-                <div class="cartao-resumo">
-                    <div class="icone-cartao">
-                        <span class="material-icons">percent</span>
-                    </div>
-                    <div class="conteudo-cartao">
-                        <h3>Frequência</h3>
-                        <p class="numero-cartao">87.5%</p>
-                        <p class="rotulo-cartao">de presença</p>
-                    </div>
-                </div>
+                <!-- Conteúdo dos cartões -->
             </div>
         </section>
 
-        <!-- Frequência por Disciplina -->
-        <section class="secao-disciplinas">
-            <h2>Frequência por Disciplina</h2>
-            <div class="lista-disciplinas">
-                <div class="cartao-disciplina">
-                    <h3>Matemática</h3>
-                    <div class="estatisticas-disciplina">
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Presenças:</span>
-                            <span class="valor-estatistica">28/30</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Faltas:</span>
-                            <span class="valor-estatistica">2</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Frequência:</span>
-                            <span class="valor-estatistica porcentagem">93.3%</span>
-                        </div>
-                    </div>
-                    <div class="barra-progresso">
-                        <div class="preenchimento-progresso" style="width: 93.3%"></div>
-                    </div>
-                </div>
+        <section id="resumo-frequencia" class="secao-resumo">
+  
 
-                <div class="cartao-disciplina">
-                    <h3>Português</h3>
-                    <div class="estatisticas-disciplina">
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Presenças:</span>
-                            <span class="valor-estatistica">25/30</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Faltas:</span>
-                            <span class="valor-estatistica">5</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Frequência:</span>
-                            <span class="valor-estatistica porcentagem">83.3%</span>
-                        </div>
-                    </div>
-                    <div class="barra-progresso">
-                        <div class="preenchimento-progresso" style="width: 83.3%"></div>
-                    </div>
-                </div>
+    <div class="grafico-container">
+        <canvas id="grafico-frequencia"></canvas>
+    </div>
 
-                <div class="cartao-disciplina">
-                    <h3>História</h3>
-                    <div class="estatisticas-disciplina">
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Presenças:</span>
-                            <span class="valor-estatistica">29/30</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Faltas:</span>
-                            <span class="valor-estatistica">1</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Frequência:</span>
-                            <span class="valor-estatistica porcentagem">96.7%</span>
-                        </div>
-                    </div>
-                    <div class="barra-progresso">
-                        <div class="preenchimento-progresso" style="width: 96.7%"></div>
-                    </div>
-                </div>
-
-                <div class="cartao-disciplina">
-                    <h3>Geografia</h3>
-                    <div class="estatisticas-disciplina">
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Presenças:</span>
-                            <span class="valor-estatistica">23/30</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Faltas:</span>
-                            <span class="valor-estatistica">7</span>
-                        </div>
-                        <div class="estatistica">
-                            <span class="rotulo-estatistica">Frequência:</span>
-                            <span class="valor-estatistica porcentagem">76.7%</span>
-                        </div>
-                    </div>
-                    <div class="barra-progresso">
-                        <div class="preenchimento-progresso" style="width: 76.7%"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <div class="informacoes-frequencia">
+        <p><strong>Frequência Geral:</strong> <span id="frequencia-geral">-</span>%</p>
+        <p><strong>Faltas na Semana:</strong> <span id="faltas-semana">-</span></p>
+        <p><strong>Faltas no Mês:</strong> <span id="faltas-mes">-</span></p>
+    </div>
+</section>
 
         <!-- Calendário de Aulas -->
-        
+        <section id="calendario-aulas" class="secao-calendario" style="display:none;">
+            <h2>Calendário de Aulas</h2>
+            <p>Em breve...</p>
+        </section>
+
+        <!-- Histórico Completo -->
+        <section id="historico-completo" class="secao-historico" style="display:none;">
+            <h2>Histórico Completo</h2>
+            <p>Em breve...</p>
+        </section>
+
+        <!-- Meus Dados -->
+        <section id="meus-dados" class="secao-dados" style="display:none;">
+            <h2>Meus Dados</h2>
+            <p>Em breve...</p>
+        </section>
+    </main>
 
     <footer class="rodape">
         <p>© 2024 Sistema de Frequência Escolar - Todos os direitos reservados</p>

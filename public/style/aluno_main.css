@@ -440,4 +440,26 @@ body {
     }
 }
 
+/* Container do gráfico */
+.grafico-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Informações de frequência */
+.informacoes-frequencia {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #34495e;
+}
+
+.informacoes-frequencia p {
+    margin: 10px 0;
+    font-weight: bold;
+}
 /* ...existing code... */
