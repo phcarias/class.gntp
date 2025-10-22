@@ -463,3 +463,64 @@ body {
     font-weight: bold;
 }
 /* ...existing code... */
+
+
+/* Reset e base */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;color:#333}
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* Cabeçalho */
+.cabecalho{background:#2c3e50;color:#fff;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;position:fixed;top:0;left:0;right:0;z-index:50;height:64px}
+.cabecalho h1{font-size:1.15rem;font-weight:700}
+.lado-direito-cabecalho{display:flex;align-items:center;gap:0.75rem}
+.info-usuario{color:#ecf0f1;font-weight:600}
+.botao-sair{color:#ecf0f1;text-decoration:none;display:inline-flex;align-items:center;font-size:1.4rem}
+
+/* Menu lateral */
+.menu-lateral{background:#34495e;color:#fff;width:260px;position:fixed;top:64px;left:0;bottom:0;padding-top:0.75rem;overflow-y:auto}
+.menu-lateral ul{list-style:none}
+.menu-lateral li{border-bottom:1px solid rgba(255,255,255,0.06)}
+.menu-lateral a{display:block;padding:0.95rem 1.25rem;color:#bdc3c7;text-decoration:none;font-weight:600;transition:background .18s,padding-left .18s}
+.menu-lateral a:hover{background:#2c3e50;color:#fff;padding-left:1.6rem}
+.menu-lateral li.ativo a{background:linear-gradient(90deg,#3498db,#2980b9);color:#fff;border-left:4px solid rgba(0,0,0,0.06)}
+
+/* Conteúdo principal */
+.conteudo-principal{margin-top:64px;margin-left:260px;padding:1.75rem 2rem;flex:1 0 auto;min-height:calc(100vh - 64px)}
+.conteudo-principal h2{color:#2c3e50;font-size:1.4rem;margin-bottom:1rem}
+
+/* Cartões resumo */
+.grade-cartoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;margin-bottom:1.25rem}
+.cartao-resumo{background:#fff;border-radius:10px;padding:1rem;box-shadow:0 6px 18px rgba(15,20,25,0.04);display:flex;gap:0.75rem;align-items:center;border-left:4px solid #3498db}
+.icone-cartao{font-size:1.6rem;color:#3498db;min-width:48px;min-height:48px;display:grid;place-items:center;background:rgba(52,152,219,0.08);border-radius:8px}
+.conteudo-cartao h3{font-size:1rem;color:#2c3e50;margin-bottom:0.25rem}
+.numero-cartao{font-size:1.35rem;font-weight:700;color:#2c3e50}
+.rotulo-cartao{font-size:0.85rem;color:#6b7280}
+
+/* Gráfico */
+.grafico-container{background:#fff;border-radius:10px;padding:1rem;box-shadow:0 6px 18px rgba(15,20,25,0.04);margin-bottom:1.5rem;height:340px;overflow:hidden}
+
+/* Calendário */
+.secao-calendario .calendario-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem}
+.secao-calendario select{padding:0.35rem 0.5rem;border-radius:6px;border:1px solid #d1d5db}
+#calendario-tabela-wrapper{background:#fff;border-radius:8px;padding:0.75rem;box-shadow:0 6px 18px rgba(15,20,25,0.04)}
+#calendario-tabela-wrapper table{width:100%;border-collapse:collapse;font-size:0.95rem}
+#calendario-tabela-wrapper th{padding:0.6rem 0.5rem;border-bottom:1px solid #e6e9ee;color:#2c3e50;text-align:left}
+#calendario-tabela-wrapper td{padding:0.55rem 0.5rem;border-bottom:1px solid #f1f3f5}
+
+/* Histórico e dados */
+.cartao-historico,.cartao-dados{background:#fff;border-radius:10px;padding:1rem;box-shadow:0 6px 18px rgba(15,20,25,0.04);margin-bottom:1rem}
+
+/* Faltas / mensagens */
+.lista-faltas{display:flex;flex-direction:column;gap:0.9rem}
+.item-falta{display:flex;gap:1rem;align-items:center;background:#fff;border-radius:10px;padding:0.9rem;box-shadow:0 6px 14px rgba(15,20,25,0.04);border-left:4px solid #e74c3c}
+.data-falta{width:64px;background:#e74c3c;color:#fff;border-radius:8px;padding:0.55rem 0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.dia-falta{font-size:1.25rem;font-weight:700}
+.mes-falta{font-size:0.75rem;text-transform:uppercase;opacity:0.95}
+
+/* Rodapé */
+.rodape{background:#2c3e50;color:#fff;text-align:center;padding:1rem;margin-top:auto}
+
+/* Responsividade */
+@media (max-width:980px){.grade-cartoes{grid-template-columns:repeat(2,1fr)}.menu-lateral{width:220px}.conteudo-principal{margin-left:220px}}
+@media (max-width:700px){.menu-lateral{position:static;width:100%;height:auto}.conteudo-principal{margin-left:0;padding:1rem}.grade-cartoes{grid-template-columns:1fr}}
