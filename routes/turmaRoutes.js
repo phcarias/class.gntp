@@ -45,6 +45,57 @@ router.get("/listar", async (req, res) => {
         res.status(500).json({ erro: "Erro ao listar turmas", detalhes: error.message });
     }
 });
+
+router.get("/detalhes/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const turma = await Turma.findById(id)
+            .populate("professores", "name email") // Popula os professores com nome e email
+            .populate("alunos", "name email"); // Popula os alunos com nome e email
+
+        if (!turma) {
+            return res.status(404).json({ erro: "Turma não encontrada" });
+        }
+
+        res.status(200).json(turma);
+    } catch (error) {
+        console.error("Erro ao buscar detalhes da turma:", error);
+        res.status(500).json({ erro: "Erro ao buscar detalhes da turma", detalhes: error.message });
+    }
+});
+
+
+
+router.post("/salvar-frequencia", async (req, res) => {
+    const { turmaId, frequencia } = req.body;
+
+    if (!turmaId || !frequencia) {
+        return res.status(400).json({ erro: "Turma e frequência são obrigatórios." });
+    }
+
+    try {
+        const turma = await Turma.findById(turmaId);
+        if (!turma) {
+            return res.status(404).json({ erro: "Turma não encontrada." });
+        }
+
+        // Atualiza a frequência dos alunos (exemplo: salva no MongoDB)
+        frequencia.forEach(({ alunoId, status }) => {
+            const aluno = turma.alunos.find(a => a._id.toString() === alunoId);
+            if (aluno) {
+                aluno.frequencia = status; // Adiciona o status de frequência
+            }
+        });
+
+        await turma.save();
+        res.status(200).json({ mensagem: "Frequência salva com sucesso." });
+    } catch (error) {
+        console.error("Erro ao salvar frequência:", error);
+        res.status(500).json({ erro: "Erro ao salvar frequência.", detalhes: error.message });
+    }
+});
+
 module.exports = router;
 
 router.post("/criarturma", turmaController.createTurma);

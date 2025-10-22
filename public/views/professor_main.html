@@ -24,6 +24,7 @@
     <nav class="menu-lateral">
         <ul>
             <li class="ativo"><a href="#minhas-turmas">Minhas Turmas</a></li>
+            <li><a href="#frequencia-alunos">Frequência Alunos</a></li>
             <li><a href="#avisos">Avisos</a></li>
             <li><a href="#configuracoes">Configurações</a></li>
         </ul>
@@ -53,6 +54,25 @@
     </div>
 
     <p id="nenhuma-turma" class="mensagem-nenhuma" style="display:none;">Nenhuma turma encontrada para o dia selecionado.</p>
+</section>
+
+<section id="frequencia-alunos" class="secao-frequencia" style="display:none;">
+    <h2>Frequência dos Alunos</h2>
+
+    <div class="filtro-turmas">
+        <label for="turma-select">Selecione a turma:</label>
+        <select id="turma-select" class="filtro-select">
+            <option value="">Selecione uma turma</option>
+            <!-- As turmas serão carregadas dinamicamente aqui -->
+        </select>
+        <button id="btn-carregar-alunos" class="botao-filtrar">Carregar Alunos</button>
+    </div>
+
+    <div id="lista-alunos" class="lista-alunos">
+        <!-- A lista de alunos será carregada aqui -->
+    </div>
+
+    <button id="btn-salvar-frequencia" class="botao-salvar" style="display:none;">Salvar Frequência</button>
 </section>
 
         <section id="avisos" class="secao-avisos" style="display:none;">
