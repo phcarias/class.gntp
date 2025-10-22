@@ -98,13 +98,16 @@ body, html {
     border-left: 4px solid #2980b9;
 }
 
-/* Main content */
 .conteudo-principal {
     margin-left: 280px;
     padding: 2rem 3rem;
     flex-grow: 1;
     background-color: #f5f7fa;
     min-height: calc(100vh - 64px);
+
+    /* Centraliza visualmente em telas largas */
+    max-width: 1200px;
+    margin-right: auto;
 }
 
 /* Section titles */

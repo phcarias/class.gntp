@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Professor - Sistema de Frequência Escolar</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <link rel="stylesheet" href="../style/professor_main.css?v=2" />
+    <link rel="stylesheet" href="../style/professor_main.css?v=3" />
     <script type="module" src="/public/scripts/professor.js"></script>
 </head>
 <body>
@@ -18,7 +18,6 @@
             <a href="login.html" class="botao-sair" title="Sair">
                 <span class="material-icons">logout</span>
             </a>
-            
         </div>
     </header>
 
@@ -32,22 +31,29 @@
 
     <main class="conteudo-principal">
         <section id="minhas-turmas" class="secao-turmas">
-            <h2>Minhas Turmas</h2>
+    <h2>Minhas Turmas</h2>
 
-            <div class="filtro-turmas">
-                <label for="filtro-data">Filtrar por dia da aula:</label>
-                <input id="filtro-data" type="date" />
-                <button id="btn-filtrar" class="botao-filtrar">Filtrar</button>
-                <button id="btn-limpar" class="botao-limpar">Limpar filtro</button>
-                <p class="ajuda-filtro">Escolha uma data e clique em "Filtrar" para ver apenas as turmas com aula nesse dia.</p>
-            </div>
+    <div class="filtro-turmas">
+        <label for="filtro-data">Filtrar por dia da aula:</label>
+        <select id="filtro-dia" class="filtro-select">
+            <option value="">Selecione o dia</option>
+            <option value="segunda">Segunda-feira</option>
+            <option value="terca">Terça-feira</option>
+            <option value="quarta">Quarta-feira</option>
+            <option value="quinta">Quinta-feira</option>
+            <option value="sexta">Sexta-feira</option>
+            <option value="sabado">Sábado</option>
+        </select>
+        <button id="btn-filtrar" class="botao-filtrar">Filtrar</button>
+        <button id="btn-limpar" class="botao-limpar">Limpar filtro</button>
+    </div>
 
-            <section id="lista-turmas">
-                <!-- As turmas serão carregadas aqui dinamicamente -->
-            </section>
+    <div id="lista-turmas" class="lista-turmas">
+        <!-- As turmas filtradas serão exibidas aqui -->
+    </div>
 
-            <p id="nenhuma-turma" class="mensagem-nenhuma" style="display:none;">Nenhuma turma encontrada para a data selecionada.</p>
-        </section>
+    <p id="nenhuma-turma" class="mensagem-nenhuma" style="display:none;">Nenhuma turma encontrada para o dia selecionado.</p>
+</section>
 
         <section id="avisos" class="secao-avisos" style="display:none;">
             <h2>Avisos</h2>
@@ -59,7 +65,6 @@
             <p>Configurações do usuário.</p>
         </section>
     </main>
-
 
     <footer class="rodape">
         <p>© 2025 Sistema de Frequência Escolar - Todos os direitos reservados</p>

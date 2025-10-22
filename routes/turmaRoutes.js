@@ -27,18 +27,27 @@ router.get("/alunos", async (req, res) => {
 
 // Rota para listar turmas
 router.get("/listar", async (req, res) => {
+    const { diaSemana } = req.query;
+
     try {
-        const turmas = await Turma.find();
+        let turmas;
+        if (diaSemana) {
+            // Filtra as turmas pelo dia da semana
+            turmas = await Turma.find({ "horarios.diaSemana": diaSemana });
+        } else {
+            // Retorna todas as turmas se o dia da semana não for fornecido
+            turmas = await Turma.find();
+        }
+
         res.status(200).json(turmas);
     } catch (error) {
-        console.error("Erro ao listar turmas:", error); // Verifica erros no terminal
+        console.error("Erro ao listar turmas:", error);
         res.status(500).json({ erro: "Erro ao listar turmas", detalhes: error.message });
     }
 });
-
+module.exports = router;
 
 router.post("/criarturma", turmaController.createTurma);
 router.get("/getturmas", turmaController.getTurmas);
 
-module.exports = router;
 
