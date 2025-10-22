@@ -233,3 +233,135 @@ document.addEventListener("DOMContentLoaded", () => {
     // Carregar as turmas ao carregar a página
     carregarTurmas();
 });
+
+   
+
+ // ...existing code...
+{
+    /* INÍCIO: integração de Avisos (colocar no final do arquivo ou em um escopo global, é autocontido) */
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const API_BASE = "http://localhost:9090";
+    
+      async function carregarTurmasParaAvisos() {
+        const select = document.getElementById('avisos-turma');
+        if (!select) return;
+        select.innerHTML = '<option value="">Carregando turmas...</option>';
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE}/turma/listar`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error('Falha ao carregar turmas');
+          const turmas = await res.json();
+          const userId = localStorage.getItem('userId');
+          const minhas = Array.isArray(turmas) ? turmas.filter(t => {
+            if (!t.professor) return true;
+            return String(t.professor) === String(userId);
+          }) : [];
+          if (minhas.length === 0) {
+            select.innerHTML = '<option value="">Nenhuma turma encontrada</option>';
+            return;
+          }
+          select.innerHTML = '<option value="">Selecione a turma</option>' +
+            minhas.map(t => {
+              const label = t.disciplina || t.nome || t.codigo || t._id;
+              return `<option value="${t._id}">${label}</option>`;
+            }).join('');
+        } catch (err) {
+          console.error(err);
+          select.innerHTML = '<option value="">Erro ao carregar turmas</option>';
+        }
+      }
+    
+      function statusAviso(msg, type = 'info') {
+        const statusEl = document.getElementById('status-aviso');
+        if (!statusEl) {
+          // caso o elemento não exista, usa alert como fallback
+          if (type === 'error') alert(msg);
+          else console.log(msg);
+          return;
+        }
+        statusEl.style.display = '';
+        statusEl.textContent = msg;
+        statusEl.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#333';
+      }
+    
+      const btnEnviarAviso = document.getElementById('btn-enviar-aviso');
+      const btnLimparAviso = document.getElementById('btn-limpar-aviso');
+    
+      if (btnLimparAviso) {
+        btnLimparAviso.addEventListener('click', () => {
+          const sel = document.getElementById('avisos-turma');
+          const subj = document.getElementById('avisos-assunto');
+          const msg = document.getElementById('avisos-mensagem');
+          if (sel) sel.value = '';
+          if (subj) subj.value = '';
+          if (msg) msg.value = '';
+          const statusEl = document.getElementById('status-aviso');
+          if (statusEl) statusEl.style.display = 'none';
+        });
+      }
+    
+      if (btnEnviarAviso) {
+        btnEnviarAviso.addEventListener('click', async () => {
+          const selectTurma = document.getElementById('avisos-turma');
+          const assuntoEl = document.getElementById('avisos-assunto');
+          const mensagemEl = document.getElementById('avisos-mensagem');
+          const turmaId = selectTurma ? selectTurma.value : '';
+          const assunto = assuntoEl ? assuntoEl.value.trim() : '';
+          const mensagem = mensagemEl ? mensagemEl.value.trim() : '';
+    
+          if (!turmaId) {
+            statusAviso('Selecione uma turma.', 'error');
+            return;
+          }
+          if (!assunto) {
+            statusAviso('Informe um assunto.', 'error');
+            return;
+          }
+          if (!mensagem) {
+            statusAviso('Escreva a mensagem.', 'error');
+            return;
+          }
+    
+          statusAviso('Enviando...', 'info');
+          try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/email/enviar-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                turmaId,
+                subject: assunto,
+                message: mensagem,
+                tipo: 'aviso-professor'
+              })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              statusAviso(data.msg || data.error || 'Erro ao enviar avisos', 'error');
+              return;
+            }
+            statusAviso('Avisos enviados com sucesso.', 'success');
+          } catch (err) {
+            console.error(err);
+            statusAviso('Erro de conexão ao enviar.', 'error');
+          }
+        });
+      }
+    
+      // Se já existir a função carregarTurmas em outro escopo, chame-a com segurança
+      if (typeof carregarTurmas === 'function') {
+        try { carregarTurmas(); } catch (e) { console.warn('Erro ao chamar carregarTurmas:', e); }
+      }
+    
+      // Carrega turmas específicas para avisos
+      carregarTurmasParaAvisos();
+    });
+    /* FIM: integração de Avisos */
+    }
+    // ...existing code...

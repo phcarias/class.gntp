@@ -75,10 +75,33 @@
     <button id="btn-salvar-frequencia" class="botao-salvar" style="display:none;">Salvar Frequência</button>
 </section>
 
-        <section id="avisos" class="secao-avisos" style="display:none;">
-            <h2>Avisos</h2>
-            <p>Sem avisos no momento.</p>
-        </section>
+    
+<section id="avisos" class="secao-avisos" style="display:none;">
+    <h2>Avisos</h2>
+
+    <div class="form-avisos">
+        <p>Envie notificações por email para os responsáveis dos alunos (faltas, notas, etc.).</p>
+
+        <label for="avisos-turma">Selecionar turma</label>
+        <select id="avisos-turma">
+            <option value="">Carregando turmas...</option>
+        </select>
+
+        <label for="avisos-assunto">Assunto</label>
+        <input id="avisos-assunto" type="text" placeholder="Ex: Aviso sobre faltas / Notas" />
+
+        <label for="avisos-mensagem">Mensagem</label>
+        <textarea id="avisos-mensagem" rows="6" placeholder="Escreva sua mensagem aqui..."></textarea>
+
+        <div class="acoes-avisos">
+            <button id="btn-enviar-aviso" class="botao-filtrar">Enviar aviso</button>
+            <button id="btn-limpar-aviso" class="botao-limpar">Limpar</button>
+        </div>
+
+        <p id="status-aviso" style="display:none;margin-top:0.75rem;"></p>
+    </div>
+</section>
+
 
         <section id="configuracoes" class="secao-configuracoes" style="display:none;">
             <h2>Configurações</h2>
