@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     api = 'http://localhost:9090'; // Defina a URL base da sua API aqui
 
+    let alunosCache = [];
+
+    // Utils
+    const $ = (sel) => document.querySelector(sel);
+
     // Verificar se o usuário está autenticado
     const token = localStorage.getItem('token');
     const type = localStorage.getItem('type');
@@ -39,104 +44,272 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             const alunos = await res.json();
-            console.log(alunos)
+            alunosCache = alunos;
+
             const tbody = document.querySelector('#alunos .data-table tbody');
             tbody.innerHTML = '';
+
             alunos.forEach(aluno => {
-                const turmas = aluno.roleData?.turmas?.map(t => t.turma?.codigo).join(', ') || 'N/A';
+                const turmas = aluno.roleData?.turmas?.map(t => t?.turma?.codigo).join(', ') || 'N/A';
                 const matricula = aluno.roleData?.matricula || 'N/A';
-                
                 const statusClass = aluno.active ? 'active' : 'inactive';
                 const statusText = aluno.active ? 'Ativo' : 'Inativo';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${matricula}</td>
-                    <td>${aluno.name}</td>
-                    <td>${turmas}</td>
-                    <td>N/A</td>
-                    <td><span class="status ${statusClass}">${statusText}</span></td>
-                    <td class="actions">
-                        <button class="btn-icon" title="Editar">
-                            <span class="material-icons">edit</span>
-                        </button>
-                        <button class="btn-icon" title="Visualizar">
-                            <span class="material-icons">visibility</span>
-                        </button>
-                        <button class="btn-icon danger" title="Excluir">
-                            <span class="material-icons">delete</span>
-                        </button>
-                    </td>
-                `;
+              <td>${matricula}</td>
+              <td>${aluno.name || ''}</td>
+              <td>${turmas}</td>
+              <td>N/A</td>
+              <td><span class="status ${statusClass}">${statusText}</span></td>
+              <td class="actions">
+                <button class="btn-icon btn-edit" data-action="edit" data-id="${aluno._id || aluno.id}">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-icon btn-view" data-action="view" data-id="${aluno._id || aluno.id}">
+                  <span class="material-icons">visibility</span>
+                </button>
+              </td>
+            `;
                 tbody.appendChild(row);
             });
+
+            if (!tbody.dataset.bound) {
+                tbody.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    const action = btn.dataset.action;
+                    if (action === 'view') openAlunoModal('view', id);
+                    if (action === 'edit') openAlunoModal('edit', id);
+                });
+                tbody.dataset.bound = '1';
+            }
         } catch (error) {
             console.error('Erro ao carregar alunos:', error);
         }
     }
 
+    function getSelectedValues(selectEl) {
+        return Array.from(selectEl?.selectedOptions || []).map(o => o.value);
+    }
 
+    // Util: carregar turmas em qualquer <select> (reuso do seu fetch atual)
+    async function loadTurmasSelect(selectId, preselectedIds = []) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
 
-    // Modal para adicionar novo aluno
-    const modalNovoAluno = document.getElementById('modal-novo-aluno');
-    const btnNovoAluno = document.getElementById('btn-novo-aluno');
-    const closeModalNovoAluno = document.getElementById('close-modal-novo-aluno');
-    const formNovoAluno = document.getElementById('form-novo-aluno');
-
-    // Abrir modal
-    btnNovoAluno.addEventListener('click', () => {
-        modalNovoAluno.style.display = 'block';
-    });
-
-    // Fechar modal
-    closeModalNovoAluno.addEventListener('click', () => {
-        modalNovoAluno.style.display = 'none';
-    });
-
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', (e) => {
-        if (e.target === modalNovoAluno) {
-            modalNovoAluno.style.display = 'none';
-        }
-    });
-
-    // Submeter formulário para adicionar aluno
-    formNovoAluno.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const alunoData = {
-            name: formNovoAluno.name.value,
-            email: formNovoAluno.email.value,
-            password: formNovoAluno.password.value,
-            confirmpassword: formNovoAluno.confirmpassword.value,
-            matricula: formNovoAluno.matricula.value,
-            responsavelEmail: formNovoAluno.responsavelEmail.value,
-            type: "aluno",
-            turmas: Array.from(document.getElementById('turma-aluno').selectedOptions).map(opt => opt.value)
-        };
         try {
-            const res = await fetch(`${api}/auth/register`, {
-                method: 'POST',
+            const res = await fetch('http://localhost:9090/turma/listar');
+            const data = await res.json();
+            select.innerHTML = '';
+            data.forEach(turma => {
+                const option = document.createElement('option');
+                option.value = turma._id;
+                option.textContent = turma.codigo;
+                if (preselectedIds.includes(String(turma._id))) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar turmas:', error);
+        }
+    }
+
+    // Modal handling
+    function openAlunoModal(mode, id) {
+        const aluno = alunosCache.find(a => String(a._id || a.id) === String(id));
+        if (!aluno) return;
+
+        // Preenche campos
+        document.getElementById('aluno-id').value = aluno._id || aluno.id || '';
+        document.getElementById('aluno-nome').value = aluno.name || '';
+        document.getElementById('aluno-email').value = aluno.email || '';
+        document.getElementById('aluno-matricula').value = aluno.roleData?.matricula || '';
+        document.getElementById('aluno-active').value = aluno.active ? 'true' : 'false';
+
+        // IDs de turmas do aluno
+        const currentTurmaIds = (aluno.roleData?.turmas || [])
+            .map(t => {
+                if (t && typeof t === 'object') {
+                    const tt = t.turma ?? t._id ?? t.id ?? t;
+                    if (tt && typeof tt === 'object') return tt._id || tt.id || '';
+                    return String(tt || '');
+                }
+                return String(t || '');
+            })
+            .filter(Boolean);
+
+        // Popular select múltiplo reutilizando o fetch existente
+        loadTurmasSelect('aluno-turmas-select', currentTurmaIds);
+
+        // View vs Edit
+        const isView = mode === 'view';
+        document.getElementById('aluno-modal-title').textContent = isView ? 'Visualizar aluno' : 'Editar aluno';
+        document.getElementById('aluno-save').classList.toggle('hidden', isView);
+
+        // Habilitar/Desabilitar campos
+        document.querySelectorAll('#aluno-form input, #aluno-form select, #aluno-form textarea')
+            .forEach(el => el.disabled = isView);
+
+        // Abrir modal (mesmo padrão do modal de novo aluno, usando display)
+        const modal = document.getElementById('aluno-modal');
+        modal.classList.remove('hidden');
+        modal.style.display = 'block';
+    }
+
+    (function bindAlunosTableActions() {
+        const tbody = document.querySelector('#alunos .data-table tbody');
+        if (!tbody || tbody.dataset.bound) return;
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (btn.dataset.action === 'view') openAlunoModal('view', id);
+            if (btn.dataset.action === 'edit') openAlunoModal('edit', id);
+        });
+        tbody.dataset.bound = '1';
+    })();
+
+    function closeAlunoModal() {
+        const modal = document.getElementById('aluno-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+
+    function toggleFormDisabled(formSel, disabled) {
+        document.querySelectorAll(`${formSel} input, ${formSel} select, ${formSel} textarea`)
+            .forEach(el => el.disabled = disabled);
+    }
+
+    // Bind botões do modal (delegado para garantir existência)
+    document.addEventListener('click', (e) => {
+        if (e.target?.id === 'aluno-cancel') closeAlunoModal();
+        if (e.target?.id === 'aluno-save') saveAluno();
+        if (e.target?.id === 'aluno-modal') closeAlunoModal(); // clique no backdrop
+    });
+
+    async function saveAluno() {
+        const id = document.getElementById('aluno-id').value;
+        const turmas = getSelectedValues(document.getElementById('aluno-turmas-select'));
+
+        const payload = {
+            id,
+            name: document.getElementById('aluno-nome').value.trim(),
+            email: document.getElementById('aluno-email').value.trim(),
+            active: document.getElementById('aluno-active').value === 'true',
+            roleData: {
+                matricula: document.getElementById('aluno-matricula').value.trim(),
+                turmas
+            }
+        };
+
+        try {
+            const res = await fetch(`${api}/administrador/attaluno`, {
+                method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(alunoData),
+                body: JSON.stringify(payload)
             });
-
             if (!res.ok) {
-                const error = await res.json();
-                alert(`Erro ao adicionar aluno: ${error.msg}`);
+                const txt = await res.text();
+                console.error('Erro ao salvar aluno:', txt);
                 return;
             }
-
-            alert('Aluno adicionado com sucesso!');
-            modalNovoAluno.style.display = 'none';
-            formNovoAluno.reset();
-        } catch (error) {
-            console.error('Erro ao adicionar aluno:', error);
-            alert('Erro ao adicionar aluno. Tente novamente mais tarde.');
+            await loadAlunos();
+            closeAlunoModal();
+        } catch (e) {
+            console.error('Erro ao salvar aluno:', e);
         }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Popular o select do "Novo Aluno" (já existente)
+        loadTurmasSelect('turma-aluno');
+        // Se existir select do professor, reutiliza também
+        loadTurmasSelect('turma-professor');
     });
+    // Modal para adicionar novo aluno
+    function openNovoAlunoModal() {
+        const modal = document.getElementById('modal-novo-aluno');
+        if (!modal) return;
+        modal.style.display = 'block';
+        loadTurmasSelect('turma-aluno', []); // reusa seu carregamento de turmas
+    }
+    function closeNovoAlunoModal() {
+        const modal = document.getElementById('modal-novo-aluno');
+        if (!modal) return;
+        modal.style.display = 'none';
+    }
+
+    // Delegação única (qualquer botão com data-action="novo-aluno")
+    (function bindNovoAlunoButtons() {
+        if (document.body.dataset.boundNovoAluno) return;
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action="novo-aluno"]');
+            if (btn) {
+                e.preventDefault();
+                openNovoAlunoModal();
+            }
+            if (e.target?.id === 'close-modal-novo-aluno') {
+                closeNovoAlunoModal();
+            }
+        });
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal-novo-aluno');
+            if (e.target === modal) closeNovoAlunoModal();
+        });
+        document.body.dataset.boundNovoAluno = '1';
+    })();
+
+    // Submeter formulário para adicionar aluno
+    const formNovoAluno = document.getElementById('form-novo-aluno');
+    // ...existing code...
+    
+    // Submeter formulário para adicionar aluno
+    if (formNovoAluno && !formNovoAluno.dataset.bound) {
+      formNovoAluno.addEventListener('submit', async (e) => {
+        e.preventDefault();
+    
+        const alunoData = {
+          name: formNovoAluno.name.value,
+          email: formNovoAluno.email.value,
+          password: formNovoAluno.password.value,
+          confirmpassword: formNovoAluno.confirmpassword.value,
+          matricula: formNovoAluno.matricula.value,
+          responsavelEmail: formNovoAluno.responsavelEmail.value,
+          type: "aluno",
+          turmas: Array.from(document.getElementById('turma-aluno')?.selectedOptions || []).map(opt => opt.value)
+        };
+    
+        try {
+          const res = await fetch(`${api}/auth/register`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(alunoData),
+          });
+    
+          if (!res.ok) {
+            const error = await res.json();
+            alert(error?.msg || 'Erro ao adicionar aluno.');
+            return;
+          }
+    
+          alert('Aluno adicionado com sucesso!');
+          closeNovoAlunoModal();
+          formNovoAluno.reset();
+        } catch (error) {
+          console.error('Erro ao adicionar aluno:', error);
+          alert('Erro ao adicionar aluno. Tente novamente mais tarde.');
+        }
+      });
+      formNovoAluno.dataset.bound = '1';
+    }
 
     // Modal para adicionar novo professor
     const modalNovoProfessor = document.getElementById('modal-novo-professor');

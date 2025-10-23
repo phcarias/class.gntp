@@ -717,3 +717,8 @@ body, html {
 .btn-add-horario:hover, .btn-remove-horario:hover {
   background: #1c5d8c;
 }
+
+.modal.hidden { display: none; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.modal-content { background: #fff; padding: 16px; border-radius: 8px; width: 100%; max-width: 520px; max-height: 80vh; overflow: auto; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
