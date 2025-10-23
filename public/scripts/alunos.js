@@ -270,3 +270,51 @@ document.addEventListener("DOMContentLoaded", () => {
     /* FIM: Substituição calendário */
     }
 })
+
+// javascript
+{
+  (function(){
+    const API_BASE = "http://localhost:9090";
+  
+    async function carregarMeusDados() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/aluno/me`, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) {
+          console.warn('Falha ao obter dados do aluno:', res.status, await res.text());
+          return;
+        }
+        const aluno = await res.json();
+  
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = value ?? '';
+        };
+  
+        // preencher com vários ids possíveis (fallback)
+        const nome = aluno.nome || aluno.name || aluno.usuarioNome || '';
+        const email = aluno.email || aluno.emailPrincipal || '';
+        const matricula = aluno.matricula || aluno.ra || aluno.registro || '';
+  
+        setText('aluno-nome', nome);
+        setText('meu-nome', nome);
+        setText('usuario-nome', nome);
+        setText('aluno-email', email);
+        setText('meu-email', email);
+        setText('aluno-matricula', matricula);
+        setText('meu-matricula', matricula);
+      } catch (err) {
+        console.error('Erro carregarMeusDados:', err);
+      }
+    }
+  
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', carregarMeusDados);
+    } else {
+      carregarMeusDados();
+    }
+  })();
+  }
