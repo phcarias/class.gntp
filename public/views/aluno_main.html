@@ -26,7 +26,6 @@
         <ul>
             <li class="ativo"><a href="#resumo-frequencia">Minha Frequência</a></li>
             <li><a href="#calendario-aulas">Calendário de Aulas</a></li>
-            <li><a href="#historico-completo">Histórico Completo</a></li>
             <li><a href="#meus-dados">Meus Dados</a></li>
         </ul>
     </nav>
@@ -61,17 +60,21 @@
             <div id="calendario-aulas-content"></div>
           </section>
 
-        <!-- Histórico Completo -->
-        <section id="historico-completo" class="secao-historico" style="display:none;">
-            <h2>Histórico Completo</h2>
-            <p>Em breve...</p>
-        </section>
+<section id="meus-dados" class="secao-dados">
+    <h2>Meus Dados</h2>
+    <div class="cartao-dados">
+      <p><strong>Nome:</strong> <span id="aluno-nome">-</span></p>
+      <!-- outros ids de fallback -->
+      <p style="display:none"><span id="meu-nome"></span><span id="usuario-nome"></span></p>
+  
+      <p><strong>Email:</strong> <span id="aluno-email">-</span></p>
+      <p style="display:none"><span id="meu-email"></span></p>
+  
+      <p><strong>Matrícula / RA:</strong> <span id="aluno-matricula">-</span></p>
+      <p style="display:none"><span id="meu-matricula"></span></p>
+    </div>
+  </section>
 
-        <!-- Meus Dados -->
-        <section id="meus-dados" class="secao-dados" style="display:none;">
-            <h2>Meus Dados</h2>
-            <p>Em breve...</p>
-        </section>
     </main>
 
     <footer class="rodape">

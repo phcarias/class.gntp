@@ -1,10 +1,13 @@
+// language: javascript
+// filepath: /c:/Users/thiago.jlima/Downloads/class.gntp/middlewares/authMiddleware.js
+// ...existing code...
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+dotenv.config();
 
-// Middleware para verificar token JWT (mantido do original)
-exports.checkToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+function checkToken(req, res, next) {
+  const authHeader = req.headers["authorization"] || req.headers["x-access-token"] || "";
+  const token = authHeader && authHeader.split ? authHeader.split(" ")[1] : null;
 
   if (!token) {
     return res.status(401).json({ msg: "Acesso negado!" });
@@ -13,32 +16,45 @@ exports.checkToken = (req, res, next) => {
   try {
     const secret = process.env.SECRET;
     const decoded = jwt.verify(token, secret);
+
     req.user = {
-      id: decoded.id,
-      type: decoded.type // ← ESTA É A PROPRIEDADE QUE FALTA
+      id: decoded.id || decoded._id || decoded.userId || null,
+      type: decoded.type || decoded.tipo || decoded.role || null,
+      raw: decoded
     };
-    next();
+    return next();
   } catch (err) {
     return res.status(400).json({ msg: "O Token é inválido!" });
   }
 }
 
-exports.authorize = (...roles) => {
+function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ msg: "Usuário não autenticado!" });
     }
-
-    if (!roles.includes(req.user.tipo)) {
+    const userType = req.user.type || (req.user.raw && (req.user.raw.type || req.user.raw.role || req.user.raw.tipo));
+    if (!roles.includes(userType)) {
       return res.status(403).json({ msg: "Acesso negado! Permissão insuficiente." });
     }
     next();
   };
-};
+}
 
-exports.checkAdmin = (req, res, next) => {
-  if (req.user.type !== "admin") {
+function checkAdmin(req, res, next) {
+  const userType = req.user && (req.user.type || (req.user.raw && (req.user.raw.type || req.user.raw.role || req.user.raw.tipo)));
+  if (userType !== "admin") {
     return res.status(403).json({ msg: "Acesso restrito a administradores!" });
   }
   next();
-};
+}
+
+// Export compatível com diferentes import styles:
+// - const auth = require('./authMiddleware'); -> auth(req,res,next)
+// - const { checkToken } = require('./authMiddleware'); -> checkToken(req,res,next)
+// - const auth = require('./authMiddleware'); auth.authorize('admin')
+module.exports = checkToken;
+module.exports.checkToken = checkToken;
+module.exports.authorize = authorize;
+module.exports.checkAdmin = checkAdmin;
+// ...existing code...
