@@ -375,10 +375,10 @@ exports.getAlunosByName = async (req, res) => {
     // Busca alunos cujo nome contenha o valor fornecido (case-insensitive)
     const alunos = await User.find({
       type: "aluno",
-      name: { $regex: new RegExp(name, "i") }
+      name: { $regex: new RegExp(name, "i")}
     });
 
-    if (alunos.length === 0) {
+    if (!alunos.length) {
       return res.status(404).json({ msg: "Nenhum aluno encontrado com esse nome!" });
     }
 

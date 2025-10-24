@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
 
     api = 'http://localhost:9090'; // Defina a URL base da sua API aqui
@@ -7,6 +6,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Utils
     const $ = (sel) => document.querySelector(sel);
+    // Novo: debounce simples para busca
+    const debounce = (fn, wait = 300) => {
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), wait);
+        };
+    };
 
     // Verificar se o usuário está autenticado
     const token = localStorage.getItem('token');
@@ -30,6 +37,71 @@ document.addEventListener('DOMContentLoaded', function () {
     getFrequenciaMedia().catch(console.error);
     loadAlunos();
 
+    // Novo: função para renderizar a lista de alunos (reaproveitada por loadAlunos e pela busca)
+    function renderAlunosList(alunos) {
+        const tbody = document.querySelector('#alunos .data-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        // Novo: estado de "nenhum resultado"
+        if (!alunos || alunos.length === 0) {
+            const row = document.createElement('tr');
+            row.className = 'no-results';
+            row.innerHTML = `<td colspan="6">Nenhum aluno encontrado.</td>`;
+            tbody.appendChild(row);
+
+            if (!tbody.dataset.bound) {
+                tbody.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    const action = btn.dataset.action;
+                    if (action === 'view') openAlunoModal('view', id);
+                    if (action === 'edit') openAlunoModal('edit', id);
+                });
+                tbody.dataset.bound = '1';
+            }
+            return;
+        }
+
+        alunos.forEach(aluno => {
+            const turmas = aluno.roleData?.turmas?.map(t => t?.turma?.codigo).join(', ') || 'N/A';
+            const matricula = aluno.roleData?.matricula || 'N/A';
+            const statusClass = aluno.active ? 'active' : 'inactive';
+            const statusText = aluno.active ? 'Ativo' : 'Inativo';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${matricula}</td>
+              <td>${aluno.name || ''}</td>
+              <td>${turmas}</td>
+              <td>N/A</td>
+              <td><span class="status ${statusClass}">${statusText}</span></td>
+              <td class="actions">
+                <button class="btn-icon btn-edit" data-action="edit" data-id="${aluno._id || aluno.id}">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-icon btn-view" data-action="view" data-id="${aluno._id || aluno.id}">
+                  <span class="material-icons">visibility</span>
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        if (!tbody.dataset.bound) {
+            tbody.addEventListener('click', (e) => {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                const action = btn.dataset.action;
+                if (action === 'view') openAlunoModal('view', id);
+                if (action === 'edit') openAlunoModal('edit', id);
+            });
+            tbody.dataset.bound = '1';
+        }
+    }
+
     async function loadAlunos() {
         try {
             const res = await fetch(`${api}/administrador/getalunos`, {
@@ -46,49 +118,70 @@ document.addEventListener('DOMContentLoaded', function () {
             const alunos = await res.json();
             alunosCache = alunos;
 
-            const tbody = document.querySelector('#alunos .data-table tbody');
-            tbody.innerHTML = '';
-
-            alunos.forEach(aluno => {
-                const turmas = aluno.roleData?.turmas?.map(t => t?.turma?.codigo).join(', ') || 'N/A';
-                const matricula = aluno.roleData?.matricula || 'N/A';
-                const statusClass = aluno.active ? 'active' : 'inactive';
-                const statusText = aluno.active ? 'Ativo' : 'Inativo';
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-              <td>${matricula}</td>
-              <td>${aluno.name || ''}</td>
-              <td>${turmas}</td>
-              <td>N/A</td>
-              <td><span class="status ${statusClass}">${statusText}</span></td>
-              <td class="actions">
-                <button class="btn-icon btn-edit" data-action="edit" data-id="${aluno._id || aluno.id}">
-                  <span class="material-icons">edit</span>
-                </button>
-                <button class="btn-icon btn-view" data-action="view" data-id="${aluno._id || aluno.id}">
-                  <span class="material-icons">visibility</span>
-                </button>
-              </td>
-            `;
-                tbody.appendChild(row);
-            });
-
-            if (!tbody.dataset.bound) {
-                tbody.addEventListener('click', (e) => {
-                    const btn = e.target.closest('button');
-                    if (!btn) return;
-                    const id = btn.dataset.id;
-                    const action = btn.dataset.action;
-                    if (action === 'view') openAlunoModal('view', id);
-                    if (action === 'edit') openAlunoModal('edit', id);
-                });
-                tbody.dataset.bound = '1';
-            }
+            // Refatorado: usa a função de renderização
+            renderAlunosList(alunos);
         } catch (error) {
             console.error('Erro ao carregar alunos:', error);
         }
     }
+
+    // Novo: bind da busca (não colapsa a listagem completa)
+    (function bindAlunoSearch() {
+        // Ajuste o seletor se necessário para o seu HTML
+        const searchInput = document.querySelector('.search-box input[placeholder="Buscar aluno..."]');
+        const searchIcon = document.querySelector('.search-box .material-icons');
+        if (!searchInput) return;
+        if (searchInput.dataset.bound) return;
+
+        const runSearch = async () => {
+            const term = searchInput.value.trim();
+            if (!term) {
+                // Campo limpo -> recarrega todos
+                await loadAlunos();
+                return;
+            }
+            // Evita chamadas para termos muito curtos
+            if (term.length < 2) return;
+
+            try {
+                const res = await fetch(`${api}/administrador/buscaraluno`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: term })
+                });
+
+                if (res.status === 404) {
+                    alunosCache = [];
+                    renderAlunosList([]); // Novo: mostra estado vazio
+                    return;
+                }
+                if (!res.ok) {
+                    console.error('Erro ao buscar alunos por nome:', res.status);
+                    renderAlunosList([]); // Novo: mostra estado vazio em erro
+                    return;
+                }
+
+                const alunos = await res.json();
+                alunosCache = alunos;
+                renderAlunosList(alunos);
+            } catch (err) {
+                console.error('Erro ao buscar alunos por nome:', err);
+                renderAlunosList([]); // Novo: mostra estado vazio em exceção
+            }
+        };
+
+        // Busca com debounce ao digitar
+        searchInput.addEventListener('input', debounce(runSearch, 300));
+        // Clique na lupa dispara a busca imediata
+        if (searchIcon) {
+            searchIcon.addEventListener('click', runSearch);
+        }
+
+        searchInput.dataset.bound = '1';
+    })();
 
     function getSelectedValues(selectEl) {
         return Array.from(selectEl?.selectedOptions || []).map(o => o.value);

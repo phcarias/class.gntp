@@ -10,7 +10,7 @@ router.get("/alunosstats", checkToken, checkAdmin, adminController.getAlunosStat
 router.get("/professoresstats", checkToken, checkAdmin, adminController.getProfessoresStats);
 router.get("/turmasativas", checkToken, checkAdmin, adminController.getTurmasStats);
 router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFrequenciaMedia);
-router.get("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
+router.post("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
 router.get("/getalunos", checkToken, checkAdmin, adminController.getAlunos);
 router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
 

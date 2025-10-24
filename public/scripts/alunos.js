@@ -3,6 +3,8 @@
 
 const API_BASE = "http://localhost:9090";
 
+
+
 /* ----------------- Navegação de seções ----------------- */
 function initNavegacao() {
   const menuLinks = document.querySelectorAll(".menu-lateral a");
