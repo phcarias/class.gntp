@@ -246,7 +246,7 @@
             </table>
         </section>
 
-        <!-- G</script>erenciamento de Professores -->
+        <!-- Gerenciamento de Professores -->
         <section id="professores" class="management-section">
             <h2>Gerenciamento de Professores</h2>
             <div class="section-header">
@@ -272,36 +272,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>PROF001</td>
-                        <td>Carlos Oliveira</td>
-                        <td>Matemática, Física</td>
-                        <td>3ºA, 2ºB</td>
-                        <td><span class="status active">Ativo</span></td>
-                        <td class="actions">
-                            <button class="btn-icon" title="Editar">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon danger" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>PROF002</td>
-                        <td>Beatriz Santos</td>
-                        <td>Português, Literatura</td>
-                        <td>1ºA, 3ºB</td>
-                        <td><span class="status active">Ativo</span></td>
-                        <td class="actions">
-                            <button class="btn-icon" title="Editar">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon danger" title="Excluir">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>
-                    </tr>
+                    <!-- JS irá preencher dinamicamente -->
                 </tbody>
             </table>
         </section>
@@ -553,55 +524,103 @@
         </div>
     </div>
 
-    <!-- ...existing code... -->
-<!-- Modal de Aluno -->
-<div id="aluno-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3 id="aluno-modal-title">Editar aluno</h3>
-      <form id="aluno-form">
-        <input type="hidden" id="aluno-id">
-  
-        <label>
-          Nome
-          <input id="aluno-nome" type="text" required>
-        </label>
-  
-        <label>
-          E-mail
-          <input id="aluno-email" type="email">
-        </label>
-  
-        <label>
-          Matrícula
-          <input id="aluno-matricula" type="text">
-        </label>
-  
-        <label>
-          E-mail do responsável
-          <input id="aluno-responsavel-email" type="email" placeholder="responsavel@exemplo.com">
-        </label>
-  
-        <label>
-          Status
-          <select id="aluno-active">
-            <option value="true">Ativo</option>
-            <option value="false">Inativo</option>
-          </select>
-        </label>
-  
-        <label>
-            Turmas
-            <select id="aluno-turmas-select" multiple></select>
-          </label>
-          <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
+    <!-- Modal de Aluno -->
+    <div id="aluno-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="aluno-modal-title">Editar aluno</h3>
+            <form id="aluno-form">
+                <input type="hidden" id="aluno-id">
 
-        <div class="modal-actions">
-          <button type="button" id="aluno-save">Salvar</button>
-          <button type="button" id="aluno-cancel">Cancelar</button>
+                <label>
+                    Nome
+                    <input id="aluno-nome" type="text" required>
+                </label>
+
+                <label>
+                    E-mail
+                    <input id="aluno-email" type="email">
+                </label>
+
+                <label>
+                    Matrícula
+                    <input id="aluno-matricula" type="text">
+                </label>
+
+                <label>
+                    E-mail do responsável
+                    <input id="aluno-responsavel-email" type="email" placeholder="responsavel@exemplo.com">
+                </label>
+
+                <label>
+                    Status
+                    <select id="aluno-active">
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </label>
+
+                <label>
+                    Turmas
+                    <select id="aluno-turmas-select" multiple></select>
+                </label>
+                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
+
+                <div class="modal-actions">
+                    <button type="button" id="aluno-save">Salvar</button>
+                    <button type="button" id="aluno-cancel">Cancelar</button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
+
+    <!-- Modal de Professor -->
+    <div id="professor-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="professor-modal-title">Editar professor</h3>
+            <form id="professor-form">
+                <input type="hidden" id="professor-id">
+
+                <label>
+                    Nome
+                    <input id="professor-nome" type="text" required>
+                </label>
+
+                <label>
+                    E-mail
+                    <input id="professor-email" type="email">
+                </label>
+
+                <label>
+                    Matrícula
+                    <input id="professor-matricula" type="text" placeholder="Ex: PROF2025001">
+                </label>
+
+                <label>
+                    Disciplinas (separe por vírgula)
+                    <input id="professor-disciplinas" type="text" placeholder="Ex: Matemática, Física">
+                </label>
+
+                <label>
+                    Status
+                    <select id="professor-active">
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </label>
+
+                <label>
+                    Turmas
+                    <select id="professor-turmas-select" multiple></select>
+                </label>
+                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
+
+                <div class="modal-actions">
+                    <button type="button" id="professor-save">Salvar</button>
+                    <button type="button" id="professor-cancel">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="../scripts/admin.js"></script>
 </body>

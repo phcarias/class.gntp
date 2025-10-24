@@ -166,33 +166,28 @@ exports.updateAluno = async (req, res) => {
 };
 
 exports.updateProfessor = async (req, res) => {
-  const { id } = req.params; // ID do usuário (professor)
-  const { name, email, active, roleData } = req.body;
+  const { id, name, email, active, roleData } = req.body; // id via body
 
   try {
-    // Busca o usuário e garante que é do tipo professor
     const user = await User.findById(id);
     if (!user || user.type !== "professor") {
       return res.status(404).json({ msg: "Professor não encontrado!" });
     }
 
-    // Atualiza campos permitidos
     if (name) user.name = name;
     if (email) user.email = email;
     if (typeof active === "boolean") user.active = active;
 
-    // Atualiza dados específicos do professor (roleData)
     if (roleData) {
-      // Permitir múltiplas turmas para o professor
       if (roleData.turmas) user.roleData.turmas = roleData.turmas;
       if (roleData.disciplinas) user.roleData.disciplinas = roleData.disciplinas;
+      if (roleData.matricula) user.roleData.matricula = roleData.matricula;
     }
 
     await user.save();
-
-    res.status(200).json({ msg: "Dados do professor atualizados com sucesso!", user });
+    return res.status(200).json({ msg: "Dados do professor atualizados com sucesso!", user });
   } catch (error) {
-    res.status(500).json({ msg: "Erro ao atualizar professor!", error });
+    return res.status(500).json({ msg: "Erro ao atualizar professor!", error });
   }
 };
 
@@ -264,6 +259,51 @@ exports.getAlunos = async (req, res) => {
     res.status(500).json({ erro: 'Erro ao buscar alunos', detalhes: error.message });
   }
 };
+
+exports.getProfessores = async (req, res) => {
+  try {
+    const professores = await User.find({ type: 'professor' })
+      .select('name email type active roleData createdAt')
+      .populate({
+        path: 'roleData.turmas.turma',
+        model: Turma
+      });
+
+    res.status(200).json(professores);
+  } catch (error) {
+    console.error('Erro ao buscar professores:', error);
+    res.status(500).json({ erro: 'Erro ao buscar professores', detalhes: error.message });
+  }
+};
+
+exports.getProfessoresByName = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(422).json({ msg: "O nome é obrigatório para a busca!" });
+  }
+
+  try {
+    const professores = await User.find({
+      type: "professor",
+      name: { $regex: new RegExp(name, "i") }
+    })
+      .select('name email type active roleData createdAt')
+      .populate({
+        path: 'roleData.turmas.turma',
+        model: Turma
+      });
+
+    if (!professores.length) {
+      return res.status(404).json({ msg: "Nenhum professor encontrado com esse nome!" });
+    }
+
+    res.status(200).json(professores);
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao buscar professores pelo nome!", error });
+  }
+};
+
 exports.getProfessoresStats = async (req, res) => {
   try {
     // Total de professores

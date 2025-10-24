@@ -13,5 +13,9 @@ router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFreque
 router.post("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
 router.get("/getalunos", checkToken, checkAdmin, adminController.getAlunos);
 router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
+router.get("/getprofessores", checkToken, checkAdmin, adminController.getProfessores);
+router.post("/buscarprofessor", checkToken, checkAdmin, adminController.getProfessoresByName);
+// Alterado: receber id no body
+router.put("/attprofessor", checkToken, checkAdmin, adminController.updateProfessor);
 
 module.exports = router;
