@@ -131,8 +131,8 @@ exports.login = async (req, res) => {
     const type = user.type;
 
     // Verificar se o tipo de usuário é professor ou admin
-    if (type !== "professor" && type !== "admin") {
-      return res.status(403).json({ msg: "Acesso negado. Apenas professores e administradores podem acessar." });
+    if (type !== "professor" && type !== "admin" && type !== "aluno"  ) {
+      return res.status(403).json({ msg: "Acesso negado. Apenas professores, administradores e alunos podem acessar." });
     }
 
     // Verificar se a senha está correta

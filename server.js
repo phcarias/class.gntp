@@ -39,6 +39,11 @@ app.get("/admin", (req,res) => {
     res.sendFile(path.join(__dirname, "public", "views", "administrador.html"));
 });
 
+app.get("/alunohtml", (req,res) => {
+  res.sendFile(path.join(__dirname, "public", "views", "aluno_main.html"));
+});
+
+
 
 const porta = process.env.PORT || 9090;
 app.listen(porta, () => {

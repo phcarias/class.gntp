@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (data.type === 'professor') {
                     window.location.href = '/public/views/professor_main.html';
                 } else if (data.type === 'aluno') {
-                    window.location.href = '/public/views/aluno_main.html';
+                    window.location.href = '/alunohtml';
                 } else {
                     alert('Tipo de usuário desconhecido.');
                 }
