@@ -98,13 +98,11 @@ exports.updateAluno = async (req, res) => {
   const { id, name, email, active, roleData } = req.body;
 
   try {
-    // Busca o usuário e garante que é do tipo aluno
     const user = await User.findById(id);
     if (!user || user.type !== "aluno") {
       return res.status(404).json({ msg: "Aluno não encontrado!" });
     }
 
-    // Atualiza campos permitidos + validações de unicidade
     if (email && email !== user.email) {
       const emailExists = await User.findOne({ email, _id: { $ne: id } });
       if (emailExists) return res.status(422).json({ msg: "Por favor, utilize outro e-mail!" });
@@ -113,9 +111,7 @@ exports.updateAluno = async (req, res) => {
     if (name) user.name = name;
     if (typeof active === "boolean") user.active = active;
 
-    // Atualiza dados específicos do aluno (roleData)
     if (roleData) {
-      // Matricula (com validação de unicidade)
       if (roleData.matricula && roleData.matricula !== user.roleData?.matricula) {
         const matriculaExists = await User.findOne({
           "roleData.matricula": roleData.matricula,
@@ -127,12 +123,10 @@ exports.updateAluno = async (req, res) => {
         user.roleData.matricula = roleData.matricula;
       }
 
-      // Corrige a chave para responsavelEmail
       if (roleData.responsavelEmail !== undefined) {
         user.roleData.responsavelEmail = roleData.responsavelEmail;
       }
 
-      // Turmas: normaliza para [{ turma: ObjectId }] e sincroniza TurmaModel.alunos
       if (roleData.turmas) {
         const incomingIds = Array.isArray(roleData.turmas)
           ? roleData.turmas.map((t) =>
@@ -149,13 +143,15 @@ exports.updateAluno = async (req, res) => {
         const toRemove = currentIds.filter((tid) => !newIds.includes(tid));
 
         await Promise.all([
-          // use o modelo já importado como 'Turma'
           ...toAdd.map((tid) => Turma.findByIdAndUpdate(tid, { $addToSet: { alunos: user._id } })),
           ...toRemove.map((tid) => Turma.findByIdAndUpdate(tid, { $pull: { alunos: user._id } })),
         ]);
 
         user.roleData.turmas = newIds.map((tid) => ({ turma: tid }));
       }
+
+      // Marcar roleData como modificado para Mixed fields
+      user.markModified('roleData');
     }
 
     await user.save();
@@ -166,28 +162,86 @@ exports.updateAluno = async (req, res) => {
 };
 
 exports.updateProfessor = async (req, res) => {
-  const { id, name, email, active, roleData } = req.body; // id via body
+  const { id, name, email, active, roleData } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ msg: "ID do professor é obrigatório." });
+  }
 
   try {
     const user = await User.findById(id);
     if (!user || user.type !== "professor") {
+      console.log('Professor not found or invalid type for id:', id);
       return res.status(404).json({ msg: "Professor não encontrado!" });
     }
 
+    // Update basic fields with validations
     if (name) user.name = name;
-    if (email) user.email = email;
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({ email, _id: { $ne: id } });
+      if (emailExists) return res.status(422).json({ msg: "Por favor, utilize outro e-mail!" });
+      user.email = email;
+    }
     if (typeof active === "boolean") user.active = active;
 
     if (roleData) {
-      if (roleData.turmas) user.roleData.turmas = roleData.turmas;
+      // Matricula with uniqueness check
+      if (roleData.matricula && roleData.matricula !== user.roleData?.matricula) {
+        const matriculaExists = await User.findOne({
+          "roleData.matricula": roleData.matricula,
+          _id: { $ne: id },
+        });
+        if (matriculaExists) {
+          return res.status(422).json({ msg: "Matrícula já cadastrada!" });
+        }
+        user.roleData.matricula = roleData.matricula;
+      }
+
+      // Disciplinas
       if (roleData.disciplinas) user.roleData.disciplinas = roleData.disciplinas;
-      if (roleData.matricula) user.roleData.matricula = roleData.matricula;
+
+      // Turmas: normalize and sync with TurmaModel
+      if (roleData.turmas) {
+        const incomingIds = Array.isArray(roleData.turmas)
+          ? roleData.turmas.map((t) =>
+              typeof t === "object" && t !== null ? String(t.turma || t._id || t.id) : String(t)
+            )
+          : [];
+        const newIds = [...new Set(incomingIds.filter(Boolean))];
+
+        console.log('Processed turmas - incomingIds:', incomingIds, 'newIds:', newIds);
+
+        const currentIds = (user.roleData?.turmas || []).map((t) =>
+          String(typeof t === "object" && t !== null ? t.turma : t)
+        );
+
+        const toAdd = newIds.filter((tid) => !currentIds.includes(tid));
+        const toRemove = currentIds.filter((tid) => !newIds.includes(tid));
+
+        console.log('Turmas to add/remove:', { toAdd, toRemove });
+
+        await Promise.all([
+          ...toAdd.map((tid) => Turma.findByIdAndUpdate(tid, { $addToSet: { professores: user._id } })),
+          ...toRemove.map((tid) => Turma.findByIdAndUpdate(tid, { $pull: { professores: user._id } })),
+        ]);
+
+        user.roleData.turmas = newIds.map((tid) => ({ turma: tid }));
+
+        console.log('Updated user.roleData.turmas:', user.roleData.turmas);
+      }
+
+      // Marcar roleData como modificado para Mixed fields
+      user.markModified('roleData');
     }
 
+    console.log('About to save user with roleData:', user.roleData);
     await user.save();
+    console.log('User saved successfully, final roleData:', user.roleData);
+
     return res.status(200).json({ msg: "Dados do professor atualizados com sucesso!", user });
   } catch (error) {
-    return res.status(500).json({ msg: "Erro ao atualizar professor!", error });
+    console.error('Error in updateProfessor:', error);
+    return res.status(500).json({ msg: "Erro ao atualizar professor!", error: error.message });
   }
 };
 

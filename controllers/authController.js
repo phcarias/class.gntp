@@ -77,10 +77,11 @@ exports.register = async (req, res) => {
       await Promise.all(
       turmas.map(async (turmaId) => {
         const turma = await TurmaModel.findById(turmaId);
-        if (turma) {
+        if (!turma) {
+          throw new Error(`Turma ${turmaId} não encontrada para professor.`);
+        }
         turma.professores.push(newUser._id);
         await turma.save();
-        }
       })
       );
     }
@@ -89,10 +90,11 @@ exports.register = async (req, res) => {
       await Promise.all(
       turmas.map(async (turmaId) => {
         const turma = await TurmaModel.findById(turmaId);
-        if (turma) {
+        if (!turma) {
+          throw new Error(`Turma ${turmaId} não encontrada para aluno.`);
+        }
         turma.alunos.push(newUser._id);
         await turma.save();
-        }
       })
       );
     }

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const frequenciaSchema = new mongoose.Schema({
     aluno: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Aluno', 
+      ref: 'User', 
       required: true 
     }, // Aluno referente
     turma: { 

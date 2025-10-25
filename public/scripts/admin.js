@@ -1,5 +1,3 @@
-
-
 document.addEventListener('DOMContentLoaded', function () {
 
     api = 'http://localhost:9090'; // Defina a URL base da sua API aqui
@@ -42,6 +40,13 @@ document.addEventListener('DOMContentLoaded', function () {
     getFrequenciaMedia().catch(console.error);
     loadAlunos();
     loadProfessores(); // novo: carrega professores na inicialização
+
+    // Add this block here (right after loadProfessores) to hide all sections except the first (dashboard)
+    document.querySelectorAll('.main-content section').forEach((section, index) => {
+        if (index !== 0) {
+            section.style.display = 'none';
+        }
+    });
 
     // Novo: função para renderizar a lista de alunos (reaproveitada por loadAlunos e pela busca)
     function renderAlunosList(alunos) {
@@ -333,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const res = await fetch('http://localhost:9090/turma/listar');
+            if (!res.ok) throw new Error('Erro ao carregar turmas');
             const data = await res.json();
             select.innerHTML = '';
             data.forEach(turma => {
@@ -344,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         } catch (error) {
             console.error('Erro ao carregar turmas:', error);
+            alert('Erro ao carregar turmas. Tente novamente.');
         }
     }
 
@@ -401,12 +408,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function saveAluno() {
         const id = document.getElementById('aluno-id').value;
+        const name = document.getElementById('aluno-nome').value.trim();
+        if (!name) {
+            alert('Nome é obrigatório.');
+            return;
+        }
         const turmas = getSelectedValues(document.getElementById('aluno-turmas-select'));
         const responsavelEmail = document.getElementById('aluno-responsavel-email')?.value?.trim();
 
         const payload = {
             id,
-            name: document.getElementById('aluno-nome').value.trim(),
+            name,
             email: document.getElementById('aluno-email').value.trim(),
             active: document.getElementById('aluno-active').value === 'true',
             roleData: {
@@ -428,12 +440,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!res.ok) {
                 const txt = await res.text();
                 console.error('Erro ao salvar aluno:', txt);
+                alert('Erro ao salvar aluno. Verifique os dados.');
                 return;
             }
             await loadAlunos();
             closeAlunoModal();
         } catch (e) {
             console.error('Erro ao salvar aluno:', e);
+            alert('Erro de conexão ao salvar aluno.');
         }
     }
 
@@ -482,13 +496,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function saveProfessor() {
         const id = document.getElementById('professor-id').value;
-        const turmas = Array.from(document.getElementById('professor-turmas-select')?.selectedOptions || []).map(o => o.value);
+        const name = document.getElementById('professor-nome').value.trim();
+        if (!name) {
+            alert('Nome é obrigatório.');
+            return;
+        }
+        const turmasSelect = document.getElementById('professor-turmas-select');
+        const turmas = turmasSelect?.multiple 
+            ? Array.from(turmasSelect.selectedOptions || []).map(o => o.value)
+            : [turmasSelect?.value].filter(Boolean);
         const disciplinas = (document.getElementById('professor-disciplinas').value || '')
             .split(',').map(d => d.trim()).filter(Boolean);
 
         const payload = {
-            id, // id via body
-            name: document.getElementById('professor-nome').value.trim(),
+            id,
+            name,
             email: document.getElementById('professor-email').value.trim(),
             active: document.getElementById('professor-active').value === 'true',
             roleData: {
@@ -510,20 +532,25 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!res.ok) {
                 const txt = await res.text();
                 console.error('Erro ao salvar professor:', txt);
+                alert('Erro ao salvar professor. Verifique os dados.');
                 return;
             }
             await loadProfessores();
             closeProfessorModal();
         } catch (e) {
             console.error('Erro ao salvar professor:', e);
+            alert('Erro de conexão ao salvar professor.');
         }
     }
 
-    // Bind botões do modal de professor (delegado)
+    // Bind botões do modal (delegado para garantir existência)
     document.addEventListener('click', (e) => {
+        if (e.target?.id === 'aluno-cancel') closeAlunoModal();
+        if (e.target?.id === 'aluno-save') saveAluno();
+        if (e.target === document.getElementById('aluno-modal')) closeAlunoModal(); // clique no backdrop
         if (e.target?.id === 'professor-cancel') closeProfessorModal();
         if (e.target?.id === 'professor-save') saveProfessor();
-        if (e.target?.id === 'professor-modal') closeProfessorModal(); // clique no backdrop
+        if (e.target === document.getElementById('professor-modal')) closeProfessorModal(); // clique no backdrop
     });
 
     (function bindAlunosTableActions() {
@@ -548,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('click', (e) => {
         if (e.target?.id === 'aluno-cancel') closeAlunoModal();
         if (e.target?.id === 'aluno-save') saveAluno();
-        if (e.target?.id === 'aluno-modal') closeAlunoModal(); // clique no backdrop
+        if (e.target === document.getElementById('aluno-modal')) closeAlunoModal(); // clique no backdrop
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -967,12 +994,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Mostrar apenas a seção ativa inicialmente
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.main-content section').forEach((section, index) => {
-            if (index !== 0) {
-                section.style.display = 'none';
-            }
-        });
+    document.querySelectorAll('.main-content section').forEach((section, index) => {
+        if (index !== 0) {
+            section.style.display = 'none';
+        }
     });
     // Carregar turmas no select
     document.addEventListener("DOMContentLoaded", () => {
@@ -1004,116 +1029,4 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         })
         .catch(error => console.error("Erro ao carregar turmas:", error));
-
-    // Atualizar os handlers da tabela de professores para abrir o modal (view/edit)
-    function renderProfessoresList(professores) {
-        // ...existing code...
-        if (!tbody.dataset.bound) {
-            tbody.addEventListener('click', (e) => {
-                const btn = e.target.closest('button[data-action]');
-                if (!btn) return;
-                const id = btn.dataset.id;
-                if (btn.dataset.action === 'view') openProfessorModal('view', id);
-                if (btn.dataset.action === 'edit') openProfessorModal('edit', id);
-            });
-            tbody.dataset.bound = '1';
-        }
-    }
-
-    // Modal de Professor (view/edit)
-    function openProfessorModal(mode, id) {
-        const prof = professoresCache.find(p => String(p._id || p.id) === String(id));
-        if (!prof) return;
-
-        // Preenche campos
-        document.getElementById('professor-id').value = prof._id || prof.id || '';
-        document.getElementById('professor-nome').value = prof.name || '';
-        document.getElementById('professor-email').value = prof.email || '';
-        document.getElementById('professor-matricula').value = prof.roleData?.matricula || '';
-        document.getElementById('professor-active').value = prof.active ? 'true' : 'false';
-        document.getElementById('professor-disciplinas').value =
-            Array.isArray(prof.roleData?.disciplinas) ? prof.roleData.disciplinas.join(', ') : '';
-
-        // IDs de turmas atuais
-        const currentTurmaIds = (prof.roleData?.turmas || [])
-            .map(t => {
-                if (t && typeof t === 'object') {
-                    const tt = t.turma ?? t._id ?? t.id ?? t;
-                    if (tt && typeof tt === 'object') return tt._id || tt.id || '';
-                    return String(tt || '');
-                }
-                return String(t || '');
-            })
-            .filter(Boolean);
-
-        // Popular select de turmas
-        loadTurmasSelect('professor-turmas-select', currentTurmaIds);
-
-        // View vs Edit
-        const isView = mode === 'view';
-        document.getElementById('professor-modal-title').textContent = isView ? 'Visualizar professor' : 'Editar professor';
-        document.getElementById('professor-save').classList.toggle('hidden', isView);
-
-        // Habilitar/Desabilitar campos
-        document.querySelectorAll('#professor-form input, #professor-form select, #professor-form textarea')
-            .forEach(el => el.disabled = isView);
-
-        // Abrir modal
-        const modal = document.getElementById('professor-modal');
-        modal.classList.remove('hidden');
-        modal.style.display = 'block';
-    }
-
-    function closeProfessorModal() {
-        const modal = document.getElementById('professor-modal');
-        modal.style.display = 'none';
-        modal.classList.add('hidden');
-    }
-
-    async function saveProfessor() {
-        const id = document.getElementById('professor-id').value;
-        const turmas = Array.from(document.getElementById('professor-turmas-select')?.selectedOptions || []).map(o => o.value);
-        const disciplinas = (document.getElementById('professor-disciplinas').value || '')
-            .split(',').map(d => d.trim()).filter(Boolean);
-
-        const payload = {
-            id, // id via body (alteração)
-            name: document.getElementById('professor-nome').value.trim(),
-            email: document.getElementById('professor-email').value.trim(),
-            active: document.getElementById('professor-active').value === 'true',
-            roleData: {
-                matricula: document.getElementById('professor-matricula').value.trim(),
-                turmas,
-                disciplinas
-            }
-        };
-
-        try {
-            const res = await fetch(`${api}/administrador/attprofessor`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) {
-                const txt = await res.text();
-                console.error('Erro ao salvar professor:', txt);
-                return;
-            }
-            await loadProfessores();
-            closeProfessorModal();
-        } catch (e) {
-            console.error('Erro ao salvar professor:', e);
-        }
-    }
-
-    // Bind botões do modal de professor (delegado)
-    document.addEventListener('click', (e) => {
-        if (e.target?.id === 'professor-cancel') closeProfessorModal();
-        if (e.target?.id === 'professor-save') saveProfessor();
-        if (e.target?.id === 'professor-modal') closeProfessorModal(); // clique no backdrop
-    });
-
 });
