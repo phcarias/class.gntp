@@ -94,49 +94,10 @@
                     </button>
                     <!-- Apenas UM modal e UM formulário! -->
 
-                    <button class="action-btn" id="btn-novo-professor">
+                    <button class="action-btn" id="btn-novo-professor" data-action="novo-professor">
                         <span class="material-icons">person_add</span>
                         Novo Professor
                     </button>
-                    <div id="modal-novo-professor" class="modal" style="display: none;">
-                        <div class="modal-content">
-                            <span class="close-modal" id="close-modal-novo-professor">&times;</span>
-                            <h3>Registrar Novo Professor</h3>
-                            <form id="form-novo-professor">
-                                <label for="nome-professor">Nome Completo:</label>
-                                <input type="text" id="nome-professor" name="name" required
-                                    placeholder="Ex: Carlos Oliveira" />
-
-                                <label for="email-professor">E-mail:</label>
-                                <input type="email" id="email-professor" name="email" required
-                                    placeholder="Ex: carlos@email.com" />
-
-                                <label for="senha-professor">Senha:</label>
-                                <input type="password" id="senha-professor" name="password" required
-                                    placeholder="Crie uma senha forte" />
-
-                                <label for="confirmar-senha-professor">Confirmar Senha:</label>
-                                <input type="password" id="confirmar-senha-professor" name="confirmpassword" required
-                                    placeholder="Repita a senha" />
-
-                                <label for="matricula-professor">Matrícula:</label>
-                                <input type="text" id="matricula-professor" name="matricula" required
-                                    placeholder="Ex: PROF2025001" />
-
-                                <label for="disciplinas-professor">Disciplinas:</label>
-                                <input type="text" id="disciplinas-professor" name="disciplinas" required
-                                    placeholder="Ex: Matemática, Física" />
-
-                                <label for="turma-professor">Turmas:</label>
-                                <select id="turma-professor" name="turmas" multiple>
-                                    <!-- Opções carregadas via JS -->
-                                </select>
-                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
-
-                                <button type="submit" class="btn-primary">Registrar</button>
-                            </form>
-                        </div>
-                    </div>
 
                     <button class="action-btn" id="btn-nova-turma">
                         <span class="material-icons">add</span>
@@ -254,7 +215,7 @@
                     <input type="text" placeholder="Buscar professor..." />
                     <span class="material-icons">search</span>
                 </div>
-                <button class="btn-primary">
+                <button class="btn-primary" data-action="novo-professor">
                     <span class="material-icons">person_add</span>
                     Novo Professor
                 </button>
@@ -621,6 +582,47 @@
             </form>
         </div>
     </div>
+
+                        <div id="modal-novo-professor" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close-modal" id="close-modal-novo-professor">&times;</span>
+                            <h3>Registrar Novo Professor</h3>
+                            <form id="form-novo-professor">
+                                <label for="nome-professor">Nome Completo:</label>
+                                <input type="text" id="nome-professor" name="name" required
+                                    placeholder="Ex: Carlos Oliveira" />
+
+                                <label for="email-professor">E-mail:</label>
+                                <input type="email" id="email-professor" name="email" required
+                                    placeholder="Ex: carlos@email.com" />
+
+                                <label for="senha-professor">Senha:</label>
+                                <input type="password" id="senha-professor" name="password" required
+                                    placeholder="Crie uma senha forte" />
+
+                                <label for="confirmar-senha-professor">Confirmar Senha:</label>
+                                <input type="password" id="confirmar-senha-professor" name="confirmpassword" required
+                                    placeholder="Repita a senha" />
+
+                                <label for="matricula-professor">Matrícula:</label>
+                                <input type="text" id="matricula-professor" name="matricula" required
+                                    placeholder="Ex: PROF2025001" />
+
+                                <label for="disciplinas-professor">Disciplinas:</label>
+                                <input type="text" id="disciplinas-professor" name="disciplinas" required
+                                    placeholder="Ex: Matemática, Física" />
+
+                                <label for="turma-professor">Turmas:</label>
+                                <select id="turma-professor" name="turmas" multiple>
+                                    <!-- Opções carregadas via JS -->
+                                </select>
+                                <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
+
+                                <button type="submit" class="btn-primary">Registrar</button>
+                            </form>
+                        </div>
+                    </div>
+
 
     <script src="../scripts/admin.js"></script>
 </body>

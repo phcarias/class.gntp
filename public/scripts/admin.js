@@ -665,65 +665,93 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Modal para adicionar novo professor
-    const modalNovoProfessor = document.getElementById('modal-novo-professor');
-    const btnNovoProfessor = document.getElementById('btn-novo-professor');
-    const closeModalNovoProfessor = document.getElementById('close-modal-novo-professor');
+    // Remova o código antigo:
+    // const modalNovoProfessor = document.getElementById('modal-novo-professor');
+    // const btnNovoProfessor = document.getElementById('btn-novo-professor');
+    // const closeModalNovoProfessor = document.getElementById('close-modal-novo-professor');
+    // const formNovoProfessor = document.getElementById('form-novo-professor');
+
+    // btnNovoProfessor.addEventListener('click', () => {
+    //     modalNovoProfessor.style.display = 'block';
+    // });
+
+    // closeModalNovoProfessor.addEventListener('click', () => {
+    //     modalNovoProfessor.style.display = 'none';
+    // });
+
+    // window.addEventListener('click', (e) => {
+    //     if (e.target === modalNovoProfessor) {
+    //         modalNovoProfessor.style.display = 'none';
+    //     }
+    // });
+
+    // Adicione um listener delegado para "novo-professor"
+    (function bindNovoProfessorButtons() {
+        if (document.body.dataset.boundNovoProfessor) return;
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action="novo-professor"]');
+            if (btn) {
+                e.preventDefault();
+                const modal = document.getElementById('modal-novo-professor');
+                if (modal) modal.style.display = 'block';
+                loadTurmasSelect('turma-professor', []);
+            }
+            if (e.target?.id === 'close-modal-novo-professor') {
+                const modal = document.getElementById('modal-novo-professor');
+                if (modal) modal.style.display = 'none';
+            }
+        });
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal-novo-professor');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        document.body.dataset.boundNovoProfessor = '1';
+    })();
+
+    // Defina formNovoProfessor
     const formNovoProfessor = document.getElementById('form-novo-professor');
 
-    // Abrir modal
-    btnNovoProfessor.addEventListener('click', () => {
-        modalNovoProfessor.style.display = 'block';
-    });
-
-    // Fechar modal
-    closeModalNovoProfessor.addEventListener('click', () => {
-        modalNovoProfessor.style.display = 'none';
-    });
-
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', (e) => {
-        if (e.target === modalNovoProfessor) {
-            modalNovoProfessor.style.display = 'none';
-        }
-    });
-
     // Submeter formulário para adicionar professor
-    formNovoProfessor.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const professorData = {
-            name: formNovoProfessor.name.value,
-            email: formNovoProfessor.email.value,
-            password: formNovoProfessor.password.value,
-            confirmpassword: formNovoProfessor.confirmpassword.value,
-            matricula: formNovoProfessor.matricula.value,
-            disciplinas: formNovoProfessor.disciplinas.value.split(',').map(d => d.trim()),
-            type: "professor",
-            turmas: Array.from(document.getElementById('turma-professor').selectedOptions).map(opt => opt.value)
-        };
-        try {
-            const res = await fetch(`${api}/auth/register`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(professorData),
-            });
+    if (formNovoProfessor && !formNovoProfessor.dataset.bound) {
+        formNovoProfessor.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const professorData = {
+                name: formNovoProfessor.name.value,
+                email: formNovoProfessor.email.value,
+                password: formNovoProfessor.password.value,
+                confirmpassword: formNovoProfessor.confirmpassword.value,
+                matricula: formNovoProfessor.matricula.value,
+                disciplinas: formNovoProfessor.disciplinas.value.split(',').map(d => d.trim()),
+                type: "professor",
+                turmas: Array.from(document.getElementById('turma-professor').selectedOptions).map(opt => opt.value)
+            };
+            try {
+                const res = await fetch(`${api}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(professorData),
+                });
 
-            if (!res.ok) {
-                const error = await res.json();
-                alert(`Erro ao adicionar professor: ${error.msg}`);
-                return;
+                if (!res.ok) {
+                    const error = await res.json();
+                    alert(`Erro ao adicionar professor: ${error.msg}`);
+                    return;
+                }
+
+                alert('Professor adicionado com sucesso!');
+                const modal = document.getElementById('modal-novo-professor');
+                if (modal) modal.style.display = 'none';
+                formNovoProfessor.reset();
+            } catch (error) {
+                console.error('Erro ao adicionar professor:', error);
+                alert('Erro ao adicionar professor. Tente novamente mais tarde.');
             }
-
-            alert('Professor adicionado com sucesso!');
-            modalNovoProfessor.style.display = 'none';
-            formNovoProfessor.reset();
-        } catch (error) {
-            console.error('Erro ao adicionar professor:', error);
-            alert('Erro ao adicionar professor. Tente novamente mais tarde.');
-        }
-    });
+        });
+        formNovoProfessor.dataset.bound = '1';
+    }
 
     // Modal para criar nova turma
     const modalNovaTurma = document.getElementById('modal-nova-turma');

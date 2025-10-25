@@ -29,4 +29,25 @@ const turmaSchema = new mongoose.Schema({
   ativo: { type: Boolean, default: true } // Indica se a turma está ativa
 });
 
+// Middleware de pré-exclusão para limpeza de referências
+turmaSchema.pre('remove', async function(next) {
+  const turma = this;
+  const User = mongoose.model('User');
+  const Frequencia = mongoose.model('Frequencia');
+
+  try {
+    // Remover referências de User.roleData.turmas para alunos e professores
+    await User.updateMany(
+      { 'roleData.turmas.turma': turma._id },
+      { $pull: { 'roleData.turmas': { turma: turma._id } } }
+    );
+    // Remover registros de frequência da turma
+    await Frequencia.deleteMany({ turma: turma._id });
+    next();
+  } catch (error) {
+    console.error('Erro no middleware de exclusão de turma:', error);
+    next(error);
+  }
+});
+
 module.exports = mongoose.model("Turma", turmaSchema, "turma");

@@ -254,22 +254,91 @@ exports.removeTurmas = async (req, res) => {
   }
 
   try {
-    // Busca o usuário
     const user = await User.findById(id);
     if (!user || !user.roleData || !Array.isArray(user.roleData.turmas)) {
       return res.status(404).json({ msg: "Usuário ou turmas não encontrados!" });
     }
 
-    // Remove as turmas especificadas
+    // Filtrar turmas no roleData do usuário
     user.roleData.turmas = user.roleData.turmas.filter(
-      (turma) => !turmasToRemove.includes(turma)
+      (turmaObj) => !turmasToRemove.includes(String(turmaObj.turma))
     );
 
+    // Sincronizar com TurmaModel: remover usuário das turmas especificadas
+    await Promise.all(
+      turmasToRemove.map((turmaId) =>
+        Turma.findByIdAndUpdate(turmaId, {
+          $pull: { [user.type === 'aluno' ? 'alunos' : 'professores']: user._id }
+        })
+      )
+    );
+
+    user.markModified('roleData');
     await user.save();
 
     res.status(200).json({ msg: "Turmas removidas com sucesso!", turmas: user.roleData.turmas });
   } catch (error) {
     res.status(500).json({ msg: "Erro ao remover turmas!", error });
+  }
+};
+
+// Nova função: Deletar usuário (aluno ou professor) - aciona middleware
+exports.deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ msg: "Usuário não encontrado!" });
+    }
+    if (user.type === 'admin') {
+      return res.status(403).json({ msg: "Não é possível deletar administradores via esta rota!" });
+    }
+
+    await user.remove(); // Aciona middleware de limpeza
+    res.status(200).json({ msg: "Usuário deletado com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao deletar usuário!", error });
+  }
+};
+
+// Nova função: Deletar turma - aciona middleware
+exports.deleteTurma = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const turma = await Turma.findById(id);
+    if (!turma) {
+      return res.status(404).json({ msg: "Turma não encontrada!" });
+    }
+
+    await turma.remove(); // Aciona middleware de limpeza
+    res.status(200).json({ msg: "Turma deletada com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao deletar turma!", error });
+  }
+};
+
+// Nova função: Deletar admin (opcional, com restrições)
+exports.deleteAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const admin = await User.findById(id);
+    if (!admin || admin.type !== 'admin') {
+      return res.status(404).json({ msg: "Administrador não encontrado!" });
+    }
+
+    // Verificar se há outros admins (não deletar o último)
+    const totalAdmins = await User.countDocuments({ type: 'admin' });
+    if (totalAdmins <= 1) {
+      return res.status(403).json({ msg: "Não é possível deletar o último administrador!" });
+    }
+
+    await admin.remove(); // Aciona middleware (embora admins não tenham roleData complexo)
+    res.status(200).json({ msg: "Administrador deletado com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao deletar administrador!", error });
   }
 };
 
