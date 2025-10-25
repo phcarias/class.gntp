@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let alunosCache = [];
     let professoresCache = []; // novo cache
+    let turmasCache = []; // Novo cache para turmas
 
     // Utils
     const $ = (sel) => document.querySelector(sel);
@@ -222,6 +223,166 @@ document.addEventListener('DOMContentLoaded', function () {
             renderProfessoresList(professores);
         } catch (err) {
             console.error('Erro ao carregar professores:', err);
+        }
+    }
+
+    // Novo: função para abrir modal de turma
+    function openTurmaModal(mode, id) {
+        const turma = turmasCache.find(t => String(t._id) === String(id));
+        if (!turma) return;
+
+        if (mode === 'view') {
+            document.getElementById('view-turma-codigo').textContent = turma.codigo || '-';
+            document.getElementById('view-turma-disciplinas').textContent = Array.isArray(turma.disciplinas) ? turma.disciplinas.join(', ') : '-';
+            document.getElementById('view-turma-professores').textContent = turma.professores?.map(p => p.name).join(', ') || '-';
+            document.getElementById('view-turma-alunos').textContent = turma.alunos?.map(a => a.name).join(', ') || '-';
+            document.getElementById('view-turma-horarios').textContent = turma.horarios?.map(h => `${h.diaSemana} ${h.horarioInicio}-${h.horarioFim}`).join(', ') || '-';
+            document.getElementById('view-turma-carga').textContent = turma.cargaHoraria || '-';
+            document.getElementById('view-turma-periodo').textContent = turma.periodoLetivo ? `${turma.periodoLetivo.dataInicio} - ${turma.periodoLetivo.dataFim}` : '-';
+            document.getElementById('view-turma-limite').textContent = turma.limiteFaltas || '-';
+            document.getElementById('view-turma-status').textContent = turma.ativo ? 'Ativo' : 'Inativo';
+            document.getElementById('turma-view-modal').classList.remove('hidden');
+            document.getElementById('turma-view-modal').style.display = 'block';
+        } else if (mode === 'edit') {
+            document.getElementById('turma-edit-id').value = turma._id;
+            document.getElementById('turma-edit-codigo').value = turma.codigo || '';
+            document.getElementById('turma-edit-disciplinas').value = Array.isArray(turma.disciplinas) ? turma.disciplinas.join(', ') : '';
+            // Preencher selects de professores e alunos (assumindo funções auxiliares)
+            loadTurmasSelect('turma-edit-professores', turma.professores?.map(p => p._id) || []);
+            loadTurmasSelect('turma-edit-alunos', turma.alunos?.map(a => a._id) || []);
+            document.getElementById('turma-edit-horarios').value = JSON.stringify(turma.horarios || []);
+            document.getElementById('turma-edit-carga').value = turma.cargaHoraria || '';
+            document.getElementById('turma-edit-inicio').value = turma.periodoLetivo?.dataInicio?.split('T')[0] || '';
+            document.getElementById('turma-edit-fim').value = turma.periodoLetivo?.dataFim?.split('T')[0] || '';
+            document.getElementById('turma-edit-limite').value = turma.limiteFaltas || '';
+            document.getElementById('turma-edit-ativo').value = turma.ativo ? 'true' : 'false';
+            document.getElementById('turma-edit-modal-title').textContent = 'Editar Turma';
+            document.getElementById('turma-edit-modal').classList.remove('hidden');
+            document.getElementById('turma-edit-modal').style.display = 'block';
+        }
+    }
+
+    function closeTurmaModal() {
+        document.getElementById('turma-view-modal').style.display = 'none';
+        document.getElementById('turma-view-modal').classList.add('hidden');
+        document.getElementById('turma-edit-modal').style.display = 'none';
+        document.getElementById('turma-edit-modal').classList.add('hidden');
+    }
+
+    async function saveTurma() {
+        const id = document.getElementById('turma-edit-id').value;
+        const payload = {
+            codigo: document.getElementById('turma-edit-codigo').value,
+            disciplinas: document.getElementById('turma-edit-disciplinas').value.split(',').map(d => d.trim()),
+            professores: getSelectedValues(document.getElementById('turma-edit-professores')),
+            alunos: getSelectedValues(document.getElementById('turma-edit-alunos')),
+            horarios: JSON.parse(document.getElementById('turma-edit-horarios').value || '[]'),
+            cargaHoraria: document.getElementById('turma-edit-carga').value,
+            periodoLetivo: {
+                dataInicio: document.getElementById('turma-edit-inicio').value,
+                dataFim: document.getElementById('turma-edit-fim').value
+            },
+            limiteFaltas: document.getElementById('turma-edit-limite').value,
+            ativo: document.getElementById('turma-edit-ativo').value === 'true'
+        };
+
+        try {
+            const res = await fetch(`${api}/administrador/updateturma/${id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                console.error('Erro ao salvar turma:', txt);
+                alert('Erro ao salvar turma. Verifique os dados.');
+                return;
+            }
+            await loadTurmas();
+            closeTurmaModal();
+        } catch (e) {
+            console.error('Erro ao salvar turma:', e);
+            alert('Erro de conexão ao salvar turma.');
+        }
+    }
+
+    // Novo: função para renderizar cards de turmas
+    function renderTurmas(turmas) {
+        const grid = document.querySelector('#turmas .cards-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        if (!turmas || turmas.length === 0) {
+            grid.innerHTML = '<p>Nenhuma turma encontrada.</p>';
+            return;
+        }
+
+        turmas.forEach(turma => {
+            // Formatar professores
+            const professores = turma.professores?.map(p => p.name).join(', ') || 'N/A';
+            // Disciplinas
+            const disciplinas = Array.isArray(turma.disciplinas) ? turma.disciplinas.join(', ') : 'N/A';
+            // Horário: assume horários iguais e junta dias (e.g., Seg-Qua-Sex, 08:00-12:00)
+            const uniqueTimes = [...new Set(turma.horarios?.map(h => `${h.horarioInicio}-${h.horarioFim}`))];
+            const time = uniqueTimes.length === 1 ? uniqueTimes[0] : 'Vários';
+            const days = turma.horarios?.map(h => h.diaSemana.slice(0, 3)).join('-') || 'N/A';
+            const horario = days !== 'N/A' ? `${days}, ${time}` : 'N/A';
+            // Alunos: contar
+            const alunosCount = turma.alunos?.length || 0;
+
+            const card = document.createElement('div');
+            card.className = 'turma-card';
+            card.innerHTML = `
+                <h3>${turma.codigo || 'N/A'}</h3>
+                <div class="turma-info">
+                    <p><strong>Professor:</strong> ${professores}</p>
+                    <p><strong>Disciplinas:</strong> ${disciplinas}</p>
+                    <p><strong>Horário:</strong> ${horario}</p>
+                    <p><strong>Alunos:</strong> ${alunosCount}</p>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-small" data-action="view-turma" data-id="${turma._id}">Visualizar</button>
+                    <button class="btn-small" data-action="edit-turma" data-id="${turma._id}">Editar</button>
+                    <button class="btn-small danger" data-action="delete-turma" data-id="${turma._id}">Excluir</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Bind para ações (se não existir)
+        if (!grid.dataset.bound) {
+            grid.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                const action = btn.dataset.action;
+                if (action === 'view-turma') openTurmaModal('view', id);
+                if (action === 'edit-turma') openTurmaModal('edit', id);
+                if (action === 'delete-turma') openConfirmacaoModal('turma', id);
+            });
+            grid.dataset.bound = '1';
+        }
+    }
+
+    // Novo: função para carregar turmas
+    async function loadTurmas() {
+        try {
+            const res = await fetch(`${api}/administrador/getturmas`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!res.ok) {
+                console.error('Erro ao buscar turmas:', res.status);
+                return;
+            }
+            const turmas = await res.json();
+            turmasCache = turmas;
+            renderTurmas(turmas);
+        } catch (error) {
+            console.error('Erro ao carregar turmas:', error);
         }
     }
 
@@ -568,7 +729,8 @@ document.addEventListener('DOMContentLoaded', function () {
         mensagemEl.textContent = `Tem certeza que deseja excluir este ${tipo}? Esta ação pode gerar inconsistências nos relatórios futuros, pois removerá o ${tipo} de todas as turmas associadas e registros relacionados.`;
 
         confirmarBtn.onclick = () => {
-            deleteUser(tipo, id);
+            if (tipo === 'turma') deleteTurma(tipo, id);
+            else deleteUser(tipo, id);
             modal.style.display = 'none';
         };
 
@@ -594,6 +756,30 @@ document.addEventListener('DOMContentLoaded', function () {
             alert(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} deletado com sucesso!`);
             if (tipo === 'aluno') await loadAlunos();
             else await loadProfessores();
+        } catch (e) {
+            console.error(`Erro ao deletar ${tipo}:`, e);
+            alert(`Erro de conexão ao deletar ${tipo}.`);
+        }
+    }
+
+    // Novo: função para deletar turma
+    async function deleteTurma(tipo, id) {
+        try {
+            const res = await fetch(`${api}/administrador/turmaremove/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                console.error(`Erro ao deletar ${tipo}:`, txt);
+                alert(`Erro ao deletar ${tipo}. Verifique os dados.`);
+                return;
+            }
+            alert(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} deletada com sucesso!`);
+            await loadTurmas(); // Recarrega turmas após exclusão
         } catch (e) {
             console.error(`Erro ao deletar ${tipo}:`, e);
             alert(`Erro de conexão ao deletar ${tipo}.`);
@@ -739,27 +925,28 @@ document.addEventListener('DOMContentLoaded', function () {
     //     }
     // });
 
-    // Adicione um listener delegado para "novo-professor"
-    (function bindNovoProfessorButtons() {
-        if (document.body.dataset.boundNovoProfessor) return;
+    // Adicione a nova função delegada
+    (function bindNovoTurmaButtons() {
+        if (document.body.dataset.boundNovoTurma) return;
         document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action="novo-professor"]');
+            const btn = e.target.closest('[data-action="nova-turma"]');
             if (btn) {
                 e.preventDefault();
-                const modal = document.getElementById('modal-novo-professor');
+                const modal = document.getElementById('modal-nova-turma');
                 if (modal) modal.style.display = 'block';
-                loadTurmasSelect('turma-professor', []);
+                carregarProfessoresTurma();
+                carregarAlunosTurma();
             }
-            if (e.target?.id === 'close-modal-novo-professor') {
-                const modal = document.getElementById('modal-novo-professor');
+            if (e.target?.id === 'close-modal-nova-turma') {
+                const modal = document.getElementById('modal-nova-turma');
                 if (modal) modal.style.display = 'none';
             }
         });
         window.addEventListener('click', (e) => {
-            const modal = document.getElementById('modal-novo-professor');
+            const modal = document.getElementById('modal-nova-turma');
             if (e.target === modal) modal.style.display = 'none';
         });
-        document.body.dataset.boundNovoProfessor = '1';
+        document.body.dataset.boundNovoTurma = '1';
     })();
 
     // Defina formNovoProfessor
@@ -813,22 +1000,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeModalNovaTurma = document.getElementById('close-modal-nova-turma');
     const formNovaTurma = document.getElementById('form-nova-turma');
 
-    // Abrir modal
-    btnNovaTurma.addEventListener('click', () => {
-        modalNovaTurma.style.display = 'block';
-    });
+    // Remova estes listeners diretos, pois o bindNovoTurmaButtons agora cuida disso
+    // btnNovaTurma.addEventListener('click', () => {
+    //     modalNovaTurma.style.display = 'block';
+    // });
 
-    // Fechar modal
-    closeModalNovaTurma.addEventListener('click', () => {
-        modalNovaTurma.style.display = 'none';
-    });
+    // closeModalNovaTurma.addEventListener('click', () => {
+    //     modalNovaTurma.style.display = 'none';
+    // });
 
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', (e) => {
-        if (e.target === modalNovaTurma) {
-            modalNovaTurma.style.display = 'none';
-        }
-    });
+    // window.addEventListener('click', (e) => {
+    //     if (e.target === modalNovaTurma) {
+    //         modalNovaTurma.style.display = 'none';
+    //     }
+    // });
 
     // Carregar professores
     function carregarProfessoresTurma() {
@@ -864,11 +1049,11 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error("Erro ao carregar alunos:", error));
     }
 
-    // Carregar selects ao abrir modal
-    btnNovaTurma.addEventListener('click', () => {
-        carregarProfessoresTurma();
-        carregarAlunosTurma();
-    });
+    // Remova este listener duplicado
+    // btnNovaTurma.addEventListener('click', () => {
+    //     carregarProfessoresTurma();
+    //     carregarAlunosTurma();
+    // });
 
     // Adicionar/remover horários
     document.addEventListener('click', function (e) {
@@ -1111,4 +1296,30 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         })
         .catch(error => console.error("Erro ao carregar turmas:", error));
+
+    // No DOMContentLoaded, adicione:
+    loadTurmas(); // Carrega turmas na inicialização
+
+    // No event listener da sidebar, adicione:
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            document.querySelectorAll('.main-content section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(targetId).style.display = 'block';
+
+            // Atualiza menu ativo
+            document.querySelectorAll('.sidebar li').forEach(item => {
+                item.classList.remove('active');
+            });
+            link.parentElement.classList.add('active');
+
+            // Recarrega turmas ao navegar para a seção de turmas
+            if (targetId === 'turmas') {
+                loadTurmas();
+            }
+        });
+    });
 });
