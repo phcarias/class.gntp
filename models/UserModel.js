@@ -45,28 +45,5 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Middleware de pré-exclusão para limpeza de referências
-userSchema.pre('remove', async function(next) {
-  const user = this;
-  const Turma = mongoose.model('Turma');
-  const Frequencia = mongoose.model('Frequencia');
-
-  try {
-    if (user.type === 'aluno') {
-      // Remover aluno de Turma.alunos
-      await Turma.updateMany({ alunos: user._id }, { $pull: { alunos: user._id } });
-      // Remover registros de frequência do aluno
-      await Frequencia.deleteMany({ aluno: user._id });
-    } else if (user.type === 'professor') {
-      // Remover professor de Turma.professores
-      await Turma.updateMany({ professores: user._id }, { $pull: { professores: user._id } });
-    }
-    next();
-  } catch (error) {
-    console.error('Erro no middleware de exclusão de usuário:', error);
-    next(error);
-  }
-});
-
 module.exports = mongoose.model("User", userSchema, "user");
 

@@ -11,6 +11,9 @@ const turmaRoutes = require("./routes/turmaRoutes")
 const adminRoutes = require("./routes/adminRoutes")
 const alunoRoutes = require('./routes/alunoRoutes');
 
+const frequenciaModelo = require("./models/FrequenciaModel");
+const TurmaModel = require("./models/TurmaModel");
+
 dotenv.config();
 require("./config/db");
 
@@ -18,7 +21,6 @@ require("./config/db");
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'))); // Arquivos estáticos
-app.use("/turma", turmaRoutes);
 
 
 app.use("/email", emailRoutes);

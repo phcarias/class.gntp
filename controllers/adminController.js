@@ -295,10 +295,24 @@ exports.deleteUser = async (req, res) => {
       return res.status(403).json({ msg: "Não é possível deletar administradores via esta rota!" });
     }
 
-    await user.remove(); // Aciona middleware de limpeza
+    console.log('About to remove user:', user._id, 'type:', user.type);
+
+    // Limpeza manual de referências
+    const Turma = require("../models/TurmaModel");
+    const Frequencia = require("../models/FrequenciaModel");
+
+    if (user.type === 'aluno') {
+      await Turma.updateMany({ alunos: user._id }, { $pull: { alunos: user._id } });
+      await Frequencia.deleteMany({ aluno: user._id });
+    } else if (user.type === 'professor') {
+      await Turma.updateMany({ professores: user._id }, { $pull: { professores: user._id } });
+    }
+
+    await user.deleteOne(); // Remove o usuário
     res.status(200).json({ msg: "Usuário deletado com sucesso!" });
   } catch (error) {
-    res.status(500).json({ msg: "Erro ao deletar usuário!", error });
+    console.error('Erro no controller deleteUser:', error);
+    res.status(500).json({ msg: "Erro ao deletar usuário!", error: error.message || error });
   }
 };
 
@@ -312,7 +326,19 @@ exports.deleteTurma = async (req, res) => {
       return res.status(404).json({ msg: "Turma não encontrada!" });
     }
 
-    await turma.remove(); // Aciona middleware de limpeza
+    // Limpeza manual de referências
+    const User = require("../models/UserModel");
+    const Frequencia = require("../models/FrequenciaModel");
+
+    // Remover referências de User.roleData.turmas para alunos e professores
+    await User.updateMany(
+      { 'roleData.turmas.turma': turma._id },
+      { $pull: { 'roleData.turmas': { turma: turma._id } } }
+    );
+    // Remover registros de frequência da turma
+    await Frequencia.deleteMany({ turma: turma._id });
+
+    await turma.deleteOne(); // Remove a turma
     res.status(200).json({ msg: "Turma deletada com sucesso!" });
   } catch (error) {
     res.status(500).json({ msg: "Erro ao deletar turma!", error });
@@ -483,19 +509,18 @@ exports.getFrequenciaMedia = async (req, res) => {
     const startPrev = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
     const endPrev = new Date(ano, mes, 0, 23, 59, 59, 999);
 
-    // Substitua 'Chamada' pelo seu modelo de presença e ajuste 'data' e 'registros.presente'
-    const Chamada = require('../models/frequenciaModel');
+    const Frequencia = require('../models/FrequenciaModel'); // Corrija o require
 
     async function computeRange(start, end) {
-      const agg = await Chamada.aggregate([
+      const agg = await Frequencia.aggregate([
         { $match: { data: { $gte: start, $lte: end } } },
-        { $unwind: '$registros' },
+        // Remova $unwind, pois o schema é plano
         {
           $group: {
             _id: null,
             totalRegistros: { $sum: 1 },
             totalPresentes: {
-              $sum: { $cond: [{ $eq: ['$registros.presente', true] }, 1, 0] }
+              $sum: { $cond: [{ $eq: ['$presente', true] }, 1, 0] } // Use 'presente' diretamente
             }
           }
         }

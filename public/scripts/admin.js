@@ -95,6 +95,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <button class="btn-icon btn-view" data-action="view" data-id="${aluno._id || aluno.id}">
                   <span class="material-icons">visibility</span>
                 </button>
+                <button class="btn-icon danger" data-action="delete" data-id="${aluno._id || aluno.id}" title="Excluir">
+                  <span class="material-icons">delete</span>
+                </button>
               </td>
             `;
             tbody.appendChild(row);
@@ -179,6 +182,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     </button>
                     <button class="btn-icon btn-view" data-action="view" data-id="${prof._id || prof.id}">
                         <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="btn-icon danger" data-action="delete" data-id="${prof._id || prof.id}" title="Excluir">
+                        <span class="material-icons">delete</span>
                     </button>
                 </td>
             `;
@@ -553,6 +559,58 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.target === document.getElementById('professor-modal')) closeProfessorModal(); // clique no backdrop
     });
 
+    // Novo: função para abrir modal de confirmação
+    function openConfirmacaoModal(tipo, id) {
+        const modal = document.getElementById('modal-confirmacao');
+        const mensagemEl = document.getElementById('confirmacao-mensagem');
+        const confirmarBtn = document.getElementById('btn-confirmar-confirmacao');
+
+        mensagemEl.textContent = `Tem certeza que deseja excluir este ${tipo}? Esta ação pode gerar inconsistências nos relatórios futuros, pois removerá o ${tipo} de todas as turmas associadas e registros relacionados.`;
+
+        confirmarBtn.onclick = () => {
+            deleteUser(tipo, id);
+            modal.style.display = 'none';
+        };
+
+        modal.style.display = 'block';
+    }
+
+    // Novo: função para deletar usuário (aluno ou professor)
+    async function deleteUser(tipo, id) {
+        try {
+            const res = await fetch(`${api}/administrador/userremove/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                console.error(`Erro ao deletar ${tipo}:`, txt);
+                alert(`Erro ao deletar ${tipo}. Verifique os dados.`);
+                return;
+            }
+            alert(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} deletado com sucesso!`);
+            if (tipo === 'aluno') await loadAlunos();
+            else await loadProfessores();
+        } catch (e) {
+            console.error(`Erro ao deletar ${tipo}:`, e);
+            alert(`Erro de conexão ao deletar ${tipo}.`);
+        }
+    }
+
+    // Novo: bind para fechar modal de confirmação
+    document.addEventListener('click', (e) => {
+        if (e.target?.id === 'close-modal-confirmacao' || e.target?.id === 'btn-cancelar-confirmacao') {
+            document.getElementById('modal-confirmacao').style.display = 'none';
+        }
+    });
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('modal-confirmacao');
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
     (function bindAlunosTableActions() {
         const tbody = document.querySelector('#alunos .data-table tbody');
         if (!tbody || tbody.dataset.bound) return;
@@ -562,28 +620,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const id = btn.dataset.id;
             if (btn.dataset.action === 'view') openAlunoModal('view', id);
             if (btn.dataset.action === 'edit') openAlunoModal('edit', id);
+            if (btn.dataset.action === 'delete') openConfirmacaoModal('aluno', id);
         });
         tbody.dataset.bound = '1';
     })();
 
-    function toggleFormDisabled(formSel, disabled) {
-        document.querySelectorAll(`${formSel} input, ${formSel} select, ${formSel} textarea`)
-            .forEach(el => el.disabled = disabled);
-    }
+    // Novo: bind para ações da tabela de professores
+    (function bindProfessoresTableActions() {
+        const tbody = document.querySelector('#professores .data-table tbody');
+        if (!tbody || tbody.dataset.bound) return;
+        tbody.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (btn.dataset.action === 'view') openProfessorModal('view', id);
+            if (btn.dataset.action === 'edit') openProfessorModal('edit', id);
+            if (btn.dataset.action === 'delete') openConfirmacaoModal('professor', id);
+        });
+        tbody.dataset.bound = '1';
+    })();
 
-    // Bind botões do modal (delegado para garantir existência)
-    document.addEventListener('click', (e) => {
-        if (e.target?.id === 'aluno-cancel') closeAlunoModal();
-        if (e.target?.id === 'aluno-save') saveAluno();
-        if (e.target === document.getElementById('aluno-modal')) closeAlunoModal(); // clique no backdrop
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Popular o select do "Novo Aluno" (já existente)
-        loadTurmasSelect('turma-aluno');
-        // Se existir select do professor, reutiliza também
-        loadTurmasSelect('turma-professor');
-    });
     // Modal para adicionar novo aluno
     function openNovoAlunoModal() {
         const modal = document.getElementById('modal-novo-aluno');
@@ -619,8 +675,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Submeter formulário para adicionar aluno
     const formNovoAluno = document.getElementById('form-novo-aluno');
-    // ...existing code...
-
     // Submeter formulário para adicionar aluno
     if (formNovoAluno && !formNovoAluno.dataset.bound) {
         formNovoAluno.addEventListener('submit', async (e) => {

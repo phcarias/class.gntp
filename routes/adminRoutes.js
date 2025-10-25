@@ -14,8 +14,8 @@ router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
 router.get("/getprofessores", checkToken, checkAdmin, adminController.getProfessores);
 router.post("/buscarprofessor", checkToken, checkAdmin, adminController.getProfessoresByName);
 router.put("/attprofessor", checkToken, checkAdmin, adminController.updateProfessor);
-router.delete("/user/:id", checkToken, checkAdmin, adminController.deleteUser); // Deletar aluno ou professor
-router.delete("/turma/:id", checkToken, checkAdmin, adminController.deleteTurma); // Deletar turma
-router.delete("/admin/:id", checkToken, checkAdmin, adminController.deleteAdmin); // Deletar admin (opcional)
+router.delete("/userremove/:id", checkToken, checkAdmin, adminController.deleteUser); // Deletar aluno ou professor
+router.delete("/turmaremove/:id", checkToken, checkAdmin, adminController.deleteTurma); // Deletar turma
+router.delete("/adminremove/:id", checkToken, checkAdmin, adminController.deleteAdmin); // Deletar admin (opcional)
 
 module.exports = router;
