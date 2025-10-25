@@ -654,6 +654,7 @@
     <!-- Modal de Turma (Editar) -->
     <div id="turma-edit-modal" class="modal hidden">
         <div class="modal-content">
+            <span class="close-modal" id="close-turma-edit-modal">&times;</span>
             <h3 id="turma-edit-modal-title">Editar Turma</h3>
             <form id="turma-edit-form">
                 <input type="hidden" id="turma-edit-id">
@@ -663,7 +664,10 @@
                 <small>Segure Ctrl para múltipla seleção</small>
                 <label>Alunos <select id="turma-edit-alunos" multiple></select></label>
                 <small>Segure Ctrl para múltipla seleção</small>
-                <label>Horários (JSON ou texto) <textarea id="turma-edit-horarios"></textarea></label>
+                <label>Horários (dia, início, fim):</label>
+                <div id="horarios-turma-edit-list">
+                    <!-- Horários serão adicionados dinamicamente -->
+                </div>
                 <label>Carga Horária <input id="turma-edit-carga" type="number" required></label>
                 <label>Data Início <input id="turma-edit-inicio" type="date" required></label>
                 <label>Data Fim <input id="turma-edit-fim" type="date" required></label>

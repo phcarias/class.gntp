@@ -247,10 +247,54 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('turma-edit-id').value = turma._id;
             document.getElementById('turma-edit-codigo').value = turma.codigo || '';
             document.getElementById('turma-edit-disciplinas').value = Array.isArray(turma.disciplinas) ? turma.disciplinas.join(', ') : '';
-            // Preencher selects de professores e alunos (assumindo funções auxiliares)
-            loadTurmasSelect('turma-edit-professores', turma.professores?.map(p => p._id) || []);
-            loadTurmasSelect('turma-edit-alunos', turma.alunos?.map(a => a._id) || []);
-            document.getElementById('turma-edit-horarios').value = JSON.stringify(turma.horarios || []);
+            // Preencher selects de professores e alunos (usando as novas funções)
+            loadProfessoresSelect('turma-edit-professores', turma.professores?.map(p => p._id) || []);
+            loadAlunosSelect('turma-edit-alunos', turma.alunos?.map(a => a._id) || []);
+            // Popular horários dinamicamente
+            const horariosList = document.getElementById('horarios-turma-edit-list');
+            horariosList.innerHTML = '';
+            if (turma.horarios && turma.horarios.length > 0) {
+                turma.horarios.forEach(h => {
+                    const row = document.createElement('div');
+                    row.className = 'horario-row';
+                    row.innerHTML = `
+                        <select name="diaSemana[]" required>
+                            <option value="">Dia da semana</option>
+                            <option value="segunda" ${h.diaSemana === 'segunda' ? 'selected' : ''}>Segunda</option>
+                            <option value="terca" ${h.diaSemana === 'terca' ? 'selected' : ''}>Terça</option>
+                            <option value="quarta" ${h.diaSemana === 'quarta' ? 'selected' : ''}>Quarta</option>
+                            <option value="quinta" ${h.diaSemana === 'quinta' ? 'selected' : ''}>Quinta</option>
+                            <option value="sexta" ${h.diaSemana === 'sexta' ? 'selected' : ''}>Sexta</option>
+                            <option value="sabado" ${h.diaSemana === 'sabado' ? 'selected' : ''}>Sábado</option>
+                        </select>
+                        <input type="time" name="horarioInicio[]" value="${h.horarioInicio || ''}" required />
+                        <input type="time" name="horarioFim[]" value="${h.horarioFim || ''}" required />
+                        <button type="button" class="btn-add-horario">+</button>
+                        <button type="button" class="btn-remove-horario">-</button>
+                    `;
+                    horariosList.appendChild(row);
+                });
+            } else {
+                // Adicionar uma linha vazia se não houver horários
+                const row = document.createElement('div');
+                row.className = 'horario-row';
+                row.innerHTML = `
+                    <select name="diaSemana[]" required>
+                        <option value="">Dia da semana</option>
+                        <option value="segunda">Segunda</option>
+                        <option value="terca">Terça</option>
+                        <option value="quarta">Quarta</option>
+                        <option value="quinta">Quinta</option>
+                        <option value="sexta">Sexta</option>
+                        <option value="sabado">Sábado</option>
+                    </select>
+                    <input type="time" name="horarioInicio[]" required />
+                    <input type="time" name="horarioFim[]" required />
+                    <button type="button" class="btn-add-horario">+</button>
+                    <button type="button" class="btn-remove-horario">-</button>
+                `;
+                horariosList.appendChild(row);
+            }
             document.getElementById('turma-edit-carga').value = turma.cargaHoraria || '';
             document.getElementById('turma-edit-inicio').value = turma.periodoLetivo?.dataInicio?.split('T')[0] || '';
             document.getElementById('turma-edit-fim').value = turma.periodoLetivo?.dataFim?.split('T')[0] || '';
@@ -276,7 +320,12 @@ document.addEventListener('DOMContentLoaded', function () {
             disciplinas: document.getElementById('turma-edit-disciplinas').value.split(',').map(d => d.trim()),
             professores: getSelectedValues(document.getElementById('turma-edit-professores')),
             alunos: getSelectedValues(document.getElementById('turma-edit-alunos')),
-            horarios: JSON.parse(document.getElementById('turma-edit-horarios').value || '[]'),
+            // Coletar horários do formulário
+            horarios: Array.from(document.querySelectorAll('#horarios-turma-edit-list .horario-row')).map(row => ({
+                diaSemana: row.querySelector('select[name="diaSemana[]"]').value,
+                horarioInicio: row.querySelector('input[name="horarioInicio[]"]').value,
+                horarioFim: row.querySelector('input[name="horarioFim[]"]').value
+            })),
             cargaHoraria: document.getElementById('turma-edit-carga').value,
             periodoLetivo: {
                 dataInicio: document.getElementById('turma-edit-inicio').value,
@@ -521,6 +570,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Novo: função para carregar professores no select (reutiliza lógica de carregarProfessoresTurma)
+    async function loadProfessoresSelect(selectId, preselectedIds = []) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        try {
+            const res = await fetch(`${api}/turma/professores`);
+            if (!res.ok) throw new Error('Erro ao carregar professores');
+            const data = await res.json();
+            select.innerHTML = '';
+            data.forEach(prof => {
+                const option = document.createElement('option');
+                option.value = prof._id;
+                option.textContent = prof.name;
+                if (preselectedIds.includes(String(prof._id))) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar professores:', error);
+            alert('Erro ao carregar professores. Tente novamente.');
+        }
+    }
+
+    // Novo: função para carregar alunos no select (reutiliza lógica de carregarAlunosTurma)
+    async function loadAlunosSelect(selectId, preselectedIds = []) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        try {
+            const res = await fetch(`${api}/turma/alunos`);
+            if (!res.ok) throw new Error('Erro ao carregar alunos');
+            const data = await res.json();
+            select.innerHTML = '';
+            data.forEach(aluno => {
+                const option = document.createElement('option');
+                option.value = aluno._id;
+                option.textContent = aluno.name;
+                if (preselectedIds.includes(String(aluno._id))) option.selected = true;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar alunos:', error);
+            alert('Erro ao carregar alunos. Tente novamente.');
+        }
+    }
+
     // Modal handling
     function openAlunoModal(mode, id) {
         const aluno = alunosCache.find(a => String(a._id || a.id) === String(id));
@@ -718,6 +813,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.target?.id === 'professor-cancel') closeProfessorModal();
         if (e.target?.id === 'professor-save') saveProfessor();
         if (e.target === document.getElementById('professor-modal')) closeProfessorModal(); // clique no backdrop
+        if (e.target?.id === 'turma-edit-save') saveTurma();
+        if (e.target?.id === 'turma-edit-cancel') closeTurmaModal();
+        if (e.target?.id === 'close-turma-edit-modal') closeTurmaModal();
+        if (e.target === document.getElementById('turma-edit-modal')) closeTurmaModal(); // clique no backdrop
+        // Novo: fechar modal de visualização de turma
+        if (e.target?.id === 'turma-view-cancel') closeTurmaModal();
+        if (e.target === document.getElementById('turma-view-modal')) closeTurmaModal(); // clique no backdrop
     });
 
     // Novo: função para abrir modal de confirmação
@@ -904,26 +1006,32 @@ document.addEventListener('DOMContentLoaded', function () {
         formNovoAluno.dataset.bound = '1';
     }
 
-    // Modal para adicionar novo professor
-    // Remova o código antigo:
-    // const modalNovoProfessor = document.getElementById('modal-novo-professor');
-    // const btnNovoProfessor = document.getElementById('btn-novo-professor');
-    // const closeModalNovoProfessor = document.getElementById('close-modal-novo-professor');
-    // const formNovoProfessor = document.getElementById('form-novo-professor');
 
-    // btnNovoProfessor.addEventListener('click', () => {
-    //     modalNovoProfessor.style.display = 'block';
-    // });
+    // ...existing code...
+    // Adicione a nova função delegada para professor
+    (function bindNovoProfessorButtons() {
+        if (document.body.dataset.boundNovoProfessor) return;
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action="novo-professor"]');
+            if (btn) {
+                e.preventDefault();
+                const modal = document.getElementById('modal-novo-professor');
+                if (modal) modal.style.display = 'block';
+                // Carregar turmas se necessário para professor
+            }
+            if (e.target?.id === 'close-modal-novo-professor') {
+                const modal = document.getElementById('modal-novo-professor');
+                if (modal) modal.style.display = 'none';
+            }
+        });
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal-novo-professor');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        document.body.dataset.boundNovoProfessor = '1';
+    })();
 
-    // closeModalNovoProfessor.addEventListener('click', () => {
-    //     modalNovoProfessor.style.display = 'none';
-    // });
 
-    // window.addEventListener('click', (e) => {
-    //     if (e.target === modalNovoProfessor) {
-    //         modalNovoProfessor.style.display = 'none';
-    //     }
-    // });
 
     // Adicione a nova função delegada
     (function bindNovoTurmaButtons() {
@@ -1000,21 +1108,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeModalNovaTurma = document.getElementById('close-modal-nova-turma');
     const formNovaTurma = document.getElementById('form-nova-turma');
 
-    // Remova estes listeners diretos, pois o bindNovoTurmaButtons agora cuida disso
-    // btnNovaTurma.addEventListener('click', () => {
-    //     modalNovaTurma.style.display = 'block';
-    // });
-
-    // closeModalNovaTurma.addEventListener('click', () => {
-    //     modalNovaTurma.style.display = 'none';
-    // });
-
-    // window.addEventListener('click', (e) => {
-    //     if (e.target === modalNovaTurma) {
-    //         modalNovaTurma.style.display = 'none';
-    //     }
-    // });
-
     // Carregar professores
     function carregarProfessoresTurma() {
         fetch('http://localhost:9090/turma/professores')
@@ -1049,16 +1142,11 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error("Erro ao carregar alunos:", error));
     }
 
-    // Remova este listener duplicado
-    // btnNovaTurma.addEventListener('click', () => {
-    //     carregarProfessoresTurma();
-    //     carregarAlunosTurma();
-    // });
 
     // Adicionar/remover horários
     document.addEventListener('click', function (e) {
         if (e.target.classList.contains('btn-add-horario')) {
-            const horariosList = document.getElementById('horarios-turma-list');
+            const horariosList = e.target.closest('#horarios-turma-list') || e.target.closest('#horarios-turma-edit-list');
             const row = document.createElement('div');
             row.className = 'horario-row';
             row.innerHTML = `
@@ -1073,6 +1161,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </select>
                 <input type="time" name="horarioInicio[]" required />
                 <input type="time" name="horarioFim[]" required />
+                <button type="button" class="btn-add-horario">+</button>
                 <button type="button" class="btn-remove-horario">-</button>
             `;
             horariosList.appendChild(row);
