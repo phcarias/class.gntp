@@ -10,9 +10,8 @@ const authRoutes = require("./routes/authRoutes");
 const turmaRoutes = require("./routes/turmaRoutes")
 const adminRoutes = require("./routes/adminRoutes")
 const alunoRoutes = require('./routes/alunoRoutes');
-
-const frequenciaModelo = require("./models/FrequenciaModel");
-const TurmaModel = require("./models/TurmaModel");
+const frequenciaRoutes = require('./routes/frequenciaRoutes');
+const notaRoutes = require('./routes/notaRoutes');
 
 dotenv.config();
 require("./config/db");
@@ -31,6 +30,8 @@ app.use("/turma", turmaRoutes);
 app.use("/administrador", adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/aluno', alunoRoutes);
+app.use('/frequencia', frequenciaRoutes);
+app.use('/nota', notaRoutes);
 
 
 app.get("/login", (req, res) => {
