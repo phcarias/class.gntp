@@ -25,6 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
+const username = localStorage.getItem('username') || 'professor';
+    const userInfoElement = document.querySelector('.info-usuario strong');
+    if (userInfoElement) {
+        userInfoElement.textContent = username;
+    }
+
 document.addEventListener("DOMContentLoaded", () => {
     const filtroDia = document.getElementById("filtro-dia");
     const btnFiltrar = document.getElementById("btn-filtrar");
@@ -78,10 +85,10 @@ async function exibirDetalhesTurma(turmaId) {
                 .map((h) => `${h.diaSemana} (${h.horarioInicio} - ${h.horarioFim})`)
                 .join(", ")}</p>
             <p><strong>Professores:</strong> ${turma.professores
-                .map((p) => `${p.name} (${p.email})`)
+                .map((p) => `${p.name}`)
                 .join(", ")}</p>
             <p><strong>Alunos:</strong> ${turma.alunos
-                .map((a) => `${a.name} (${a.email})`)
+                .map((a) => `${a.name}`)
                 .join(", ")}</p>
             <button id="fechar-detalhes" class="botao-limpar">Fechar</button>
         `;

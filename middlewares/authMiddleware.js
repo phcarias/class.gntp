@@ -49,6 +49,8 @@ function checkAdmin(req, res, next) {
   next();
 }
 
+
+
 // Export compatível com diferentes import styles:
 // - const auth = require('./authMiddleware'); -> auth(req,res,next)
 // - const { checkToken } = require('./authMiddleware'); -> checkToken(req,res,next)

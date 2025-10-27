@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.type === 'admin') {
                     window.location.href = '/admin';
                 } else if (data.type === 'professor') {
-                    window.location.href = '/public/views/professor_main.html';
+                    window.location.href = '/professorhtml';
                 } else if (data.type === 'aluno') {
                     window.location.href = '/alunohtml';
                 } else {

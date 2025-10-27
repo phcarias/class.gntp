@@ -48,6 +48,12 @@ app.get("/alunohtml", (req,res) => {
   res.sendFile(path.join(__dirname, "public", "views", "aluno_main.html"));
 });
 
+app.get("/professorhtml", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "views", "professor_main.html"));
+});
+
+
+
 
 
 const porta = process.env.PORT || 9090;

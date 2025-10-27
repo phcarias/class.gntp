@@ -33,6 +33,13 @@ function initNavegacao() {
   mostrarSecao(sections[0].id);
 }
 
+
+const username = localStorage.getItem('username') || 'alunos';
+    const userInfoElement = document.querySelector('.info-usuario strong');
+    if (userInfoElement) {
+        userInfoElement.textContent = username;
+    }
+
 /* ----------------- Utilitários fetch ----------------- */
 async function fetchJson(url, opts = {}) {
   const res = await fetch(url, opts);
