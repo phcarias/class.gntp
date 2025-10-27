@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let alunosCache = [];
     let professoresCache = []; // novo cache
     let turmasCache = []; // Novo cache para turmas
+    let usersCache = []; // Novo: cache de usuários
 
     // Utils
     const $ = (sel) => document.querySelector(sel);
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     getFrequenciaMedia().catch(console.error);
     loadAlunos();
     loadProfessores(); // novo: carrega professores na inicialização
+    loadUsers(); // Novo: carrega usuários
 
     // Add this block here (right after loadProfessores) to hide all sections except the first (dashboard)
     document.querySelectorAll('.main-content section').forEach((section, index) => {
@@ -1430,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Popular selects de aluno
-        ['select-aluno-frequencia', 'select-aluno-desempenho'].forEach(id => {
+        ['select-aluno-frequencia', 'select-aluno-desempenho', 'select-aluno-desempenho-frequencia'].forEach(id => {
             const select = document.getElementById(id);
             alunos.forEach(a => {
                 const option = document.createElement('option');
@@ -1543,5 +1545,147 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btn-pdf-desempenho').addEventListener('click', () => {
         generatePDF('/relatorios/export/pdf/desempenho');
     });
+
+    // Novo: Desempenho + Frequência (Aluno)
+    document.getElementById('btn-pdf-desempenho-frequencia-aluno')?.addEventListener('click', () => {
+        const alunoId = document.getElementById('select-aluno-desempenho-frequencia')?.value;
+        const startDate = document.getElementById('start-date-desempenho-frequencia-aluno')?.value;
+        const endDate = document.getElementById('end-date-desempenho-frequencia-aluno')?.value;
+        if (!alunoId) return alert('Selecione um aluno');
+        // A rota aceita apenas alunoId; os parâmetros de data serão ignorados se não suportados.
+        generatePDF('/relatorios/export/pdf/desempenhofrequencia/aluno/' + alunoId, { startDate, endDate });
+    });
+
+    // Novo: renderização da lista de usuários
+    function renderUsersList(users) {
+        const tbody = document.querySelector('#usuarios .data-table tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!users || users.length === 0) {
+            const row = document.createElement('tr');
+            row.className = 'no-results';
+            row.innerHTML = `<td colspan="6">Nenhum usuário encontrado.</td>`;
+            tbody.appendChild(row);
+
+            if (!tbody.dataset.bound) {
+                tbody.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button[data-action]');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+
+                    if (btn.dataset.action === 'view') {
+                        if (typeof openUserModal === 'function') openUserModal('view', id);
+                        else alert('Visualização não implementada.');
+                    }
+                    if (btn.dataset.action === 'edit') {
+                        if (typeof openUserModal === 'function') openUserModal('edit', id);
+                        else alert('Edição não implementada.');
+                    }
+                    if (btn.dataset.action === 'delete') {
+                        if (!confirm('Deseja excluir este usuário?')) return;
+                        await deleteUser(id);
+                    }
+                });
+                tbody.dataset.bound = '1';
+            }
+            return;
+        }
+
+        users.forEach((user) => {
+            const statusClass = user.active ? 'active' : 'inactive';
+            const statusText = user.active ? 'Ativo' : 'Inativo';
+            const typeLabel = (user.type || '').charAt(0).toUpperCase() + (user.type || '').slice(1);
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user._id || ''}</td>
+                <td>${user.name || ''}</td>
+                <td>${user.email || ''}</td>
+                <td>${typeLabel || ''}</td>
+                <td><span class="status ${statusClass}">${statusText}</span></td>
+                <td class="actions">
+                    <button class="btn-icon btn-view" data-action="view" data-id="${user._id}"><span class="material-icons">visibility</span></button>
+                    <button class="btn-icon btn-edit" data-action="edit" data-id="${user._id}"><span class="material-icons">edit</span></button>
+                    <button class="btn-icon danger" data-action="delete" data-id="${user._id}"><span class="material-icons">delete</span></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        if (!tbody.dataset.bound) {
+            tbody.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const id = btn.dataset.id;
+
+                if (btn.dataset.action === 'view') {
+                    if (typeof openUserModal === 'function') openUserModal('view', id);
+                    else alert('Visualização não implementada.');
+                }
+                if (btn.dataset.action === 'edit') {
+                    if (typeof openUserModal === 'function') openUserModal('edit', id);
+                    else alert('Edição não implementada.');
+                }
+                if (btn.dataset.action === 'delete') {
+                    if (!confirm('Deseja excluir este usuário?')) return;
+                    await deleteUser(id);
+                }
+            });
+            tbody.dataset.bound = '1';
+        }
+    }
+
+    // Novo: carregar usuários
+    async function loadUsers() {
+        try {
+            const res = await fetch(`${api}/administrador/getusers`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.msg || `Erro ${res.status}`);
+            }
+            usersCache = await res.json();
+            renderUsersList(usersCache);
+
+            // Busca local por nome/email/tipo/id
+            const searchInput = document.querySelector('#usuarios .search-box input');
+            if (searchInput && !searchInput.dataset.bound) {
+                searchInput.addEventListener('input', debounce(() => {
+                    const q = (searchInput.value || '').toLowerCase().trim();
+                    const filtered = usersCache.filter(u =>
+                        (u.name || '').toLowerCase().includes(q) ||
+                        (u.email || '').toLowerCase().includes(q) ||
+                        (u.type || '').toLowerCase().includes(q) ||
+                        (u._id || '').toLowerCase().includes(q)
+                    );
+                    renderUsersList(filtered);
+                }, 300));
+                searchInput.dataset.bound = '1';
+            }
+        } catch (e) {
+            console.error('Erro ao carregar usuários:', e);
+            renderUsersList([]);
+        }
+    }
+
+    // Novo: deletar usuário
+    async function deleteUser(id) {
+        try {
+            const res = await fetch(`${api}/admin/userremove/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.msg || `Erro ${res.status}`);
+            usersCache = usersCache.filter(u => u._id !== id);
+            renderUsersList(usersCache);
+            alert('Usuário deletado com sucesso!');
+        } catch (e) {
+            console.error('Erro ao deletar usuário:', e);
+            alert('Erro ao deletar usuário.');
+        }
+    }
 
 });

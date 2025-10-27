@@ -29,7 +29,6 @@
             <li><a href="#alunos">Alunos</a></li>
             <li><a href="#professores">Professores</a></li>
             <li><a href="#turmas">Turmas</a></li>
-            <li><a href="#disciplinas">Disciplinas</a></li>
             <li><a href="#usuarios">Usuários</a></li>
             <li><a href="#relatorios">Relatórios</a></li>
             <li><a href="#configuracoes">Configurações</a></li>
@@ -228,6 +227,37 @@
             </div>
         </section>
 
+           <!-- Gerenciamento de Usuários -->
+           <section id="usuarios" class="management-section">
+            <h2>Gerenciamento de Usuários</h2>
+            <div class="section-header">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar usuário..." />
+                    <span class="material-icons">search</span>
+                </div>
+                <button class="btn-primary" data-action="novo-usuario">
+                    <span class="material-icons">person_add</span>
+                    Novo Usuário
+                </button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS irá preencher dinamicamente -->
+                </tbody>
+            </table>
+        </section>
+
         <!-- Relatórios -->
         <section id="relatorios" class="reports-section">
             <h2>Relatórios</h2>
@@ -304,6 +334,24 @@
                         <button class="btn-primary" id="btn-pdf-desempenho-aluno">Gerar PDF</button>
                     </div>
                 </div>
+
+                    <!-- Relatório de Desempenho + Frequência (Aluno) -->
+        <div class="report-card">
+            <h3>Relatório de Desempenho + Frequência (Aluno)</h3>
+            <p>Gere PDF agrupado por turma, com frequência e média de notas do aluno.</p>
+            <div class="report-options">
+                <label>Aluno:</label>
+                <select id="select-aluno-desempenho-frequencia">
+                    <option value="">Selecionar aluno</option>
+                    <!-- Opções carregadas via JS -->
+                </select>
+                <label>Data Início:</label>
+                <input type="date" id="start-date-desempenho-frequencia-aluno" />
+                <label>Data Fim:</label>
+                <input type="date" id="end-date-desempenho-frequencia-aluno" />
+                <button class="btn-primary" id="btn-pdf-desempenho-frequencia-aluno">Gerar PDF</button>
+            </div>
+        </div>
 
                 <!-- Relatório de Dados Gerais -->
                 <div class="report-card">
