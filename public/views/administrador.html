@@ -305,6 +305,24 @@
                     </div>
                 </div>
 
+                    <!-- Relatório de Desempenho + Frequência (Aluno) -->
+        <div class="report-card">
+            <h3>Relatório de Desempenho + Frequência (Aluno)</h3>
+            <p>Gere PDF agrupado por turma, com frequência e média de notas do aluno.</p>
+            <div class="report-options">
+                <label>Aluno:</label>
+                <select id="select-aluno-desempenho-frequencia">
+                    <option value="">Selecionar aluno</option>
+                    <!-- Opções carregadas via JS -->
+                </select>
+                <label>Data Início:</label>
+                <input type="date" id="start-date-desempenho-frequencia-aluno" />
+                <label>Data Fim:</label>
+                <input type="date" id="end-date-desempenho-frequencia-aluno" />
+                <button class="btn-primary" id="btn-pdf-desempenho-frequencia-aluno">Gerar PDF</button>
+            </div>
+        </div>
+
                 <!-- Relatório de Dados Gerais -->
                 <div class="report-card">
                     <h3>Relatório de Dados Gerais</h3>

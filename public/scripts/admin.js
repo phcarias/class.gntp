@@ -1430,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Popular selects de aluno
-        ['select-aluno-frequencia', 'select-aluno-desempenho'].forEach(id => {
+        ['select-aluno-frequencia', 'select-aluno-desempenho', 'select-aluno-desempenho-frequencia'].forEach(id => {
             const select = document.getElementById(id);
             alunos.forEach(a => {
                 const option = document.createElement('option');
@@ -1543,5 +1543,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btn-pdf-desempenho').addEventListener('click', () => {
         generatePDF('/relatorios/export/pdf/desempenho');
     });
+
+    // Novo: Desempenho + Frequência (Aluno)
+    document.getElementById('btn-pdf-desempenho-frequencia-aluno')?.addEventListener('click', () => {
+        const alunoId = document.getElementById('select-aluno-desempenho-frequencia')?.value;
+        const startDate = document.getElementById('start-date-desempenho-frequencia-aluno')?.value;
+        const endDate = document.getElementById('end-date-desempenho-frequencia-aluno')?.value;
+        if (!alunoId) return alert('Selecione um aluno');
+        // A rota aceita apenas alunoId; os parâmetros de data serão ignorados se não suportados.
+        generatePDF('/relatorios/export/pdf/desempenho/aluno/' + alunoId, { startDate, endDate });
+    });
+
 
 });

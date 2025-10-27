@@ -320,6 +320,147 @@ exports.exportRelatorioDesempenhoPDF = async (req, res) => {
     }
 };
 
+// Função para exportar relatório combinado de desempenho (frequência + notas) como PDF, agrupado por turma
+exports.exportRelatorioDesempenhoPDF = async (req, res) => {
+    try {
+        // Frequências com aluno e turma populados
+        const frequencias = await Frequencia.find({})
+            .populate('aluno', '_id name')
+            .populate('turma', '_id codigo')
+            .sort({ data: 1 });
+
+        // Map: turmaId -> { turmaId, turmaCodigo, alunos: Map<alunoId, { alunoId, alunoName, totalPresencas, totalAulas }> }
+        const turmasMap = new Map();
+
+        frequencias.forEach(freq => {
+            const turmaId = freq.turma?._id?.toString() || 'sem-turma';
+            const turmaCodigo = freq.turma?.codigo || 'Sem turma';
+            const alunoId = freq.aluno?._id?.toString();
+            const alunoName = freq.aluno?.name || 'Usuário não encontrado';
+            if (!alunoId) return;
+
+            if (!turmasMap.has(turmaId)) {
+                turmasMap.set(turmaId, { turmaId, turmaCodigo, alunos: new Map() });
+            }
+            const turmaEntry = turmasMap.get(turmaId);
+
+            if (!turmaEntry.alunos.has(alunoId)) {
+                turmaEntry.alunos.set(alunoId, {
+                    alunoId,
+                    alunoName,
+                    totalPresencas: 0,
+                    totalAulas: 0
+                });
+            }
+            const alunoEntry = turmaEntry.alunos.get(alunoId);
+            alunoEntry.totalAulas += 1;
+            if (freq.presente) alunoEntry.totalPresencas += 1;
+        });
+
+        // Notas por aluno+turma (se o campo turma existir em Nota) e fallback por aluno
+        const notasPorAlunoTurmaAgg = await Nota.aggregate([
+            { $group: { _id: { aluno: '$aluno', turma: '$turma' }, mediaNotas: { $avg: '$nota' } } }
+        ]);
+        const notasPorAlunoAgg = await Nota.aggregate([
+            { $group: { _id: '$aluno', mediaNotas: { $avg: '$nota' } } }
+        ]);
+
+        const notasAlunoTurmaMap = new Map(); // key: `${alunoId}|${turmaId}`
+        notasPorAlunoTurmaAgg.forEach(n => {
+            const alunoId = n._id?.aluno?.toString();
+            const turmaId = n._id?.turma?.toString() || 'sem-turma';
+            if (alunoId) notasAlunoTurmaMap.set(`${alunoId}|${turmaId}`, n.mediaNotas || 0);
+        });
+
+        const notasAlunoMap = new Map(); // key: alunoId
+        notasPorAlunoAgg.forEach(n => {
+            const alunoId = n._id?.toString();
+            if (alunoId) notasAlunoMap.set(alunoId, n.mediaNotas || 0);
+        });
+
+        // Montagem do PDF
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        doc.font('Times-Roman');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="relatorio-desempenho-geral.pdf"');
+        doc.pipe(res);
+
+        // Header global
+        const logoPath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+        if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 30, { width: 80 });
+        doc.fontSize(14).text('Class.GNTP', 65, 40, { align: 'center' });
+        doc.moveDown(2);
+        doc.font('Times-Bold').fontSize(18).text('Relatório de Desempenho Geral (Frequência + Notas)', { align: 'center' });
+        doc.font('Times-Roman');
+        doc.moveDown();
+
+        const turmasArray = Array.from(turmasMap.values());
+
+        if (turmasArray.length === 0) {
+            doc.fontSize(12).text('Nenhuma frequência encontrada para compor o relatório.', { align: 'center' });
+            const dataHoraImpressao = new Date().toLocaleString('pt-BR');
+            doc.moveDown();
+            doc.fontSize(10).text(`Impresso em ${dataHoraImpressao}`, 50, doc.y + 10, { align: 'left' });
+            doc.end();
+            return;
+        }
+
+        // Para cada turma, imprime uma tabela
+        turmasArray.forEach((turmaEntry, idx) => {
+            if (idx > 0) doc.addPage();
+
+            // Header da turma
+            doc.font('Times-Bold').fontSize(16).text(`Turma: ${turmaEntry.turmaCodigo}`, { align: 'left' });
+            doc.moveDown(0.5);
+            doc.font('Times-Roman').fontSize(11);
+
+            // Linhas da tabela
+            const linhas = Array.from(turmaEntry.alunos.values())
+                .sort((a, b) => a.alunoName.localeCompare(b.alunoName))
+                .map(alunoEntry => {
+                    const frequencia = alunoEntry.totalAulas > 0
+                        ? (alunoEntry.totalPresencas / alunoEntry.totalAulas) * 100
+                        : 0;
+
+                    const keyAlunoTurma = `${alunoEntry.alunoId}|${turmaEntry.turmaId}`;
+                    const mediaNotas = (notasAlunoTurmaMap.has(keyAlunoTurma)
+                        ? notasAlunoTurmaMap.get(keyAlunoTurma)
+                        : (notasAlunoMap.get(alunoEntry.alunoId) ?? 0));
+
+                    return [
+                        alunoEntry.alunoName,
+                        `${frequencia.toFixed(2)}%`,
+                        Number(mediaNotas || 0).toFixed(2)
+                    ];
+                });
+
+            const tableData = [
+                ['Aluno', 'Frequência (%)', 'Média de Notas'],
+                ...linhas
+            ];
+
+            // Tabela
+            doc.table({
+                defaultStyle: { border: 1, borderColor: 'gray', align: 'center' },
+                columnStyles: (i) => ({ align: i === 0 ? 'left' : 'center' }),
+                rowStyles: (i) => ({ align: 'center' }),
+                datas: tableData, // compat com algumas versões
+                data: tableData,
+            });
+
+            // Rodapé por turma
+            const dataHoraImpressao = new Date().toLocaleString('pt-BR');
+            doc.moveDown(0.5);
+            doc.fontSize(10).text(`Impresso em ${dataHoraImpressao}`, { align: 'left' });
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error('Erro ao gerar PDF de desempenho:', error);
+        res.status(500).json({ msg: 'Erro ao gerar PDF de desempenho.', error: error.message });
+    }
+};
+
 // Atualizar exportRelatorioFrequenciaAlunoPDF com conteúdo centralizado e justificado
 exports.exportRelatorioFrequenciaAlunoPDF = async (req, res) => {
     const { alunoId } = req.params;
@@ -632,5 +773,128 @@ exports.exportRelatorioDadosGeraisPDF = async (req, res) => {
     } catch (error) {
         console.error('Erro ao gerar PDF de dados gerais:', error);
         res.status(500).json({ msg: 'Erro ao gerar PDF de dados gerais.', error: error.message });
+    }
+};
+
+// Função para exportar relatório de desempenho (frequência + notas) de um aluno, agrupado por turma
+exports.exportRelatorioDesempenhoFrequenciaAlunoPDF = async (req, res) => {
+    try {
+        const { alunoId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(alunoId)) {
+            return res.status(400).json({ msg: 'alunoId inválido.' });
+        }
+
+        // Frequências do aluno com turma e aluno populados
+        const frequencias = await Frequencia.find({ aluno: alunoId })
+            .populate('aluno', '_id name email responsavelEmail')
+            .populate('turma', '_id codigo')
+            .sort({ data: 1 });
+
+        // Buscar dados do aluno (fallback caso não haja freq)
+        let alunoInfo = frequencias[0]?.aluno || null;
+        if (!alunoInfo) {
+            alunoInfo = await User.findById(alunoId).select('name email responsavelEmail');
+            if (!alunoInfo) return res.status(404).json({ msg: 'Aluno não encontrado.' });
+        }
+
+        // Agrupar frequência por turma
+        const turmasMap = new Map(); // turmaId -> { turmaId, turmaCodigo, totalPresencas, totalAulas }
+        frequencias.forEach(freq => {
+            const turmaId = freq.turma?._id?.toString() || 'sem-turma';
+            const turmaCodigo = freq.turma?.codigo || 'Sem turma';
+            if (!turmasMap.has(turmaId)) {
+                turmasMap.set(turmaId, { turmaId, turmaCodigo, totalPresencas: 0, totalAulas: 0 });
+            }
+            const t = turmasMap.get(turmaId);
+            t.totalAulas += 1;
+            if (freq.presente) t.totalPresencas += 1;
+        });
+
+        // Notas do aluno por turma (se existir campo turma em Nota) e fallback para média geral do aluno
+        const notasPorTurmaAgg = await Nota.aggregate([
+            { $match: { aluno: new mongoose.Types.ObjectId(alunoId) } },
+            { $group: { _id: '$turma', mediaNotas: { $avg: '$nota' } } }
+        ]);
+        const notasPorTurmaMap = new Map(); // turmaId -> media
+        notasPorTurmaAgg.forEach(n => {
+            const turmaId = n._id ? n._id.toString() : 'sem-turma';
+            notasPorTurmaMap.set(turmaId, n.mediaNotas || 0);
+        });
+
+        const notaGeralAgg = await Nota.aggregate([
+            { $match: { aluno: new mongoose.Types.ObjectId(alunoId) } },
+            { $group: { _id: '$aluno', mediaNotas: { $avg: '$nota' } } }
+        ]);
+        const mediaGeralAluno = notaGeralAgg[0]?.mediaNotas ?? 0;
+
+        // PDF
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        doc.font('Times-Roman');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="desempenho-${alunoInfo.name.replace(/\s+/g, '_')}.pdf"`);
+        doc.pipe(res);
+
+        // Header global
+        const logoPath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+        if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 30, { width: 80 });
+        doc.fontSize(14).text('Class.GNTP', 65, 40, { align: 'center' });
+        doc.moveDown(2);
+
+        // Título + info do aluno
+        doc.font('Times-Bold').fontSize(18).text(`Relatório de Desempenho de ${alunoInfo.name}`, { align: 'center' });
+        doc.font('Times-Roman').moveDown();
+        doc.fontSize(12).text(`Nome: ${alunoInfo.name}`, { align: 'justify' });
+        doc.text(`E-mail: ${alunoInfo.email || 'N/A'}`, { align: 'justify' });
+        doc.text(`E-mail do Responsável: ${alunoInfo.responsavelEmail || 'N/A'}`, { align: 'justify' });
+        doc.moveDown();
+
+        const turmasArray = Array.from(turmasMap.values()).sort((a, b) => a.turmaCodigo.localeCompare(b.turmaCodigo));
+
+        if (turmasArray.length === 0) {
+            doc.fontSize(12).text('Nenhuma frequência encontrada para este aluno.', { align: 'center' });
+            const dataHoraImpressao = new Date().toLocaleString('pt-BR');
+            doc.moveDown();
+            doc.fontSize(10).text(`Impresso em ${dataHoraImpressao}`, 50, doc.y + 10, { align: 'left' });
+            doc.end();
+            return;
+        }
+
+        turmasArray.forEach((turmaEntry, idx) => {
+            if (idx > 0) doc.addPage();
+
+            // Header da turma
+            doc.font('Times-Bold').fontSize(16).text(`Turma: ${turmaEntry.turmaCodigo}`, { align: 'left' });
+            doc.moveDown(0.5);
+            doc.font('Times-Roman').fontSize(11);
+
+            const frequencia = turmaEntry.totalAulas > 0
+                ? (turmaEntry.totalPresencas / turmaEntry.totalAulas) * 100
+                : 0;
+
+            const mediaTurma = notasPorTurmaMap.has(turmaEntry.turmaId)
+                ? notasPorTurmaMap.get(turmaEntry.turmaId)
+                : mediaGeralAluno;
+
+            const tableData = [
+                ['Aluno', 'Frequência (%)', 'Média de Notas'],
+                [alunoInfo.name, `${frequencia.toFixed(2)}%`, Number(mediaTurma || 0).toFixed(2)]
+            ];
+
+            doc.table({
+                defaultStyle: { border: 1, borderColor: 'gray', align: 'center' },
+                columnStyles: (i) => ({ align: i === 0 ? 'left' : 'center' }),
+                rowStyles: (i) => ({ align: 'center' }),
+                data: tableData,
+            });
+
+            const dataHoraImpressao = new Date().toLocaleString('pt-BR');
+            doc.moveDown(0.5);
+            doc.fontSize(10).text(`Impresso em ${dataHoraImpressao}`, { align: 'left' });
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error('Erro ao gerar PDF de desempenho do aluno:', error);
+        res.status(500).json({ msg: 'Erro ao gerar PDF de desempenho do aluno.', error: error.message });
     }
 };
