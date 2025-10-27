@@ -21,6 +21,6 @@ router.get('/export/pdf/dados-gerais', authMiddleware, reportController.exportRe
 
 // Rota para exportar relatório de desempenho geral como PDF
 router.get('/export/desempenho/pdf', authMiddleware, reportController.exportRelatorioDesempenhoPDF);
-router.get('/relatorios/export/pdf/desempenho/aluno/:alunoId', authMiddleware, reportController.exportRelatorioDesempenhoFrequenciaAlunoPDF);
+router.get('/export/pdf/desempenhofrequencia/aluno/:alunoId', authMiddleware, reportController.exportRelatorioDesempenhoFrequenciaAlunoPDF);
 
 module.exports = router;

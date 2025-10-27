@@ -779,6 +779,7 @@ exports.exportRelatorioDadosGeraisPDF = async (req, res) => {
 // Função para exportar relatório de desempenho (frequência + notas) de um aluno, agrupado por turma
 exports.exportRelatorioDesempenhoFrequenciaAlunoPDF = async (req, res) => {
     try {
+
         const { alunoId } = req.params;
         if (!mongoose.Types.ObjectId.isValid(alunoId)) {
             return res.status(400).json({ msg: 'alunoId inválido.' });
@@ -841,7 +842,7 @@ exports.exportRelatorioDesempenhoFrequenciaAlunoPDF = async (req, res) => {
         doc.moveDown(2);
 
         // Título + info do aluno
-        doc.font('Times-Bold').fontSize(18).text(`Relatório de Desempenho de ${alunoInfo.name}`, { align: 'center' });
+        doc.font('Times-Bold').fontSize(18).text(`Relatório de Desempenho e Frequencia de ${alunoInfo.name}`, { align: 'center' });
         doc.font('Times-Roman').moveDown();
         doc.fontSize(12).text(`Nome: ${alunoInfo.name}`, { align: 'justify' });
         doc.text(`E-mail: ${alunoInfo.email || 'N/A'}`, { align: 'justify' });

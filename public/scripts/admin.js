@@ -1551,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const endDate = document.getElementById('end-date-desempenho-frequencia-aluno')?.value;
         if (!alunoId) return alert('Selecione um aluno');
         // A rota aceita apenas alunoId; os parâmetros de data serão ignorados se não suportados.
-        generatePDF('/relatorios/export/pdf/desempenho/aluno/' + alunoId, { startDate, endDate });
+        generatePDF('/relatorios/export/pdf/desempenhofrequencia/aluno/' + alunoId, { startDate, endDate });
     });
 
 
