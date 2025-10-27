@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('userId', data._id);
                 localStorage.setItem('username', data.name);
                 localStorage.setItem('type', data.type);
+                localStorage.setItem('active', data.active);
+
+                if (data.active === false) {
+                    alert('Usuário inativo. Contate o administrador.');
+                    return;
+                }
 
                 // Redirecionamento baseado no tipo de usuário
                 if (data.type === 'admin') {

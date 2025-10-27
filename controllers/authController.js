@@ -159,7 +159,8 @@ exports.login = async (req, res) => {
       token, 
       type, 
       _id: user._id, 
-      name: user.name 
+      name: user.name,
+      active: user.active
     });
   } catch (error) {
     console.error('Erro ao realizar login:', error);

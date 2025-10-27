@@ -581,3 +581,44 @@ exports.getAlunosByName = async (req, res) => {
   }
 };
 
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select('-password')
+      .populate({ path: 'roleData.turmas.turma', model: Turma })
+      .populate('imagem');
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ msg: "Erro ao buscar usuários!", error: error.message });
+  }
+};
+
+
+exports.getUsersByName = async (req, res) => {
+  const { name, type } = req.body;
+
+  if (!name) {
+    return res.status(422).json({ msg: "O nome é obrigatório para a busca!" });
+  }
+
+  try {
+    const query = {
+      name: { $regex: new RegExp(name, "i") }
+    };
+    if (type) query.type = type; // opcional: filtrar por tipo (aluno, professor, admin)
+
+    const users = await User.find(query)
+      .select('name email type active roleData createdAt')
+      .populate({ path: 'roleData.turmas.turma', model: Turma })
+      .populate('imagem');
+
+    if (!users.length) {
+      return res.status(404).json({ msg: "Nenhum usuário encontrado com esse nome!" });
+    }
+
+    return res.status(200).json(users);
+  } catch (error) {
+    return res.status(500).json({ msg: "Erro ao buscar usuários pelo nome!", error: error.message });
+  }
+};

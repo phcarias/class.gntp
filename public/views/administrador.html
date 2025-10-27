@@ -29,7 +29,6 @@
             <li><a href="#alunos">Alunos</a></li>
             <li><a href="#professores">Professores</a></li>
             <li><a href="#turmas">Turmas</a></li>
-            <li><a href="#disciplinas">Disciplinas</a></li>
             <li><a href="#usuarios">Usuários</a></li>
             <li><a href="#relatorios">Relatórios</a></li>
             <li><a href="#configuracoes">Configurações</a></li>
@@ -226,6 +225,37 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+           <!-- Gerenciamento de Usuários -->
+           <section id="usuarios" class="management-section">
+            <h2>Gerenciamento de Usuários</h2>
+            <div class="section-header">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar usuário..." />
+                    <span class="material-icons">search</span>
+                </div>
+                <button class="btn-primary" data-action="novo-usuario">
+                    <span class="material-icons">person_add</span>
+                    Novo Usuário
+                </button>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS irá preencher dinamicamente -->
+                </tbody>
+            </table>
         </section>
 
         <!-- Relatórios -->

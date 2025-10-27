@@ -9,17 +9,22 @@ router.get("/alunosstats", checkToken, checkAdmin, adminController.getAlunosStat
 router.get("/professoresstats", checkToken, checkAdmin, adminController.getProfessoresStats);
 router.get("/turmasativas", checkToken, checkAdmin, adminController.getTurmasStats);
 router.get("/frequenciamedia", checkToken, checkAdmin, adminController.getFrequenciaMedia);
-router.post("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
 router.get("/getalunos", checkToken, checkAdmin, adminController.getAlunos);
-router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
 router.get("/getprofessores", checkToken, checkAdmin, adminController.getProfessores);
+router.get("/getturmas", checkToken, checkAdmin, turmaController.getTurmas); // Use diretamente
+router.get("/getusers", checkToken, checkAdmin, adminController.getUsers); // Novo endpoint para todos os usuários
+
+
+router.post("/buscaraluno", checkToken, checkAdmin, adminController.getAlunosByName);
 router.post("/buscarprofessor", checkToken, checkAdmin, adminController.getProfessoresByName);
+
+router.put("/attaluno", checkToken, checkAdmin, adminController.updateAluno);
 router.put("/attprofessor", checkToken, checkAdmin, adminController.updateProfessor);
+router.put("/updateturma/:id", checkToken, checkAdmin, turmaController.updateTurma); // Atualizar turma
+
 router.delete("/userremove/:id", checkToken, checkAdmin, adminController.deleteUser); // Deletar aluno ou professor
 router.delete("/turmaremove/:id", checkToken, checkAdmin, adminController.deleteTurma); // Deletar turma
 router.delete("/adminremove/:id", checkToken, checkAdmin, adminController.deleteAdmin); // Deletar admin (opcional)
-router.get("/getturmas", checkToken, checkAdmin, turmaController.getTurmas); // Use diretamente
-router.put("/updateturma/:id", checkToken, checkAdmin, turmaController.updateTurma); // Atualizar turma
 
 
 module.exports = router;
