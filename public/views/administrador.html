@@ -231,34 +231,94 @@
         <!-- Relatórios -->
         <section id="relatorios" class="reports-section">
             <h2>Relatórios</h2>
+            <div id="relatorio-resultados"></div> <!-- Container para preview de dados JSON, se necessário -->
             <div class="reports-grid">
+                <!-- Relatório de Frequência de Turma -->
                 <div class="report-card">
-                    <h3>Relatório de Frequência</h3>
-                    <p>Gere relatórios detalhados de frequência por período, turma ou aluno</p>
+                    <h3>Relatório de Frequência de Turma</h3>
+                    <p>Gere PDF com frequência média dos alunos por turma em um período definido.</p>
                     <div class="report-options">
-                        <select>
-                            <option>Selecionar turma</option>
-                            <option>3º Ano A</option>
-                            <option>2º Ano B</option>
+                        <label>Turma:</label>
+                        <select id="select-turma-frequencia">
+                            <option value="">Selecionar turma</option>
+                            <!-- Opções carregadas via JS -->
                         </select>
-                        <input type="date" />
-                        <input type="date" />
-                        <button class="btn-primary">Gerar PDF</button>
-                        <button class="btn-secondary">Exportar CSV</button>
+                        <label>Data Início:</label>
+                        <input type="date" id="start-date-frequencia-turma" />
+                        <label>Data Fim:</label>
+                        <input type="date" id="end-date-frequencia-turma" />
+                        <button class="btn-primary" id="btn-pdf-frequencia-turma">Gerar PDF</button>
                     </div>
                 </div>
 
+                <!-- Relatório de Frequência de Aluno -->
                 <div class="report-card">
-                    <h3>Relatório de Desempenho</h3>
-                    <p>Analise o desempenho geral dos alunos e turmas</p>
+                    <h3>Relatório de Frequência de Aluno</h3>
+                    <p>Gere PDF com frequência do aluno por turmas em um período definido.</p>
                     <div class="report-options">
-                        <select>
-                            <option>Selecionar período</option>
-                            <option>1º Bimestre</option>
-                            <option>2º Bimestre</option>
+                        <label>Aluno:</label>
+                        <select id="select-aluno-frequencia">
+                            <option value="">Selecionar aluno</option>
+                            <!-- Opções carregadas via JS -->
                         </select>
-                        <button class="btn-primary">Gerar Relatório</button>
+                        <label>Data Início:</label>
+                        <input type="date" id="start-date-frequencia-aluno" />
+                        <label>Data Fim:</label>
+                        <input type="date" id="end-date-frequencia-aluno" />
+                        <button class="btn-primary" id="btn-pdf-frequencia-aluno">Gerar PDF</button>
                     </div>
+                </div>
+
+                <!-- Relatório de Desempenho de Turma -->
+                <div class="report-card">
+                    <h3>Relatório de Desempenho de Turma</h3>
+                    <p>Gere PDF com médias de notas dos alunos por disciplina em uma turma.</p>
+                    <div class="report-options">
+                        <label>Turma:</label>
+                        <select id="select-turma-desempenho">
+                            <option value="">Selecionar turma</option>
+                            <!-- Opções carregadas via JS -->
+                        </select>
+                        <label>Data Início:</label>
+                        <input type="date" id="start-date-desempenho-turma" />
+                        <label>Data Fim:</label>
+                        <input type="date" id="end-date-desempenho-turma" />
+                        <button class="btn-primary" id="btn-pdf-desempenho-turma">Gerar PDF</button>
+                    </div>
+                </div>
+
+                <!-- Relatório de Desempenho de Aluno -->
+                <div class="report-card">
+                    <h3>Relatório de Desempenho de Aluno</h3>
+                    <p>Gere PDF com médias de notas do aluno por disciplinas.</p>
+                    <div class="report-options">
+                        <label>Aluno:</label>
+                        <select id="select-aluno-desempenho">
+                            <option value="">Selecionar aluno</option>
+                            <!-- Opções carregadas via JS -->
+                        </select>
+                        <label>Data Início:</label>
+                        <input type="date" id="start-date-desempenho-aluno" />
+                        <label>Data Fim:</label>
+                        <input type="date" id="end-date-desempenho-aluno" />
+                        <button class="btn-primary" id="btn-pdf-desempenho-aluno">Gerar PDF</button>
+                    </div>
+                </div>
+
+                <!-- Relatório de Dados Gerais -->
+                <div class="report-card">
+                    <h3>Relatório de Dados Gerais</h3>
+                    <p>Gere PDF com turmas criadas, alunos e datas de criação.</p>
+                    <div class="report-options">
+                        <button class="btn-primary" id="btn-pdf-dados-gerais">Gerar PDF</button>
+                    </div>
+                </div>
+
+                <!-- Relatório de Desempenho Geral -->
+                <div class="report-card">
+                    <h3>Relatório de Desempenho Geral</h3>
+                    <p>Gere um relatório combinado de frequência e médias de notas de todos os alunos no mês atual.</p>
+                    <button class="btn-primary" id="btn-pdf-desempenho">Exportar PDF</button>
                 </div>
             </div>
         </section>

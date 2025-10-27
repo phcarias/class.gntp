@@ -150,7 +150,8 @@ exports.login = async (req, res) => {
         id: user._id,
         type: user.type,
       },
-      secret
+      secret,
+      { expiresIn: '24h' } 
     );
 
     res.status(200).json({ 

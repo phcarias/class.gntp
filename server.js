@@ -12,6 +12,7 @@ const adminRoutes = require("./routes/adminRoutes")
 const alunoRoutes = require('./routes/alunoRoutes');
 const frequenciaRoutes = require('./routes/frequenciaRoutes');
 const notaRoutes = require('./routes/notaRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 dotenv.config();
 require("./config/db");
@@ -32,6 +33,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/aluno', alunoRoutes);
 app.use('/frequencia', frequenciaRoutes);
 app.use('/nota', notaRoutes);
+app.use('/relatorios', reportRoutes);
 
 
 app.get("/login", (req, res) => {

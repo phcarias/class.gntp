@@ -764,7 +764,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const turmasSelect = document.getElementById('professor-turmas-select');
-        const turmas = turmasSelect?.multiple 
+        const turmas = turmasSelect?.multiple
             ? Array.from(turmasSelect.selectedOptions || []).map(o => o.value)
             : [turmasSelect?.value].filter(Boolean);
         const disciplinas = (document.getElementById('professor-disciplinas').value || '')
@@ -1247,8 +1247,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const res = await fetch(`${api}/administrador/alunosstats`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Adiciona o token no cabeçalho
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}` // Adiciona o token no cabeçalho
             }
         });
         if (!res.ok) {
@@ -1267,8 +1266,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const res = await fetch(`${api}/administrador/turmasativas`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Adiciona o token no cabeçalho
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}` // Adiciona o token no cabeçalho
             }
         });
         if (!res.ok) {
@@ -1290,8 +1288,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const res = await fetch(`${api}/administrador/frequenciamedia`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Adiciona o token no cabeçalho
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}` // Adiciona o token no cabeçalho
             }
         });
         if (!res.ok) {
@@ -1411,4 +1408,140 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Carregar turmas e alunos para selects
+    async function loadOptionsForReports() {
+        const [turmasRes, alunosRes] = await Promise.all([
+            fetch(`${api}/turma/listar`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${api}/turma/alunos`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        const turmas = await turmasRes.json();
+        const alunos = await alunosRes.json();
+
+        // Popular selects de turma
+        ['select-turma-frequencia', 'select-turma-desempenho'].forEach(id => {
+            const select = document.getElementById(id);
+            turmas.forEach(t => {
+                const option = document.createElement('option');
+                option.value = t._id;
+                option.textContent = t.codigo;
+                select.appendChild(option);
+            });
+        });
+
+        // Popular selects de aluno
+        ['select-aluno-frequencia', 'select-aluno-desempenho'].forEach(id => {
+            const select = document.getElementById(id);
+            alunos.forEach(a => {
+                const option = document.createElement('option');
+                option.value = a._id;
+                option.textContent = a.name;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    // Função genérica para gerar PDF
+    async function generatePDF(urlBase, params = {}) {
+        if (!isTokenValid()) {
+            alert('Token expirado. Faça login novamente.');
+            return;
+        }
+
+        const query = new URLSearchParams(params).toString();
+        const url = `${api}${urlBase}?${query}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Envia o token
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Erro ao gerar PDF:', response.status, errorText);
+                alert('Erro ao gerar relatório. Verifique os dados e tente novamente.');
+                return;
+            }
+
+            // Converte resposta em blob (PDF)
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Cria link de download e clica automaticamente
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'relatorio.pdf';  // Nome do arquivo
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Libera o blob URL
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Erro na requisição:', error);
+            alert('Erro de conexão. Tente novamente.');
+        }
+    }
+
+    // Event listeners para botões
+    document.getElementById('btn-pdf-frequencia-turma').addEventListener('click', () => {
+        const turmaId = document.getElementById('select-turma-frequencia').value;
+        const startDate = document.getElementById('start-date-frequencia-turma').value;
+        const endDate = document.getElementById('end-date-frequencia-turma').value;
+        if (!turmaId) return alert('Selecione uma turma');
+        generatePDF('/relatorios/export/pdf/frequencia/turma/' + turmaId, { startDate, endDate });
+    });
+
+    document.getElementById('btn-pdf-frequencia-aluno').addEventListener('click', () => {
+        const alunoId = document.getElementById('select-aluno-frequencia').value;
+        const startDate = document.getElementById('start-date-frequencia-aluno').value;
+        const endDate = document.getElementById('end-date-frequencia-aluno').value;
+        if (!alunoId) return alert('Selecione um aluno');
+        generatePDF('/relatorios/export/pdf/frequencia/aluno/' + alunoId, { startDate, endDate });
+    });
+
+    // Adicionar event listeners para botões de desempenho e dados gerais
+    document.getElementById('btn-pdf-desempenho-turma').addEventListener('click', () => {
+        const turmaId = document.getElementById('select-turma-desempenho').value;
+        const startDate = document.getElementById('start-date-desempenho-turma').value;
+        const endDate = document.getElementById('end-date-desempenho-turma').value;
+        if (!turmaId) return alert('Selecione uma turma');
+        generatePDF('/relatorios/export/pdf/desempenho/turma/' + turmaId, { startDate, endDate });
+    });
+
+    document.getElementById('btn-pdf-desempenho-aluno').addEventListener('click', () => {
+        const alunoId = document.getElementById('select-aluno-desempenho').value;
+        const startDate = document.getElementById('start-date-desempenho-aluno').value;
+        const endDate = document.getElementById('end-date-desempenho-aluno').value;
+        if (!alunoId) return alert('Selecione um aluno');
+        generatePDF('/relatorios/export/pdf/desempenho/aluno/' + alunoId, { startDate, endDate });
+    });
+
+    document.getElementById('btn-pdf-dados-gerais').addEventListener('click', () => {
+        generatePDF('/relatorios/export/pdf/dados-gerais');
+    });
+
+    // Validação adicional: Verificar token antes de fetches
+    function isTokenValid() {
+        const token = localStorage.getItem('token');
+        if (!token) return false;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.exp > Date.now() / 1000; // Verifica expiração
+        } catch {
+            return false;
+        }
+    }
+
+    // Antes de generatePDF, chame if (!isTokenValid()) { alert('Token expirado. Faça login novamente.'); return; }
+    loadOptionsForReports(); // Chama para popular selects de relatórios
+
+    // Event listener para exportar relatório de desempenho geral
+    document.getElementById('btn-pdf-desempenho').addEventListener('click', () => {
+        generatePDF('/relatorios/export/pdf/desempenho');
+    });
+
 });

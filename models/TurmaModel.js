@@ -26,7 +26,12 @@ const turmaSchema = new mongoose.Schema({
     dataFim: { type: Date, required: true }     // Data de término do período letivo
   },
   limiteFaltas: { type: Number, default: 25 }, // % máximo de faltas permitidas
-  ativo: { type: Boolean, default: true } // Indica se a turma está ativa
+  ativo: { type: Boolean, default: true }, // Indica se a turma está ativa
+    createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+
 });
 
 module.exports = mongoose.model("Turma", turmaSchema, "turma");
