@@ -1,40 +1,38 @@
-const Frequencia = require('../models/FrequenciaModel');
-const User = require('../models/UserModel');
-const Turma = require('../models/TurmaModel');
+// ...existing code...
+const Turma = require("../models/TurmaModel");
+const Frequencia = require("../models/FrequenciaModel"); // cria abaixo se não existir
+const User = require("../models/UserModel");
 
-// Criar um novo registro de frequência
 exports.createFrequencia = async (req, res) => {
-  const { aluno, turma, data, presente, justificativa, justificado } = req.body;
-
-  // Validações básicas
-  if (!aluno || !turma || !data) {
-    return res.status(400).json({ msg: 'Campos obrigatórios: aluno, turma e data.' });
-  }
-
   try {
-    // Verificar se aluno e turma existem
-    const alunoExists = await User.findById(aluno);
-    const turmaExists = await Turma.findById(turma);
-    if (!alunoExists || !turmaExists) {
-      return res.status(404).json({ msg: 'Aluno ou turma não encontrados.' });
+    const { turmaId, registros, data } = req.body || {};
+    if (!turmaId || !Array.isArray(registros) || registros.length === 0) {
+      return res.status(400).json({ msg: "turmaId e registros (array) são obrigatórios." });
     }
 
-    const novaFrequencia = new Frequencia({
-      aluno,
-      turma,
-      data,
-      presente,
-      justificativa,
-      justificado
-    });
+    const turma = await Turma.findById(turmaId);
+    if (!turma) return res.status(404).json({ msg: "Turma não encontrada." });
 
-    await novaFrequencia.save();
-    res.status(201).json({ msg: 'Frequência registrada com sucesso!', frequencia: novaFrequencia });
-  } catch (error) {
-    console.error('Erro ao criar frequência:', error);
-    res.status(500).json({ msg: 'Erro interno do servidor.' });
+    // opcional: professor vindo do auth middleware (req.user)
+    const professorId = req.user ? req.user._id : undefined;
+    const dia = data ? new Date(data) : new Date();
+
+    const docs = registros.map(r => ({
+      turma: turmaId,
+      aluno: r.alunoId,
+      status: r.status, // 'presente' | 'falta'
+      data: dia,
+      professor: professorId
+    }));
+
+    const inserted = await Frequencia.insertMany(docs);
+    return res.status(201).json({ msg: "Frequências registradas.", inserted: inserted.length });
+  } catch (err) {
+    console.error("createFrequencia erro:", err && err.stack ? err.stack : err);
+    return res.status(500).json({ msg: "Erro ao salvar frequências.", erro: err.message || err });
   }
 };
+// ...existing code...
 
 // Listar frequências (com filtros opcionais por aluno, turma ou data)
 exports.getFrequencias = async (req, res) => {

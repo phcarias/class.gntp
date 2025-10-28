@@ -1,21 +1,15 @@
+// ...existing code...
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const frequenciaSchema = new mongoose.Schema({
-    aluno: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User', 
-      required: true 
-    }, // Aluno referente
-    turma: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'Turma', 
-      required: true 
-    }, // Turma referente
-    data: { type: Date, required: true },        // Data da aula
-    presente: { type: Boolean, default: false }, // Status de presença
-    justificativa: String,      // Motivo da falta (se houver)
-    justificado: { type: Boolean, default: false }, // Se falta foi justificada
-    dataRegistro: { type: Date, default: Date.now } // Quando foi registrada
-  });
+const FrequenciaSchema = new Schema({
+  turma: { type: Schema.Types.ObjectId, ref: "Turma", required: true },
+  aluno: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  professor: { type: Schema.Types.ObjectId, ref: "User" },
+  status: { type: String, enum: ["presente", "falta"], required: true },
+  data: { type: Date, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
 
-module.exports = mongoose.model("Frequencia", frequenciaSchema, "frequencia");
+module.exports = mongoose.model("Frequencia", FrequenciaSchema);
+// ...existing code...
