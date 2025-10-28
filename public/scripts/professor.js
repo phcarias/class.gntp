@@ -339,4 +339,98 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnSalvarFrequencia) btnSalvarFrequencia.addEventListener("click", salvarFrequencia);
 });
 
-// ...existing code...
+
+// Função para carregar turmas no seletor
+// Reutilizar a função para carregar turmas
+function carregarTurmasParaNotas() {
+  const seletorTurma = document.getElementById("turma-select"); // Reutilizando o seletor existente
+  if (!seletorTurma) return;
+
+  fetch("/turma/listar") // Endpoint já utilizado para listar turmas
+    .then(resposta => resposta.json())
+    .then(turmas => {
+      seletorTurma.innerHTML = "<option value=''>-- Selecione --</option>"; // Limpar opções anteriores
+      turmas.forEach(turma => {
+        const opcao = document.createElement("option");
+        opcao.value = turma.id;
+        opcao.textContent = turma.nome;
+        seletorTurma.appendChild(opcao);
+      });
+    })
+    .catch(erro => console.error("Erro ao carregar turmas:", erro));
+}
+
+// Reutilizar a função para carregar alunos
+function carregarAlunosParaNotas(turmaId) {
+  const seletorAluno = document.getElementById("aluno-select"); // Reutilizando o seletor existente
+  if (!seletorAluno) return;
+
+  fetch(`/turma/detalhes/${turmaId}/alunos`) // Endpoint já utilizado para carregar alunos
+    .then(resposta => resposta.json())
+    .then(alunos => {
+      seletorAluno.innerHTML = "<option value=''>-- Selecione --</option>"; // Limpar opções anteriores
+      alunos.forEach(aluno => {
+        const opcao = document.createElement("option");
+        opcao.value = aluno.id;
+        opcao.textContent = aluno.nome;
+        seletorAluno.appendChild(opcao);
+      });
+    })
+    .catch(erro => console.error("Erro ao carregar alunos:", erro));
+}
+
+// Função para salvar a nota do aluno selecionado
+function salvarNota() {
+  const turmaId = document.getElementById("turma-select")?.value; // Reutilizando o seletor existente
+  const alunoId = document.getElementById("aluno-select")?.value; // Reutilizando o seletor existente
+  const nota = parseFloat(document.getElementById("nota-input")?.value);
+
+  if (!turmaId) {
+    alert("Selecione uma turma.");
+    return;
+  }
+  if (!alunoId) {
+    alert("Selecione um aluno.");
+    return;
+  }
+  if (isNaN(nota) || nota < 0 || nota > 10) {
+    alert("Insira uma nota válida entre 0 e 10.");
+    return;
+  }
+
+  fetch(`/turma/detalhes/${turmaId}/alunos/${alunoId}/notas`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nota }),
+  })
+    .then(resposta => {
+      if (resposta.ok) {
+        alert("Nota salva com sucesso!");
+      } else {
+        alert("Erro ao salvar a nota.");
+      }
+    })
+    .catch(erro => console.error("Erro ao salvar nota:", erro));
+}
+
+// Adicionar eventos e carregar turmas ao carregar a página
+document.addEventListener("DOMContentLoaded", () => {
+  carregarTurmasParaNotas(); // Reutilizar o carregamento de turmas
+
+  const botaoCarregarAlunos = document.getElementById("btn-carregar-alunos"); // Reutilizando o botão existente
+  if (botaoCarregarAlunos) {
+    botaoCarregarAlunos.addEventListener("click", () => {
+      const turmaId = document.getElementById("turma-select")?.value;
+      if (!turmaId) {
+        alert("Selecione uma turma.");
+        return;
+      }
+      carregarAlunosParaNotas(turmaId);
+    });
+  }
+
+  const botaoSalvarNota = document.getElementById("btn-salvar-nota"); // Novo botão para salvar nota
+  if (botaoSalvarNota) {
+    botaoSalvarNota.addEventListener("click", salvarNota);
+  }
+});
