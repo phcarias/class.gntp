@@ -22,12 +22,23 @@ exports.getRelatorioFrequenciaTurma = async (req, res) => {
     try {
         const pipeline = [
             { $match: { turma: new mongoose.Types.ObjectId(turmaId), data: { $gte: start, $lt: end } } },
-            { $group: { _id: '$aluno', totalPresencas: { $sum: { $cond: [{ $eq: ['$presente', true] }, 1, 0] } }, totalAulas: { $sum: 1 } } },
+            { $group: { 
+                _id: '$aluno', 
+                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
+                totalAulas: { $sum: 1 } 
+            } },
             { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'aluno' } },
             { $unwind: '$aluno' },
             { $project: { aluno: '$aluno.name', frequencia: { $multiply: [{ $divide: ['$totalPresencas', '$totalAulas'] }, 100] } } }
         ];
-        const data = await Frequencia.aggregate(pipeline);
+        const data = await Frequencia.aggregate([
+            { $match: { turma: turmaId, data: { $gte: start, $lt: end } } },
+            { $group: { 
+                _id: '$aluno', 
+                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
+                totalAulas: { $sum: 1 } 
+            } }
+        ]);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ msg: 'Erro ao gerar relatório de frequência de turma.', error });
@@ -41,7 +52,11 @@ exports.getRelatorioFrequenciaAluno = async (req, res) => {
     try {
         const pipeline = [
             { $match: { aluno: new mongoose.Types.ObjectId(alunoId), data: { $gte: start, $lt: end } } },
-            { $group: { _id: '$turma', totalPresencas: { $sum: { $cond: [{ $eq: ['$presente', true] }, 1, 0] } }, totalAulas: { $sum: 1 } } },
+            { $group: { 
+                _id: '$turma', 
+                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
+                totalAulas: { $sum: 1 } 
+            } },
             { $lookup: { from: 'turmas', localField: '_id', foreignField: '_id', as: 'turma' } },
             { $unwind: '$turma' },
             { $project: { turma: '$turma.codigo', frequencia: { $multiply: [{ $divide: ['$totalPresencas', '$totalAulas'] }, 100] } } }
@@ -119,66 +134,80 @@ exports.getRelatorioDadosGerais = async (req, res) => {
     }
 };
 
-
-
 // Funções de export PDF (atualizadas para usar período)
 exports.exportRelatorioFrequenciaTurmaPDF = async (req, res) => {
-
     const { turmaId } = req.params;
     const { start, end } = getDateRange(req);
+
     try {
-        const turma = await Turma.findById(turmaId).select('codigo');
-        if (!turma) return res.status(404).json({ msg: 'Turma não encontrada.' });
+        const frequencias = await Frequencia.find({
+            turma: turmaId,
+            data: { $gte: start, $lt: end }
+        })
+            .populate('aluno', 'name') // Popula o nome do aluno
+            .sort({ data: 1 }); // Ordena por data
 
-        const pipeline = [
-            { $match: { turma: new mongoose.Types.ObjectId(turmaId), data: { $gte: start, $lt: end } } },
-            { $group: { _id: '$aluno', totalPresencas: { $sum: { $cond: [{ $eq: ['$presente', true] }, 1, 0] } }, totalAulas: { $sum: 1 } } },
-            { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'aluno' } },
-            { $unwind: '$aluno' },
-            { $project: { aluno: '$aluno.name', frequencia: { $multiply: [{ $divide: ['$totalPresencas', '$totalAulas'] }, 100] } } }
-        ];
-        const data = await Frequencia.aggregate(pipeline);
+        const turma = await Turma.findById(turmaId);
 
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        doc.font('Times-Roman');
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="relatorio-frequencia-turma-${turma.codigo}.pdf"`);
-        doc.pipe(res);
+        if (!turma) {
+            return res.status(404).json({ msg: 'Turma não encontrada.' });
+        }
 
-        // Header
-        const logoPath = path.join(__dirname, '../public/img/logo_v2.jpeg');
-        if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 30, { width: 80 });
-        doc.fontSize(14).text('Class.GNTP', 65, 40, { align: 'center' });
-        doc.moveDown(2);
+        // Criação do PDF
+        const doc = new PDFDocument();
+        const filePath = path.join(__dirname, `../../exports/Relatorio_Frequencia_Turma_${turma.codigo}.pdf`);
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
 
-        // Título
+        // Título (negrito)
         doc.font('Times-Bold').fontSize(18).text(`Relatório de Frequência da Turma ${turma.codigo}`, { align: 'center' });
-        doc.font('Times-Roman');  // Volta para normal
+        doc.font('Times-Roman');
         doc.moveDown();
 
-        // Tabela
-        if (data.length === 0) {
-            doc.fontSize(12).text('Nenhum dado encontrado.', { align: 'center' });
+        // Informações da turma
+        doc.fontSize(12).text(`Código da Turma: ${turma.codigo}`, { align: 'justify' });
+        doc.text(`Período: ${start.toLocaleDateString('pt-BR')} a ${end.toLocaleDateString('pt-BR')}`, { align: 'justify' });
+        doc.moveDown();
+
+        // Tabela de frequência
+        if (frequencias.length === 0) {
+            doc.fontSize(12).text('Nenhum registro encontrado no período selecionado.', { align: 'center' });
         } else {
-            const tableData = [["Aluno", "Frequência (%)"], ...data.map(item => [item.aluno, item.frequencia.toFixed(2)])];
+            const tableData = [
+                ["Data", "Aluno", "Status", "Justificativa/Observação", "Data Registro"],
+                ...frequencias.map(freq => {
+                    const dataFormatada = new Date(freq.data).toLocaleDateString('pt-BR');
+                    const status = freq.status === 'presente' ? 'Presente' : 'Falta';
+                    const justificativa = freq.justificativa || 'N/A';
+                    const dataRegistro = new Date(freq.createdAt).toLocaleDateString('pt-BR');
+                    return [dataFormatada, freq.aluno?.name || 'N/A', status, justificativa, dataRegistro];
+                })
+            ];
+
             doc.table({
-                defaultStyle: { border: 1, borderColor: "gray", align: 'center' },
-                columnStyles: (i) => ({ align: 'center' }),
-                rowStyles: (i) => ({ align: 'center' }),
-                data: tableData,
+                headers: tableData[0],
+                rows: tableData.slice(1),
+                options: {
+                    border: 1,
+                    borderColor: "gray",
+                    align: 'center'
+                }
             });
         }
 
-        // Footer
-        const pageCount = doc.bufferedPageRange().count;
-        const dataHoraImpressao = new Date().toLocaleString('pt-BR');
-        doc.fontSize(10).text(`Página 1 de ${pageCount}`, 450, 750, { align: 'right' });
-        doc.text(`Impresso em ${dataHoraImpressao}`, 50, 770, { align: 'left' });
-
         doc.end();
+
+        stream.on('finish', () => {
+            res.download(filePath, `Relatorio_Frequencia_Turma_${turma.codigo}.pdf`, (err) => {
+                if (err) {
+                    console.error('Erro ao enviar o arquivo:', err);
+                }
+                fs.unlinkSync(filePath); // Remove o arquivo após o download
+            });
+        });
     } catch (error) {
-        console.error('Erro ao gerar PDF de frequência de turma:', error);
-        res.status(500).json({ msg: 'Erro ao gerar PDF de frequência de turma.', error: error.message });
+        console.error('Erro ao gerar relatório de frequência da turma:', error);
+        res.status(500).json({ msg: 'Erro ao gerar relatório de frequência da turma.', error });
     }
 };
 
@@ -261,7 +290,7 @@ exports.exportRelatorioDesempenhoPDF = async (req, res) => {
                 freqMap[alunoId] = { aluno: alunoName, totalPresencas: 0, totalAulas: 0, alunoId };  // Adicionado alunoId
             }
             freqMap[alunoId].totalAulas += 1;
-            if (freq.presente) freqMap[alunoId].totalPresencas += 1;
+            if (freq.status === 'presente') freqMap[alunoId].totalPresencas += 1;
         });
         const freqData = Object.values(freqMap).map(item => ({
             _id: item.alunoId,  // Agora acessível
@@ -357,7 +386,9 @@ exports.exportRelatorioDesempenhoPDF = async (req, res) => {
             }
             const alunoEntry = turmaEntry.alunos.get(alunoId);
             alunoEntry.totalAulas += 1;
-            if (freq.presente) alunoEntry.totalPresencas += 1;
+
+            // Atualizado: Verificar o campo `status` em vez de `presente`
+            if (freq.status === 'presente') alunoEntry.totalPresencas += 1;
         });
 
         // Notas por aluno+turma (se o campo turma existir em Nota) e fallback por aluno
@@ -400,7 +431,7 @@ exports.exportRelatorioDesempenhoPDF = async (req, res) => {
         const turmasArray = Array.from(turmasMap.values());
 
         if (turmasArray.length === 0) {
-            doc.fontSize(12).text('Nenhuma frequência encontrada para compor o relatório.', { align: 'center' });
+            doc.fontSize(12).text('Nenhuma frequência/nota encontrada para compor o relatório.', { align: 'center' });
             const dataHoraImpressao = new Date().toLocaleString('pt-BR');
             doc.moveDown();
             doc.fontSize(10).text(`Impresso em ${dataHoraImpressao}`, 50, doc.y + 10, { align: 'left' });
@@ -468,38 +499,26 @@ exports.exportRelatorioDesempenhoPDF = async (req, res) => {
 exports.exportRelatorioFrequenciaAlunoPDF = async (req, res) => {
     const { alunoId } = req.params;
     const { start, end } = getDateRange(req);
+
     try {
-        // Buscar dados completos do aluno
-        const aluno = await User.findById(alunoId).select('name email responsavelEmail');
+        const frequencias = await Frequencia.find({
+            aluno: alunoId,
+            data: { $gte: start, $lt: end }
+        })
+            .populate('turma', 'codigo') // Popula o código da turma
+            .sort({ data: 1 }); // Ordena por data
+
+        const aluno = await User.findById(alunoId);
+
         if (!aluno) {
             return res.status(404).json({ msg: 'Aluno não encontrado.' });
         }
-        const alunoName = aluno.name.replace(/\s+/g, '_');
 
-        // Buscar registros de frequência
-        const frequencias = await Frequencia.find({
-            aluno: new mongoose.Types.ObjectId(alunoId),
-            data: { $gte: start, $lt: end }
-        }).populate('turma', 'codigo').sort({ data: 1 });
-
-        // Criar documento com margens e fonte
-        const doc = new PDFDocument({
-            margin: 50,  // Margens de 50px para espaço de header/footer
-            size: 'A4'
-        });
-        doc.font('Times-Roman');  // Definir fonte Times New Roman para todo o documento
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="relatorio-frequencia-${alunoName}.pdf"`);
-        doc.pipe(res);
-
-        // Header
-        const logoPath = path.join(__dirname, '../public/img/logo_v2.jpeg');  // Caminho absoluto para a logo
-        if (fs.existsSync(logoPath)) {
-            doc.image(logoPath, 50, 30, { width: 80 });  // Logo no canto superior esquerdo
-        }
-        doc.fontSize(14).text('Class.GNTP', 65, 40, { align: 'center' });  // Nome do sistema no meio
-        doc.moveDown(2);  // Espaço após header
+        // Criação do PDF
+        const doc = new PDFDocument();
+        const filePath = path.join(__dirname, `../../exports/Relatorio_Frequencia_${aluno.name}.pdf`);
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
 
         // Título (negrito)
         doc.font('Times-Bold').fontSize(18).text(`Relatório de Frequência de ${aluno.name}`, { align: 'center' });
@@ -518,49 +537,41 @@ exports.exportRelatorioFrequenciaAlunoPDF = async (req, res) => {
         } else {
             // Preparar dados da tabela
             const tableData = [
-                ["Data", "Turma", "Presença", "Justificativa/Observação", "Justificado", "Data Registro"],
+                ["Data", "Turma", "Status", "Justificativa/Observação", "Data Registro"],
                 ...frequencias.map(freq => {
                     const dataFormatada = new Date(freq.data).toLocaleDateString('pt-BR');
-                    const presente = freq.presente ? 'Presente' : 'Ausente';
+                    const status = freq.status === 'presente' ? 'Presente' : 'Falta';
                     const justificativa = freq.justificativa || 'N/A';
-                    const justificado = freq.justificado ? 'Sim' : 'Não';
-                    const dataRegistro = new Date(freq.dataRegistro).toLocaleDateString('pt-BR');
-                    return [dataFormatada, freq.turma?.codigo || 'N/A', presente, justificativa, justificado, dataRegistro];
+                    const dataRegistro = new Date(freq.createdAt).toLocaleDateString('pt-BR');
+                    return [dataFormatada, freq.turma?.codigo || 'N/A', status, justificativa, dataRegistro];
                 })
             ];
 
             // Adicionar tabela (centralizada, com texto das células centralizado)
             doc.table({
-                defaultStyle: { border: 1, borderColor: "gray", align: 'center' },  // Centraliza texto em todas as células
-                columnStyles: (i) => ({
-                    align: 'center',  // Centraliza texto em cada coluna
-                    border: { left: i === 0 ? 2 : 1, right: i === 2 ? 2 : 1 },  // Bordas extras
-                    borderColor: { left: i === 0 ? "black" : "gray", right: i === 2 ? "black" : "gray" }
-                }),
-                rowStyles: (i) => ({
-                    align: 'center',  // Centraliza texto em cada linha
-                    border: { top: i === 0 ? 2 : 1, bottom: i === tableData.length - 1 ? 2 : 1 },
-                    borderColor: { top: i === 0 ? "black" : "gray", bottom: i === tableData.length - 1 ? "black" : "gray" }
-                }),
-                data: tableData,
+                headers: tableData[0],
+                rows: tableData.slice(1),
+                options: {
+                    border: 1,
+                    borderColor: "gray",
+                    align: 'center'
+                }
             });
-
-            // Resumo (justificado)
-            const totalAulas = frequencias.length;
-            const totalPresentes = frequencias.filter(f => f.presente).length;
-            const frequenciaGeral = totalAulas > 0 ? ((totalPresentes / totalAulas) * 100).toFixed(2) : 0;
-            doc.moveDown();
-            doc.fontSize(12).text(`Resumo: Total de Aulas: ${totalAulas}, Presentes: ${totalPresentes}, Frequência Geral: ${frequenciaGeral}%`, { align: 'justify' });
         }
 
-        // Footer (adicionado antes de doc.end())
-        const pageCount = doc.bufferedPageRange().count;  // Total de páginas
-        doc.fontSize(10).text(`Página 1 de ${pageCount}`, 450, 750, { align: 'right' });  // Posição inferior direita
-
         doc.end();
+
+        stream.on('finish', () => {
+            res.download(filePath, `Relatorio_Frequencia_${aluno.name}.pdf`, (err) => {
+                if (err) {
+                    console.error('Erro ao enviar o arquivo:', err);
+                }
+                fs.unlinkSync(filePath); // Remove o arquivo após o download
+            });
+        });
     } catch (error) {
-        console.error('Erro ao gerar PDF de frequência de aluno:', error);
-        res.status(500).json({ msg: 'Erro ao gerar PDF de frequência de aluno.', error: error.message });
+        console.error('Erro ao gerar relatório de frequência do aluno:', error);
+        res.status(500).json({ msg: 'Erro ao gerar relatório de frequência do aluno.', error });
     }
 };
 
@@ -811,7 +822,7 @@ exports.exportRelatorioDesempenhoFrequenciaAlunoPDF = async (req, res) => {
             }
             const t = turmasMap.get(turmaId);
             t.totalAulas += 1;
-            if (freq.presente) t.totalPresencas += 1;
+            if (freq.status === 'presente') t.totalPresencas += 1;
         });
 
         // Notas do aluno por turma (se existir campo turma em Nota) e fallback para média geral do aluno

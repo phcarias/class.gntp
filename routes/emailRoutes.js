@@ -7,6 +7,7 @@ const emailController = require("../controllers/emailController");
 // Registrar rotas explícitas (mantém compatibilidade)
 router.post("/registrar", emailController.registrar);
 router.post("/enviar-aviso", emailController.enviarAviso);
+router.post("/enviar-para-destinatario", emailController.enviarParaDestinatarios);
 
 // Único endpoint público /enviar-email — delega conforme payload
 router.post("/enviar-email", async (req, res, next) => {
@@ -28,5 +29,6 @@ router.post("/enviar-email", async (req, res, next) => {
     return res.status(500).json({ error: "Erro interno na rota de e-mail." });
   }
 });
+
 
 module.exports = router;
