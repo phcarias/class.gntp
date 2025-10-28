@@ -69,7 +69,7 @@
                     <div class="stat-content">
                         <h3>Turmas Ativas</h3>
                         <p class="stat-number" id="total-turmas">...</p>
-                        <p class="stat-change" id="turmas-change">...</p>
+                        <p class="stat-change-red" id="turmas-change">...</p>
                     </div>
                 </div>
 
@@ -104,10 +104,6 @@
                         Nova Turma
                     </button>
 
-                    <button class="action-btn">
-                        <span class="material-icons">description</span>
-                        Gerar Relatório
-                    </button>
                 </div>
             </div>
         </section>
@@ -117,7 +113,7 @@
             <h2>Gerenciamento de Alunos</h2>
             <div class="section-header">
                 <div class="search-box">
-                    <input type="text" placeholder="Buscar aluno..." />
+                    <input type="text" placeholder="Buscar aluno por nome..." />
                     <span class="material-icons">search</span>
                 </div>
                 <button class="btn-primary" data-action="novo-aluno">
@@ -146,7 +142,7 @@
             <h2>Gerenciamento de Professores</h2>
             <div class="section-header">
                 <div class="search-box">
-                    <input type="text" placeholder="Buscar professor..." />
+                    <input type="text" placeholder="Buscar professor por nome..." />
                     <span class="material-icons">search</span>
                 </div>
                 <button class="btn-primary" data-action="novo-professor">
@@ -232,19 +228,18 @@
             <h2>Gerenciamento de Usuários</h2>
             <div class="section-header">
                 <div class="search-box">
-                    <input type="text" placeholder="Buscar usuário..." />
+                    <input type="text" placeholder="Buscar usuário por nome..." />
                     <span class="material-icons">search</span>
                 </div>
                 <button class="btn-primary" data-action="novo-usuario">
                     <span class="material-icons">person_add</span>
-                    Novo Usuário
+                    Novo Administrador
                 </button>
             </div>
 
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nome</th>
                         <th>E-mail</th>
                         <th>Tipo</th>
@@ -373,43 +368,12 @@
 
         <!-- Configurações -->
         <section id="configuracoes" class="settings-section">
-            <h2>Configurações do Sistema</h2>
+            <h2>Configurações</h2>
 
             <div class="settings-grid">
-                <div class="setting-card">
-                    <h3>Regras de Frequência</h3>
-                    <div class="setting-form">
-                        <label>Limite máximo de faltas:</label>
-                        <input type="number" value="25" min="0" max="100" />
-
-                        <label>Carga horária mínima por disciplina:</label>
-                        <input type="number" value="120" min="0" step="10" />
-
-                        <label>Percentual mínimo de frequência:</label>
-                        <input type="number" value="75" min="0" max="100" />
-
-                        <button class="btn-primary">Salvar Configurações</button>
-                    </div>
-                </div>
 
                 <div class="setting-card">
-                    <h3>Calendário Escolar</h3>
-                    <div class="setting-form">
-                        <label>Início do ano letivo:</label>
-                        <input type="date" value="2024-02-05" />
-
-                        <label>Término do ano letivo:</label>
-                        <input type="date" value="2024-12-15" />
-
-                        <label>Dias letivos totais:</label>
-                        <input type="number" value="200" readonly />
-
-                        <button class="btn-primary">Atualizar Calendário</button>
-                    </div>
-                </div>
-
-                <div class="setting-card">
-                    <h3>Configurações de Usuários</h3>
+                    <h3>Alterar senha</h3>
                     <div class="setting-form">
                         <label>Tempo de sessão (minutos):</label>
                         <input type="number" value="30" min="5" max="120" />
@@ -566,8 +530,8 @@
                 <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
 
                 <div class="modal-actions">
-                    <button type="button" id="aluno-save">Salvar</button>
-                    <button type="button" id="aluno-cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" id="aluno-save">Salvar</button>
+                    <button type="button" class="btn-secondary" id="aluno-cancel">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -615,8 +579,8 @@
                 <small>Segure Ctrl (Windows) ou Cmd (Mac) para selecionar mais de uma turma</small>
 
                 <div class="modal-actions">
-                    <button type="button" id="professor-save">Salvar</button>
-                    <button type="button" id="professor-cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" id="professor-save">Salvar</button>
+                    <button type="button" class="btn-secondary" id="professor-cancel">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -754,7 +718,7 @@
                 <p><strong>Status:</strong> <span id="view-turma-status">-</span></p>
             </div>
             <div class="modal-actions">
-                <button type="button" id="turma-view-cancel">Fechar</button>
+                <button type="button" class="btn-secondary" id="turma-view-cancel">Fechar</button>
             </div>
         </div>
     </div>
@@ -782,9 +746,80 @@
                 <label>Limite de Faltas <input id="turma-edit-limite" type="number"></label>
                 <label>Ativo <select id="turma-edit-ativo"><option value="true">Sim</option><option value="false">Não</option></select></label>
                 <div class="modal-actions">
-                    <button type="button" id="turma-edit-save">Salvar</button>
-                    <button type="button" id="turma-edit-cancel">Cancelar</button>
+                    <button type="button" class="btn-primary" id="turma-edit-save">Salvar</button>
+                    <button type="button" class="btn-secondary" id="turma-edit-cancel">Cancelar</button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Usuário (Visualizar) -->
+    <div id="user-view-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Detalhes do Usuário</h3>
+            <div class="details-grid">
+                <p><strong>Nome:</strong> <span id="view-user-nome">-</span></p>
+                <p><strong>E-mail:</strong> <span id="view-user-email">-</span></p>
+                <p><strong>Tipo:</strong> <span id="view-user-tipo">-</span></p>
+                <p><strong>Status:</strong> <span id="view-user-status">-</span></p>
+                <p><strong>Criado em:</strong> <span id="view-user-created">-</span></p>
+                <!-- Adicione mais campos se necessário, como roleData -->
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="user-view-cancel">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Usuário (Editar) -->
+<div id="user-edit-modal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Editar Usuário</h3>
+        <form id="user-edit-form">
+            <input type="hidden" id="user-edit-id">
+            <label>
+                Nome
+                <input id="user-edit-nome" type="text" required>
+            </label>
+            <label>
+                E-mail
+                <input id="user-edit-email" type="email" required>
+            </label>
+            <label>
+                Status
+                <select id="user-edit-active">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
+                </select>
+            </label>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary" id="user-edit-save">Salvar</button>
+                <button type="button" class="btn-secondary" id="user-edit-cancel">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Modal de Novo Usuário (Administrador) -->
+    <div id="modal-novo-usuario" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal-novo-usuario">&times;</span>
+            <h3>Registrar Novo Administrador</h3>
+            <form id="form-novo-usuario">
+                <label for="nome-usuario">Nome Completo:</label>
+                <input type="text" id="nome-usuario" name="name" required placeholder="Ex: João Silva" />
+
+                <label for="email-usuario">E-mail:</label>
+                <input type="email" id="email-usuario" name="email" required placeholder="Ex: joao@email.com" />
+
+                <label for="senha-usuario">Senha:</label>
+                <input type="password" id="senha-usuario" name="password" required placeholder="Crie uma senha forte" />
+
+                <label for="confirmar-senha-usuario">Confirmar Senha:</label>
+                <input type="password" id="confirmar-senha-usuario" name="confirmpassword" required placeholder="Repita a senha" />
+
+
+                <button type="submit" class="btn-primary">Registrar</button>
             </form>
         </div>
     </div>

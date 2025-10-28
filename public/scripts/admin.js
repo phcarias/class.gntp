@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     getAlunosStats();
     getProfessoresStats();
     getTurmasAtivas();
-    getFrequenciaMedia().catch(console.error);
+    getFrequenciaMedia();
     loadAlunos();
     loadProfessores(); // novo: carrega professores na inicialização
     loadUsers(); // Novo: carrega usuários
@@ -623,49 +623,73 @@ document.addEventListener('DOMContentLoaded', function () {
         const aluno = alunosCache.find(a => String(a._id || a.id) === String(id));
         if (!aluno) return;
 
-        // Preenche campos
-        document.getElementById('aluno-id').value = aluno._id || aluno.id || '';
-        document.getElementById('aluno-nome').value = aluno.name || '';
-        document.getElementById('aluno-email').value = aluno.email || '';
-        document.getElementById('aluno-matricula').value = aluno.roleData?.matricula || '';
-        document.getElementById('aluno-active').value = aluno.active ? 'true' : 'false';
+        if (mode === 'view') {
+            // Preencher spans no modal de visualização
+            document.getElementById('view-matricula').textContent = aluno.roleData?.matricula || '-';
+            document.getElementById('view-nome').textContent = aluno.name || '-';
+            document.getElementById('view-email').textContent = aluno.email || '-';
+            document.getElementById('view-responsavel').textContent = aluno.roleData?.responsavelEmail || '-';
+            document.getElementById('view-turmas').textContent = (aluno.roleData?.turmas || [])
+                .map(t => t?.turma?.codigo || t?.codigo || 'N/A')
+                .join(', ') || '-';
+            document.getElementById('view-status').textContent = aluno.active ? 'Ativo' : 'Inativo';
+            document.getElementById('view-created').textContent = aluno.createdAt ? new Date(aluno.createdAt).toLocaleDateString('pt-BR') : '-';
 
-        // Correção: preencher e-mail do responsável
-        const respEl = document.getElementById('aluno-responsavel-email');
-        if (respEl) respEl.value = aluno.roleData?.responsavelEmail || '';
+            // Abrir modal de visualização
+            const modal = document.getElementById('modal-ver-aluno');
+            modal.classList.remove('hidden');
+            modal.style.display = 'block';
+        } else if (mode === 'edit') {
+            // Código existente para edição
+            document.getElementById('aluno-id').value = aluno._id || aluno.id || '';
+            document.getElementById('aluno-nome').value = aluno.name || '';
+            document.getElementById('aluno-email').value = aluno.email || '';
+            document.getElementById('aluno-matricula').value = aluno.roleData?.matricula || '';
+            document.getElementById('aluno-active').value = aluno.active ? 'true' : 'false';
 
-        // IDs de turmas do aluno
-        const currentTurmaIds = (aluno.roleData?.turmas || [])
-            .map(t => {
-                if (t && typeof t === 'object') {
-                    const tt = t.turma ?? t._id ?? t.id ?? t;
-                    if (tt && typeof tt === 'object') return tt._id || tt.id || '';
-                    return String(tt || '');
-                }
-                return String(t || '');
-            })
-            .filter(Boolean);
+            const respEl = document.getElementById('aluno-responsavel-email');
+            if (respEl) respEl.value = aluno.roleData?.responsavelEmail || '';
 
-        // Popular select múltiplo reutilizando o fetch existente
-        loadTurmasSelect('aluno-turmas-select', currentTurmaIds);
+            const currentTurmaIds = (aluno.roleData?.turmas || [])
+                .map(t => {
+                    if (t && typeof t === 'object') {
+                        const tt = t.turma ?? t._id ?? t.id ?? t;
+                        if (tt && typeof tt === 'object') return tt._id || tt.id || '';
+                        return String(tt || '');
+                    }
+                    return String(t || '');
+                })
+                .filter(Boolean);
 
-        // View vs Edit
-        const isView = mode === 'view';
-        document.getElementById('aluno-modal-title').textContent = isView ? 'Visualizar aluno' : 'Editar aluno';
-        document.getElementById('aluno-save').classList.toggle('hidden', isView);
+            loadTurmasSelect('aluno-turmas-select', currentTurmaIds);
 
-        // Habilitar/Desabilitar campos
-        document.querySelectorAll('#aluno-form input, #aluno-form select, #aluno-form textarea')
-            .forEach(el => el.disabled = isView);
+            document.getElementById('aluno-modal-title').textContent = 'Editar aluno';
+            document.getElementById('aluno-save').classList.remove('hidden');
 
-        // Abrir modal (mesmo padrão do modal de novo aluno, usando display)
-        const modal = document.getElementById('aluno-modal');
-        modal.classList.remove('hidden');
-        modal.style.display = 'block';
+            document.querySelectorAll('#aluno-form input, #aluno-form select, #aluno-form textarea')
+                .forEach(el => el.disabled = false);
+
+            const modal = document.getElementById('aluno-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'block';
+        }
     }
+
+    window.addEventListener('click', (e) => {
+    // ... outros ifs
+    if (e.target === document.getElementById('modal-ver-aluno')) {
+        closeVerAlunoModal();
+    }
+});
 
     function closeAlunoModal() {
         const modal = document.getElementById('aluno-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+    function closeVerAlunoModal() {
+        const modal = document.getElementById('modal-ver-aluno');
+        if (!modal) return;
         modal.style.display = 'none';
         modal.classList.add('hidden');
     }
@@ -822,6 +846,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Novo: fechar modal de visualização de turma
         if (e.target?.id === 'turma-view-cancel') closeTurmaModal();
         if (e.target === document.getElementById('turma-view-modal')) closeTurmaModal(); // clique no backdrop
+        if (e.target?.id === 'close-modal-ver-aluno') {
+            closeVerAlunoModal();
+        }
     });
 
     // Novo: função para abrir modal de confirmação
@@ -834,7 +861,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         confirmarBtn.onclick = () => {
             if (tipo === 'turma') deleteTurma(tipo, id);
-            else deleteUser(tipo, id);
+            else if (tipo === 'admin') deleteUser(id);  // Adicione suporte para 'usuario'
+            else deleteUser(id);  // Para aluno/professor
             modal.style.display = 'none';
         };
 
@@ -1032,8 +1060,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         document.body.dataset.boundNovoProfessor = '1';
     })();
-
-
 
     // Adicione a nova função delegada
     (function bindNovoTurmaButtons() {
@@ -1243,7 +1269,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function getAlunosStats() {
 
-        console.log('Buscando estatísticas de alunos...');
 
         // Substitua a URL abaixo pela rota real da sua API
         const res = await fetch(`${api}/administrador/alunosstats`, {
@@ -1262,7 +1287,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     async function getTurmasAtivas() {
 
-        console.log('Buscando número de turmas ativas...');
 
         // Substitua a URL abaixo pela rota real da sua API
         const res = await fetch(`${api}/administrador/turmasativas`, {
@@ -1276,15 +1300,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const stats = await res.json();
-        document.getElementById('total-turmas').textContent = stats.totalTurmas;
-        document.getElementById('turmas-change').textContent = "-" + stats.turmasDesativadas + " turma desativada(s)";
+        document.getElementById('total-turmas').textContent = stats.turmasAtivas;
+        document.getElementById('turmas-change').textContent = "- " + stats.turmasDesativadas + " turma desativada(s)";
 
 
     }
 
     async function getFrequenciaMedia() {
 
-        console.log('Buscando frequência média...');
 
         // Substitua a URL abaixo pela rota real da sua API
         const res = await fetch(`${api}/administrador/frequenciamedia`, {
@@ -1299,7 +1322,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const stats = await res.json();
-        console.log('Estatísticas de frequência média:', stats);
         document.getElementById('frequencia-media').textContent = stats.frequenciaMedia + "%";
         document.getElementById('frequencia-anterior').textContent =
             (stats.diferencaFrequencia >= 0 ? "+" : "") + stats.diferencaFrequencia + "% em relação ao mês anterior";
@@ -1308,7 +1330,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function getProfessoresStats() {
 
-        console.log('Buscando estatísticas de professores...');
 
         // Substitua a URL abaixo pela rota real da sua API
         const res = await fetch(`${api}/administrador/professoresstats`, {
@@ -1583,8 +1604,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         else alert('Edição não implementada.');
                     }
                     if (btn.dataset.action === 'delete') {
-                        if (!confirm('Deseja excluir este usuário?')) return;
-                        await deleteUser(id);
+
+
+                        openConfirmacaoModal('admin', id);  // Mude para usar o modal personalizado
                     }
                 });
                 tbody.dataset.bound = '1';
@@ -1599,7 +1621,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${user._id || ''}</td>
                 <td>${user.name || ''}</td>
                 <td>${user.email || ''}</td>
                 <td>${typeLabel || ''}</td>
@@ -1607,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td class="actions">
                     <button class="btn-icon btn-view" data-action="view" data-id="${user._id}"><span class="material-icons">visibility</span></button>
                     <button class="btn-icon btn-edit" data-action="edit" data-id="${user._id}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon danger" data-action="delete" data-id="${user._id}"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon danger" data-action="delete" data-id="${user._id}-${user.type}"><span class="material-icons">delete</span></button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1628,8 +1649,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     else alert('Edição não implementada.');
                 }
                 if (btn.dataset.action === 'delete') {
-                    if (!confirm('Deseja excluir este usuário?')) return;
-                    await deleteUser(id);
+                    openConfirmacaoModal(type, id);  // Mude para usar o modal personalizado
                 }
             });
             tbody.dataset.bound = '1';
@@ -1673,7 +1693,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Novo: deletar usuário
     async function deleteUser(id) {
         try {
-            const res = await fetch(`${api}/admin/userremove/${id}`, {
+            const res = await fetch(`${api}/administrador/userremove/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1687,5 +1707,214 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Erro ao deletar usuário.');
         }
     }
+
+    // Novo: função para abrir modal de usuário
+    function openUserModal(mode, id) {
+        const user = usersCache.find(u => String(u._id) === String(id));
+        if (!user) return;
+
+        if (mode === 'view') {
+            // Código existente para view
+            document.getElementById('view-user-nome').textContent = user.name || '-';
+            document.getElementById('view-user-email').textContent = user.email || '-';
+            document.getElementById('view-user-tipo').textContent = (user.type || '').charAt(0).toUpperCase() + (user.type || '').slice(1) || '-';
+            document.getElementById('view-user-status').textContent = user.active ? 'Ativo' : 'Inativo';
+            document.getElementById('view-user-created').textContent = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : '-';
+            document.getElementById('user-view-modal').classList.remove('hidden');
+            document.getElementById('user-view-modal').style.display = 'block';
+        } else if (mode === 'edit') {
+            // Novo: preencher campos para edição
+            document.getElementById('user-edit-id').value = user._id;
+            document.getElementById('user-edit-nome').value = user.name || '';
+            document.getElementById('user-edit-email').value = user.email || '';
+            document.getElementById('user-edit-active').value = user.active ? 'true' : 'false';
+            document.getElementById('user-edit-modal').classList.remove('hidden');
+            document.getElementById('user-edit-modal').style.display = 'block';
+        }
+    }
+
+    // Novo: função para salvar usuário (envia PUT para updateAdmin)
+    async function saveUser() {
+        const id = document.getElementById('user-edit-id').value;
+        const name = document.getElementById('user-edit-nome').value.trim();
+        const email = document.getElementById('user-edit-email').value.trim();
+        const active = document.getElementById('user-edit-active').value === 'true';
+
+        if (!name || !email) {
+            alert('Nome e e-mail são obrigatórios.');
+            return;
+        }
+
+        const payload = { id, name, email, active };
+
+        try {
+            const res = await fetch(`${api}/administrador/updateuser`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                console.error('Erro ao salvar usuário:', txt);
+                alert('Erro ao salvar usuário. Verifique os dados.');
+                return;
+            }
+
+            // Atualizar cache e recarregar lista
+            await loadUsers();
+            closeUserModal();
+            alert('Usuário salvo com sucesso!');
+        } catch (e) {
+            console.error('Erro ao salvar usuário:', e);
+            alert('Erro de conexão ao salvar usuário.');
+        }
+    }
+
+    // Estender closeUserModal para fechar ambos os modais
+    function closeUserModal() {
+        document.getElementById('user-view-modal').style.display = 'none';
+        document.getElementById('user-view-modal').classList.add('hidden');
+        document.getElementById('user-edit-modal').style.display = 'none';
+        document.getElementById('user-edit-modal').classList.add('hidden');
+    }
+
+    // Bind para fechar e salvar modal de usuário (estender existente)
+    document.addEventListener('click', (e) => {
+        if (e.target?.id === 'user-view-cancel' || e.target?.id === 'user-edit-cancel') closeUserModal();
+        if (e.target?.id === 'user-edit-save') saveUser();
+        if (e.target === document.getElementById('user-view-modal') || e.target === document.getElementById('user-edit-modal')) closeUserModal(); // clique no backdrop
+    });
+
+    (function bindUserSearch() {
+        const searchInput = document.querySelector('#usuarios .search-box input');
+        const searchIcon = document.querySelector('#usuarios .search-box .material-icons');
+        if (!searchInput || searchInput.dataset.bound) return;
+
+        const runSearch = async () => {
+            const term = searchInput.value.trim();
+            if (!term) {
+                // Campo limpo -> recarrega todos os usuários
+                renderUsersList(usersCache);
+                return;
+            }
+            if (term.length < 2) return;
+
+            try {
+                const res = await fetch(`${api}/administrador/getusersbyname`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: term })
+                });
+
+                if (res.status === 404) {
+                    renderUsersList([]);
+                    return;
+                }
+                if (!res.ok) {
+                    console.error('Erro ao buscar usuários por nome:', res.status);
+                    renderUsersList([]);
+                    return;
+                }
+
+                const users = await res.json();
+                renderUsersList(users);
+            } catch (err) {
+                console.error('Erro ao buscar usuários por nome:', err);
+                renderUsersList([]);
+            }
+        };
+
+        searchInput.addEventListener('input', debounce(runSearch, 300));
+        if (searchIcon) {
+            searchIcon.addEventListener('click', runSearch);
+        }
+
+        searchInput.dataset.bound = '1';
+    })();
+
+    (function bindNovoUsuarioButtons() {
+        // Defina as funções aqui, dentro da IIFE
+        function openNovoUsuarioModal() {
+            const modal = document.getElementById('modal-novo-usuario');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.style.display = 'block';
+        }
+
+        function closeNovoUsuarioModal() {
+            const modal = document.getElementById('modal-novo-usuario');
+            if (!modal) return;
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+        }
+
+        // Submeter formulário para adicionar administrador
+        const formNovoUsuario = document.getElementById('form-novo-usuario');
+        if (formNovoUsuario && !formNovoUsuario.dataset.bound) {
+            formNovoUsuario.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const usuarioData = {
+                    name: formNovoUsuario.name.value,
+                    email: formNovoUsuario.email.value,
+                    password: formNovoUsuario.password.value,
+                    confirmpassword: formNovoUsuario.confirmpassword.value,
+                    type: "admin",  // Fixado como administrador
+                    active: true  // Administradores ativos por padrão
+                };
+
+                try {
+                    const res = await fetch(`${api}/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(usuarioData),
+                    });
+
+                    if (!res.ok) {
+                        const error = await res.json();
+                        alert(error?.msg || 'Erro ao adicionar administrador.');
+                        return;
+                    }
+
+                    alert('Administrador adicionado com sucesso!');
+                    closeNovoUsuarioModal();
+                    formNovoUsuario.reset();
+                    await loadUsers();  // Recarrega lista de usuários
+                } catch (error) {
+                    console.error('Erro ao adicionar administrador:', error);
+                    alert('Erro ao adicionar administrador. Tente novamente mais tarde.');
+                }
+            });
+            formNovoUsuario.dataset.bound = '1';
+        }
+
+
+
+        if (document.body.dataset.boundNovoUsuario) return;
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action="novo-usuario"]');
+            if (btn) {
+                e.preventDefault();
+                openNovoUsuarioModal();
+            }
+            if (e.target?.id === 'close-modal-novo-usuario') {
+                closeNovoUsuarioModal();
+            }
+        });
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal-novo-usuario');
+            if (e.target === modal) closeNovoUsuarioModal();
+        });
+        document.body.dataset.boundNovoUsuario = '1';
+    })();
 
 });

@@ -119,8 +119,11 @@ exports.getRelatorioDadosGerais = async (req, res) => {
     }
 };
 
+
+
 // Funções de export PDF (atualizadas para usar período)
 exports.exportRelatorioFrequenciaTurmaPDF = async (req, res) => {
+
     const { turmaId } = req.params;
     const { start, end } = getDateRange(req);
     try {

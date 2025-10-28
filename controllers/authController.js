@@ -4,6 +4,7 @@ const User = require("../models/UserModel");
 const Picture = require("../models/PictureModel");
 const TurmaModel = require("../models/TurmaModel");
 
+
 exports.register = async (req, res) => {
   const { name, email, password, confirmpassword, type, active, matricula, disciplinas, turmas, responsavelEmail } = req.body;
   const file = req.file;
@@ -99,6 +100,7 @@ exports.register = async (req, res) => {
       );
     }
 
+await emailController.sendWelcomeEmailAdmin(email, name, password);
 
     res.status(201).json({
       msg: "Usuário criado com sucesso!",
@@ -108,7 +110,7 @@ exports.register = async (req, res) => {
         email: newUser.email,
         type: newUser.type,
         roleData: newUser.roleData,
-      },
+      },  
     });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);

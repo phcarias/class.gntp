@@ -4,24 +4,37 @@ const Turma = require("../models/TurmaModel");
 
 exports.updateAdmin = async (req, res) => {
   const { id } = req.params;
-  const { name, email } = req.body;
+  const { name, email, active } = req.body;
 
   try {
     const admin = await User.findById(id);
-
     if (!admin || admin.type !== "admin") {
       return res.status(404).json({ msg: "Administrador não encontrado!" });
     }
 
-    // Atualizar os campos permitidos
+    // Nome
     if (name) admin.name = name;
-    if (email) admin.email = email;
+
+    // Email (validação de unicidade)
+    if (email && email !== admin.email) {
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const emailExists = await User.findOne({ email: normalizedEmail, _id: { $ne: id } });
+      if (emailExists) return res.status(422).json({ msg: "Por favor, utilize outro e-mail!" });
+      admin.email = normalizedEmail;
+    }
+
+    // Status ativo/inativo
+    if (typeof active === "boolean") admin.active = active;
 
     await admin.save();
 
-    res.status(200).json({ msg: "Dados do administrador atualizados com sucesso!", admin });
+    const safeAdmin = admin.toObject();
+    delete safeAdmin.password; // garantir que senha não seja exposta
+
+    res.status(200).json({ msg: "Dados do administrador atualizados com sucesso!", admin: safeAdmin });
   } catch (error) {
-    res.status(500).json({ msg: "Erro ao atualizar administrador!", error });
+    console.error("Erro updateAdmin:", error);
+    res.status(500).json({ msg: "Erro ao atualizar administrador!", error: error.message || error });
   }
 };
 
@@ -291,8 +304,13 @@ exports.deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ msg: "Usuário não encontrado!" });
     }
+
+    // Verificar se é admin e se há mais de um
     if (user.type === 'admin') {
-      return res.status(403).json({ msg: "Não é possível deletar administradores via esta rota!" });
+      const totalAdmins = await User.countDocuments({ type: 'admin' });
+      if (totalAdmins <= 1) {
+        return res.status(403).json({ msg: "Não é possível deletar o último administrador!" });
+      }
     }
 
     console.log('About to remove user:', user._id, 'type:', user.type);
@@ -400,7 +418,8 @@ exports.getAlunos = async (req, res) => {
       .populate({
         path: 'roleData.turmas.turma',
         model: Turma
-      });   
+      })
+      .sort({ name: 1 });   
 
     res.status(200).json(alunos);
   } catch (error) {
@@ -416,7 +435,8 @@ exports.getProfessores = async (req, res) => {
       .populate({
         path: 'roleData.turmas.turma',
         model: Turma
-      });
+      })
+      .sort({ name: 1 });
 
     res.status(200).json(professores);
   } catch (error) {
@@ -441,7 +461,8 @@ exports.getProfessoresByName = async (req, res) => {
       .populate({
         path: 'roleData.turmas.turma',
         model: Turma
-      });
+      })
+      .sort({ name: 1 });
 
     if (!professores.length) {
       return res.status(404).json({ msg: "Nenhum professor encontrado com esse nome!" });
@@ -481,13 +502,13 @@ exports.getProfessoresStats = async (req, res) => {
 exports.getTurmasStats = async (req, res) => {
   try {
     // Total de turmas
-    const totalTurmas = await Turma.countDocuments();
+    const turmasAtivas = await Turma.countDocuments({ ativo: true });
 
     // Total de turmas desativadas
-    const turmasDesativadas = await Turma.countDocuments({ active: false });
+    const turmasDesativadas = await Turma.countDocuments({ ativo: false });
 
     res.status(200).json({
-      totalTurmas,
+      turmasAtivas,
       turmasDesativadas
     });
   } catch (error) {
@@ -495,7 +516,6 @@ exports.getTurmasStats = async (req, res) => {
   }
 };
 
-// ...existing code...
 // Ajuste o modelo/campos conforme seu schema (ex.: Chamada/Aula/Presenca, campo de data e flag 'presente')
 exports.getFrequenciaMedia = async (req, res) => {
   try {
@@ -586,7 +606,8 @@ exports.getUsers = async (req, res) => {
     const users = await User.find({})
       .select('-password')
       .populate({ path: 'roleData.turmas.turma', model: Turma })
-      .populate('imagem');
+      .populate('imagem')
+      .sort({ name: 1 });
 
     res.status(200).json(users);
   } catch (error) {
@@ -596,7 +617,7 @@ exports.getUsers = async (req, res) => {
 
 
 exports.getUsersByName = async (req, res) => {
-  const { name, type } = req.body;
+  const { name } = req.body;
 
   if (!name) {
     return res.status(422).json({ msg: "O nome é obrigatório para a busca!" });
@@ -606,13 +627,10 @@ exports.getUsersByName = async (req, res) => {
     const query = {
       name: { $regex: new RegExp(name, "i") }
     };
-    if (type) query.type = type; // opcional: filtrar por tipo (aluno, professor, admin)
 
     const users = await User.find(query)
-      .select('name email type active roleData createdAt')
-      .populate({ path: 'roleData.turmas.turma', model: Turma })
-      .populate('imagem');
-
+      .select('name email type active createdAt')
+      .sort({ name: 1 });
     if (!users.length) {
       return res.status(404).json({ msg: "Nenhum usuário encontrado com esse nome!" });
     }
@@ -622,3 +640,40 @@ exports.getUsersByName = async (req, res) => {
     return res.status(500).json({ msg: "Erro ao buscar usuários pelo nome!", error: error.message });
   }
 };
+
+exports.updateUser = async (req, res) => {
+  const { id, name, email, active } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ msg: "Usuário não encontrado!" });
+    }
+
+    // Nome
+    if (name) user.name = name;
+
+    // Email (validação de unicidade)
+    if (email && email !== user.email) {
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const emailExists = await User.findOne({ email: normalizedEmail, _id: { $ne: id } });
+      if (emailExists) return res.status(422).json({ msg: "Por favor, utilize outro e-mail!" });
+      user.email = normalizedEmail;
+    }
+
+    // Status ativo/inativo
+    if (typeof active === "boolean") user.active = active;
+
+    await user.save();
+
+    const safeUser = user.toObject();
+    delete safeUser.password; // garantir que senha não seja exposta
+
+    res.status(200).json({ msg: "Dados do usuário atualizados com sucesso!", user: safeUser });
+  } catch (error) {
+    console.error("Erro updateUser:", error);
+    res.status(500).json({ msg: "Erro ao atualizar usuário!", error: error.message || error });
+  }
+};
+
+

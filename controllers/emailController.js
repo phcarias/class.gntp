@@ -53,12 +53,6 @@ exports.enviarEmail = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
 exports.enviarAviso = async (req, res) => {
   console.log("entrada enviarAviso - body:", req.body, "headers:", req.headers && {
     authorization: req.headers.authorization
@@ -113,3 +107,4 @@ exports.enviarAviso = async (req, res) => {
     res.status(500).json({ msg: "Erro interno ao processar aviso.", erro: err.message || err });
   }   
 }
+
