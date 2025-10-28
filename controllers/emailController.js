@@ -108,3 +108,42 @@ exports.enviarAviso = async (req, res) => {
   }   
 }
 
+exports.enviarParaDestinatarios = async (req, res) => {
+  const { destinatarios, assunto, texto, html } = req.body;
+
+  if (!destinatarios || !assunto || (!texto && !html)) {
+    return res.status(400).json({
+      msg: "Campos obrigatórios: destinatarios, assunto e texto ou html.",
+    });
+  }
+
+  const emails = destinatarios
+    .filter((email) => email && email.trim())
+    .join(",");
+
+  if (!emails) {
+    return res.status(400).json({ msg: "Nenhum e-mail válido fornecido." });
+  }
+
+  try {
+    const transportador = createTransporter();
+    if (!transportador) {
+      console.error("enviarParaDestinatarios - transporter não criado.");
+      return res.status(500).json({ msg: "Configuração de e-mail inválida." });
+    }
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: emails,
+      subject: assunto,
+      text: texto,
+      html,
+    };
+
+    const info = await transportador.sendMail(mailOptions);
+    res.status(200).json({ msg: "E-mails enviados com sucesso!", info });
+  } catch (erro) {
+    console.error("enviarParaDestinatarios - erro:", erro.message);
+    res.status(500).json({ msg: "Erro ao enviar e-mails.", erro: erro.message });
+  }
+};

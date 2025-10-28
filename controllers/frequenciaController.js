@@ -54,37 +54,69 @@ exports.getFrequencias = async (req, res) => {
 
 // Atualizar uma frequência por ID
 exports.updateFrequencia = async (req, res) => {
-  const { id } = req.params;
-  const { presente, justificativa, justificado } = req.body;
-
   try {
-    const frequencia = await Frequencia.findByIdAndUpdate(
-      id,
-      { presente, justificativa, justificado },
+    const { frequenciaId } = req.params;
+    const { status, data } = req.body;
+
+    if (!frequenciaId) {
+      return res.status(400).json({ msg: "O ID da frequência é obrigatório." });
+    }
+
+    const updated = await Frequencia.findByIdAndUpdate(
+      frequenciaId,
+      { status, data },
       { new: true }
     );
-    if (!frequencia) {
-      return res.status(404).json({ msg: 'Frequência não encontrada.' });
+
+    if (!updated) {
+      return res.status(404).json({ msg: "Frequência não encontrada." });
     }
-    res.status(200).json({ msg: 'Frequência atualizada com sucesso!', frequencia });
+
+    return res.status(200).json({ msg: "Frequência atualizada com sucesso.", updated });
   } catch (error) {
-    console.error('Erro ao atualizar frequência:', error);
-    res.status(500).json({ msg: 'Erro interno do servidor.' });
+    console.error("Erro ao atualizar frequência:", error);
+    return res.status(500).json({ msg: "Erro ao atualizar frequência.", error });
   }
 };
 
 // Deletar uma frequência por ID
 exports.deleteFrequencia = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const frequencia = await Frequencia.findByIdAndDelete(id);
-    if (!frequencia) {
-      return res.status(404).json({ msg: 'Frequência não encontrada.' });
+    const { frequenciaId } = req.params;
+
+    if (!frequenciaId) {
+      return res.status(400).json({ msg: "O ID da frequência é obrigatório." });
     }
-    res.status(200).json({ msg: 'Frequência deletada com sucesso!' });
+
+    const deleted = await Frequencia.findByIdAndDelete(frequenciaId);
+
+    if (!deleted) {
+      return res.status(404).json({ msg: "Frequência não encontrada." });
+    }
+
+    return res.status(200).json({ msg: "Frequência deletada com sucesso." });
   } catch (error) {
-    console.error('Erro ao deletar frequência:', error);
-    res.status(500).json({ msg: 'Erro interno do servidor.' });
+    console.error("Erro ao deletar frequência:", error);
+    return res.status(500).json({ msg: "Erro ao deletar frequência.", error });
+  }
+};
+
+exports.getFrequenciasByTurma = async (req, res) => {
+  try {
+    const { turmaId } = req.params;
+
+    if (!turmaId) {
+      return res.status(400).json({ msg: "O ID da turma é obrigatório." });
+    }
+
+    const frequencias = await Frequencia.find({ turma: turmaId })
+      .populate("aluno", "nome email") // Popula os dados do aluno
+      .populate("professor", "nome email") // Popula os dados do professor
+      .sort({ data: -1 }); // Ordena pela data (mais recente primeiro)
+
+    return res.status(200).json(frequencias);
+  } catch (error) {
+    console.error("Erro ao buscar frequências por turma:", error);
+    return res.status(500).json({ msg: "Erro ao buscar frequências por turma.", error });
   }
 };

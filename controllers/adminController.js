@@ -534,13 +534,12 @@ exports.getFrequenciaMedia = async (req, res) => {
     async function computeRange(start, end) {
       const agg = await Frequencia.aggregate([
         { $match: { data: { $gte: start, $lte: end } } },
-        // Remova $unwind, pois o schema é plano
         {
           $group: {
             _id: null,
             totalRegistros: { $sum: 1 },
             totalPresentes: {
-              $sum: { $cond: [{ $eq: ['$presente', true] }, 1, 0] } // Use 'presente' diretamente
+              $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } // Verifica 'status' como 'presente'
             }
           }
         }
@@ -562,6 +561,7 @@ exports.getFrequenciaMedia = async (req, res) => {
 
     const diferenca = freqAtual - freqAnterior;
 
+    console.log('Frequência atual:', freqAtual, 'Frequência anterior:', freqAnterior, 'Diferença:', diferenca);
     return res.status(200).json({
       frequenciaMedia: freqAtual,
       diferencaFrequencia: diferenca
