@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Novo: bind da busca (não colapsa a listagem completa)
     (function bindAlunoSearch() {
         // Ajuste o seletor se necessário para o seu HTML
-        const searchInput = document.querySelector('.search-box input[placeholder="Buscar aluno..."]');
+        const searchInput = document.querySelector('.search-box input[placeholder="Buscar aluno por nome..."]');
         const searchIcon = document.querySelector('.search-box .material-icons');
         if (!searchInput) return;
         if (searchInput.dataset.bound) return;
@@ -496,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Novo: busca de professores com debounce
     (function bindProfessorSearch() {
-        const searchInput = document.querySelector('#professores .search-box input[placeholder="Buscar professor..."]');
+        const searchInput = document.querySelector('#professores .search-box input[placeholder="Buscar professor por nome..."]');
         const searchIcon = document.querySelector('#professores .search-box .material-icons');
         if (!searchInput || searchInput.dataset.bound) return;
 

@@ -475,7 +475,7 @@ html {
     color: #e74c3c;
 }
 
-.btn-icon.danger:hover {
+.danger:hover {
     background-color: #fadbd8;
 }
 
@@ -794,7 +794,7 @@ html {
     margin-top: 12px;
 }
 
-.material-icons{
+#exitbutton {
 
     color: white;
 }
