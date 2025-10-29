@@ -462,5 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   const btnSalvarFrequencia = document.getElementById("btn-salvar-frequencia");
   if (btnSalvarFrequencia) btnSalvarFrequencia.addEventListener("click", salvarFrequencia);
-});
-// ...existing code...
+})
+
+

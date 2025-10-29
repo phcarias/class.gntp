@@ -524,3 +524,41 @@ body{display:flex;flex-direction:column;min-height:100vh}
 /* Responsividade */
 @media (max-width:980px){.grade-cartoes{grid-template-columns:repeat(2,1fr)}.menu-lateral{width:220px}.conteudo-principal{margin-left:220px}}
 @media (max-width:700px){.menu-lateral{position:static;width:100%;height:auto}.conteudo-principal{margin-left:0;padding:1rem}.grade-cartoes{grid-template-columns:1fr}}
+
+
+
+
+.calendario-semanal {
+  max-width: 800px;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.calendario-semanal .dia-semana {
+  margin-bottom: 1.5rem;
+}
+
+.calendario-semanal .dia-semana h3 {
+  font-size: 1.2rem;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.calendario-semanal .dia-semana ul {
+  list-style: none;
+  padding: 0;
+}
+
+.calendario-semanal .dia-semana ul li {
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 0.3rem;
+}
+
+.calendario-semanal .dia-semana ul li strong {
+  color: #1d4ed8;
+}
