@@ -2,6 +2,8 @@ const createTransporter = require("../config/email");
 const usuarios = [];
 const Turma = require("../models/TurmaModel");
 const user = require("../models/UserModel");
+const fs = require('fs');
+const path = require('path');
 
 exports.registrar = async (req, res) => {
   const { nome, email } = req.body;
@@ -52,6 +54,55 @@ exports.enviarEmail = async (req, res) => {
     res.status(500).json({ msg: "Erro ao enviar e-mail", erro: erro.message });
   }
 };
+
+exports.sendWarn = async (req, res) => {
+  const { username, para, assunto, texto, html } = req.body;
+  // ...existing code...
+  if (!para || !assunto || (!texto && !html)) {
+    return res
+      .status(400)
+      .json({ msg: "Campos obrigatórios: para, assunto e texto ou html." });
+  }
+
+  // Ajuste para aceitar múltiplos destinatários: se 'para' for uma string, converte para array; se já for array, usa diretamente
+  const destinatarios = Array.isArray(para) ? para : [para];
+  const emailsValidos = destinatarios.filter(email => email && email.trim()).join(",");
+
+  if (!emailsValidos) {
+    return res.status(400).json({ msg: "Nenhum e-mail válido fornecido." });
+  }
+  try {
+    const transportador = createTransporter();
+    const imagePath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+    let attachments = [];
+    if (fs.existsSync(imagePath)) {
+      attachments.push({
+        filename: 'logo_v2.jpeg',
+        path: imagePath,
+        cid: 'logo@cid'
+      });
+    }
+    let emailHtml = html;
+    if (emailHtml) {
+      const name = req.body.username;
+      emailHtml += `<div style="margin-top: 20px; text-align: center;"><img src="cid:logo@cid" alt="sistemlogo" style="height: 50px; vertical-align: middle;"> <span style="vertical-align: middle;">Enviado por: ${name}</span></div>`;
+    }
+    const info = await transportador.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: emailsValidos,
+      subject: assunto,
+      text: texto,
+      html: emailHtml,
+      attachments: attachments
+    });
+
+    console.log(info);
+    res.status(200).json({ msg: "E-mail enviado com sucesso!", info });
+  } catch (erro) {
+    res.status(500).json({ msg: "Erro ao enviar e-mail", erro: erro.message });
+  }
+};
+
 
 exports.enviarAviso = async (req, res) => {
   console.log("entrada enviarAviso - body:", req.body, "headers:", req.headers && {

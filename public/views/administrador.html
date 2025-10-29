@@ -127,7 +127,6 @@
                         <th>Matrícula</th>
                         <th>Nome</th>
                         <th>Turma</th>
-                        <th>Frequência</th>
                         <th>Status</th>
                         <th>Ações</th>
                     </tr>
@@ -259,25 +258,9 @@
             <div id="relatorio-resultados"></div> <!-- Container para preview de dados JSON, se necessário -->
             <div class="reports-grid">
                 <!-- Relatório de Frequência de Turma -->
-                <div class="report-card">
-                    <h3>Relatório de Frequência de Turma</h3>
-                    <p>Gere PDF com frequência média dos alunos por turma em um período definido.</p>
-                    <div class="report-options">
-                        <label>Turma:</label>
-                        <select id="select-turma-frequencia">
-                            <option value="">Selecionar turma</option>
-                            <!-- Opções carregadas via JS -->
-                        </select>
-                        <label>Data Início:</label>
-                        <input type="date" id="start-date-frequencia-turma" />
-                        <label>Data Fim:</label>
-                        <input type="date" id="end-date-frequencia-turma" />
-                        <button class="btn-primary" id="btn-pdf-frequencia-turma">Gerar PDF</button>
-                    </div>
-                </div>
 
                 <!-- Relatório de Frequência de Aluno -->
-                <div class="report-card">
+                <div class="report-card" style="display: none;">
                     <h3>Relatório de Frequência de Aluno</h3>
                     <p>Gere PDF com frequência do aluno por turmas em um período definido.</p>
                     <div class="report-options">
@@ -295,7 +278,7 @@
                 </div>
 
                 <!-- Relatório de Desempenho de Turma -->
-                <div class="report-card">
+                <div class="report-card" style="display: none;">
                     <h3>Relatório de Desempenho de Turma</h3>
                     <p>Gere PDF com médias de notas dos alunos por disciplina em uma turma.</p>
                     <div class="report-options">
@@ -313,7 +296,7 @@
                 </div>
 
                 <!-- Relatório de Desempenho de Aluno -->
-                <div class="report-card">
+                <div class="report-card" style="display: none;">
                     <h3>Relatório de Desempenho de Aluno</h3>
                     <p>Gere PDF com médias de notas do aluno por disciplinas.</p>
                     <div class="report-options">
@@ -355,14 +338,26 @@
                     <div class="report-options">
                         <button class="btn-primary" id="btn-pdf-dados-gerais">Gerar PDF</button>
                     </div>
+
+                    <br><hr><br>
+                    <!-- Relatório de Desempenho Geral -->
+
+
+                    <h3>Relatório de Desempenho Geral</h3>
+                    <p>Gere um relatório combinado de frequência e médias de notas de todos os alunos no mês atual.</p>
+                    <button class="btn-primary" id="btn-pdf-desempenho">Exportar PDF</button>
+
+
                 </div>
 
-                <!-- Relatório de Desempenho Geral -->
+                <!-- Relatório de Desempenho Geral 
                 <div class="report-card">
                     <h3>Relatório de Desempenho Geral</h3>
                     <p>Gere um relatório combinado de frequência e médias de notas de todos os alunos no mês atual.</p>
                     <button class="btn-primary" id="btn-pdf-desempenho">Exportar PDF</button>
                 </div>
+
+                -->
             </div>
         </section>
 
@@ -371,73 +366,24 @@
             <h2>Avisos</h2>
 
             <div class="avisos-grid">
-                <!-- Card para Administrador -->
+                <!-- Card para Administrador (já existente, mas ajustado) -->
                 <div class="avisos-card">
-                    <h3>Enviar aviso para Administradores</h3>
+                    <h3>Enviar aviso para...</h3>
                     <br>
                     <div class="avisos-form">
                         <label>Destinatários:</label>
-                        <select id="destinatarios-admin" multiple>
-                            <!-- Opções carregadas dinamicamente -->
-                        </select>
+                        <input id="destinatario" placeholder="Ex: email1@exemplo.com, email2@exemplo.com" />
+                        <!-- Mude para input de texto para múltiplos e-mails -->
                         <label>Assunto do aviso:</label>
-                        <input type="text" id="assunto-admin" />
+                        <input type="text" id="assunto-admin" placeholder="Ex: Assunto importante..." />
                         <label>Corpo do Aviso:</label>
-                        <textarea id="corpo-admin"></textarea>
+                        <textarea id="corpo-admin"
+                            placeholder="Ex: Informo a todos que devemos tomar atenção..."></textarea>
                         <button class="btn-primary" id="enviar-admin">Enviar aviso</button>
                     </div>
                 </div>
 
-                <!-- Card para Professor -->
-                <div class="avisos-card">
-                    <h3>Enviar aviso para Professores</h3>
-                    <br>
-                    <div class="avisos-form">
-                        <label>Destinatários:</label>
-                        <select id="destinatarios-professor" multiple>
-                            <!-- Opções carregadas dinamicamente -->
-                        </select>
-                        <label>Assunto do aviso:</label>
-                        <input type="text" id="assunto-professor" />
-                        <label>Corpo do Aviso:</label>
-                        <textarea id="corpo-professor"></textarea>
-                        <button class="btn-primary" id="enviar-professor">Enviar aviso</button>
-                    </div>
-                </div>
-
-                <!-- Card para Aluno -->
-                <div class="avisos-card">
-                    <h3>Enviar aviso para Alunos</h3>
-                    <br>
-                    <div class="avisos-form">
-                        <label>Destinatários:</label>
-                        <select id="destinatarios-aluno" multiple>
-                            <!-- Opções carregadas dinamicamente -->
-                        </select>
-                        <label>Assunto do aviso:</label>
-                        <input type="text" id="assunto-aluno" />
-                        <label>Corpo do Aviso:</label>
-                        <textarea id="corpo-aluno"></textarea>
-                        <button class="btn-primary" id="enviar-aluno">Enviar aviso</button>
-                    </div>
-                </div>
-
-                <!-- Card para Responsável -->
-                <div class="avisos-card">
-                    <h3>Enviar aviso para Responsáveis</h3>
-                    <br>
-                    <div class="avisos-form">
-                        <label>Destinatários:</label>
-                        <select id="destinatarios-responsavel" multiple>
-                            <!-- Opções carregadas dinamicamente -->
-                        </select>
-                        <label>Assunto do aviso:</label>
-                        <input type="text" id="assunto-responsavel" />
-                        <label>Corpo do Aviso:</label>
-                        <textarea id="corpo-responsavel"></textarea>
-                        <button class="btn-primary" id="enviar-responsavel">Enviar aviso</button>
-                    </div>
-                </div>
+            </div>
             </div>
         </section>
     </main>

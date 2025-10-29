@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function () {
               <td>${matricula}</td>
               <td>${aluno.name || ''}</td>
               <td>${turmas}</td>
-              <td>N/A</td>
               <td><span class="status ${statusClass}">${statusText}</span></td>
               <td class="actions">
                 <button class="btn-icon btn-edit" data-action="edit" data-id="${aluno._id || aluno.id}">
@@ -1449,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const alunos = await alunosRes.json();
 
         // Popular selects de turma
-        ['select-turma-frequencia', 'select-turma-desempenho'].forEach(id => {
+        ['select-turma-desempenho'].forEach(id => {
             const select = document.getElementById(id);
             turmas.forEach(t => {
                 const option = document.createElement('option');
@@ -1517,13 +1516,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Event listeners para botões
-    document.getElementById('btn-pdf-frequencia-turma').addEventListener('click', () => {
-        const turmaId = document.getElementById('select-turma-frequencia').value;
-        const startDate = document.getElementById('start-date-frequencia-turma').value;
-        const endDate = document.getElementById('end-date-frequencia-turma').value;
-        if (!turmaId) return alert('Selecione uma turma');
-        generatePDF('/relatorios/export/pdf/frequencia/turma/' + turmaId, { startDate, endDate });
-    });
 
     document.getElementById('btn-pdf-frequencia-aluno').addEventListener('click', () => {
         const alunoId = document.getElementById('select-aluno-frequencia').value;
@@ -1924,163 +1916,59 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.dataset.boundNovoUsuario = '1';
     })();
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const tipoUsuario = document.getElementById("tipoUsuario");
-        const destinatarios = document.getElementById("destinatarios");
+    // Em admin.js, na função enviarAviso (dentro do bloco DOMContentLoaded)
+async function enviarAviso(destinatariosInputId, assuntoId, corpoId) {
+    const destinatariosInput = document.getElementById(destinatariosInputId).value.trim();
+    const assunto = document.getElementById(assuntoId).value.trim();
+    const corpo = document.getElementById(corpoId).value.trim();
 
-        tipoUsuario.addEventListener("change", async () => {
-            const tipo = tipoUsuario.value;
-            destinatarios.innerHTML = ""; // Limpa as opções anteriores
+    if (!destinatariosInput || !assunto || !corpo) {
+        alert('Preencha todos os campos.');
+        return;
+    }
 
-            try {
-                if (tipo === "administrador") {
-                    // Reaproveitar a função para carregar usuários (administradores)
-                    const res = await fetch(`${api}/administrador/getadmins`, {
-                        method: "GET",
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    const admins = await res.json();
-                    admins.forEach((admin) => {
-                        const option = document.createElement("option");
-                        option.value = admin.email;
-                        option.textContent = admin.email;
-                        destinatarios.appendChild(option);
-                    });
-                } else if (tipo === "professor") {
-                    // Reaproveitar a função para carregar professores
-                    await loadProfessoresSelect("destinatarios");
-                } else if (tipo === "aluno") {
-                    // Reaproveitar a função para carregar alunos
-                    await loadAlunosSelect("destinatarios");
-                } else if (tipo === "responsavel") {
-                    // Carregar responsáveis (customizado)
-                    const res = await fetch(`${api}/administrador/getresponsaveis`, {
-                        method: "GET",
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    const responsaveis = await res.json();
-                    responsaveis.forEach((resp) => {
-                        const option = document.createElement("option");
-                        option.value = resp.email;
-                        option.textContent = `${resp.aluno} - ${resp.email}`;
-                        destinatarios.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error("Erro ao carregar destinatários:", error);
-            }
+    // Separar destinatários por vírgula e filtrar vazios
+    const destinatarios = destinatariosInput.split(',').map(email => email.trim()).filter(email => email);
+
+    if (destinatarios.length === 0) {
+        alert('Insira pelo menos um e-mail válido.');
+        return;
+    }
+
+    try {
+        // Usar sendWarn: passar username, para (array), assunto, texto e html
+        const res = await fetch(`${api}/email/sendwarn`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                username:  `${username}`,  // Nome do remetente
+                para: destinatarios,  // Array de e-mails
+                assunto: assunto,
+                texto: corpo,  // Corpo em texto plano
+                html: `<p>${corpo}</p>`,  // Corpo em HTML para incluir logo
+            }),
         });
-    });
 
-    // Novo: função para carregar administradores no select
-    async function loadAdminsSelect(selectId, preselectedIds = []) {
-        const select = document.getElementById(selectId);
-        if (!select) return;
-
-        try {
-            const res = await fetch(`${api}/administrador/getadmins`, {
-                method: 'GET',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const admins = await res.json();
-            select.innerHTML = '';
-            admins.forEach(admin => {
-                const option = document.createElement('option');
-                option.value = admin.email;
-                option.textContent = admin.email;
-                if (preselectedIds.includes(admin.email)) option.selected = true;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Erro ao carregar administradores:', error);
+        if (res.ok) {
+            alert('Aviso enviado com sucesso!');
+            // Limpar campos
+            document.getElementById(destinatariosInputId).value = '';
+            document.getElementById(assuntoId).value = '';
+            document.getElementById(corpoId).value = '';
+        } else {
+            const error = await res.json();
+            alert(`Erro ao enviar aviso: ${error.msg || 'Erro desconhecido'}`);
         }
+    } catch (error) {
+        console.error('Erro ao enviar aviso:', error);
+        alert('Erro ao enviar aviso.');
     }
+}
 
-    // Novo: função para carregar responsáveis no select
-    async function loadResponsaveisSelect(selectId, preselectedIds = []) {
-        const select = document.getElementById(selectId);
-        if (!select) return;
-
-        try {
-            const res = await fetch(`${api}/administrador/getresponsaveis`, {
-                method: 'GET',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const responsaveis = await res.json();
-            select.innerHTML = '';
-            responsaveis.forEach(resp => {
-                const option = document.createElement('option');
-                option.value = resp.email;
-                option.textContent = `${resp.aluno} - ${resp.email}`;
-                if (preselectedIds.includes(resp.email)) option.selected = true;
-                select.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Erro ao carregar responsáveis:', error);
-        }
-    }
-
-    // Novo: função para enviar aviso
-    async function enviarAviso(destinatariosSelectId, assuntoId, corpoId) {
-        const destinatariosSelect = document.getElementById(destinatariosSelectId);
-        const assunto = document.getElementById(assuntoId).value.trim();
-        const corpo = document.getElementById(corpoId).value.trim();
-
-        if (!destinatariosSelect || !assunto || !corpo) {
-            alert('Preencha todos os campos.');
-            return;
-        }
-
-        const destinatarios = Array.from(destinatariosSelect.selectedOptions).map(opt => opt.value);
-
-        if (destinatarios.length === 0) {
-            alert('Selecione pelo menos um destinatário.');
-            return;
-        }
-
-        try {
-            const res = await fetch(`${api}/email/enviar-para-destinatario`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    destinatarios,
-                    assunto,
-                    texto: corpo,
-                }),
-            });
-
-            if (res.ok) {
-                alert('Aviso enviado com sucesso!');
-                // Limpar campos
-                document.getElementById(assuntoId).value = '';
-                document.getElementById(corpoId).value = '';
-                destinatariosSelect.selectedIndex = -1;
-            } else {
-                alert('Erro ao enviar aviso.');
-            }
-        } catch (error) {
-            console.error('Erro ao enviar aviso:', error);
-            alert('Erro ao enviar aviso.');
-        }
-    }
-
-    // Carregar selects na inicialização
-    document.addEventListener('DOMContentLoaded', () => {
-        // ...existing code...
-        loadAdminsSelect('destinatarios-admin');
-        loadProfessoresSelect('destinatarios-professor');
-        loadAlunosSelect('destinatarios-aluno');
-        loadResponsaveisSelect('destinatarios-responsavel');
-
-        // Event listeners para botões de enviar
-        document.getElementById('enviar-admin').addEventListener('click', () => enviarAviso('destinatarios-admin', 'assunto-admin', 'corpo-admin'));
-        document.getElementById('enviar-professor').addEventListener('click', () => enviarAviso('destinatarios-professor', 'assunto-professor', 'corpo-professor'));
-        document.getElementById('enviar-aluno').addEventListener('click', () => enviarAviso('destinatarios-aluno', 'assunto-aluno', 'corpo-aluno'));
-        document.getElementById('enviar-responsavel').addEventListener('click', () => enviarAviso('destinatarios-responsavel', 'assunto-responsavel', 'corpo-responsavel'));
-    });
-
+// No event listener para o botão
+document.getElementById('enviar-admin').addEventListener('click', () => enviarAviso('destinatario', 'assunto-admin', 'corpo-admin'));
 
 });
