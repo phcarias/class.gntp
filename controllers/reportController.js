@@ -6,6 +6,7 @@ const User = require('../models/UserModel');
 const Turma = require('../models/TurmaModel');
 const path = require('path');
 const fs = require('fs');
+const emailController = require("../controllers/emailController");
 
 // Função auxiliar para parsear datas do query
 function getDateRange(req) {
@@ -845,5 +846,94 @@ exports.exportRelatorioDesempenhoFrequenciaAlunoPDF = async (req, res) => {
     } catch (error) {
         console.error('Erro ao gerar PDF de desempenho do aluno:', error);
         res.status(500).json({ msg: 'Erro ao gerar PDF de desempenho do aluno.', error: error.message });
+    }
+};
+
+exports.verificarFrequenciaENotasEEnviarAvisos = async (req, res) => {
+    try {
+        // Buscar turmas ativas
+        const turmas = await Turma.find({ ativo: true }).populate('alunos', 'name email roleData');
+        if (!turmas.length) {
+            return res.status(200).json({ msg: 'Nenhuma turma ativa encontrada.' });
+        }
+
+        const avisosEnviados = { frequencia: [], notas: [] };
+
+        for (const turma of turmas) {
+            const limiteFaltas = turma.limiteFaltas || 25; // % máximo de faltas
+
+            // Verificar frequência por aluno na turma
+            const frequencias = await Frequencia.find({ turma: turma._id }).populate('aluno', 'name email roleData');
+            const freqMap = {};
+            frequencias.forEach(freq => {
+                const alunoId = freq.aluno._id.toString();
+                if (!freqMap[alunoId]) freqMap[alunoId] = { totalAulas: 0, totalPresencas: 0, aluno: freq.aluno };
+                freqMap[alunoId].totalAulas += 1;
+                if (freq.status === 'presente') freqMap[alunoId].totalPresencas += 1;
+            });
+
+            for (const [alunoId, data] of Object.entries(freqMap)) {
+                const frequenciaPercentual = data.totalAulas > 0 ? (data.totalPresencas / data.totalAulas) * 100 : 0;
+                if (frequenciaPercentual < limiteFaltas) {
+                    // Enviar e-mail de aviso de frequência baixa
+                    const aluno = data.aluno;
+                    const responsavelEmail = aluno.roleData?.responsavelEmail;
+                    const destinatarios = [aluno.email];
+                    if (responsavelEmail) destinatarios.push(responsavelEmail);
+
+                    // Para frequência baixa:
+                    await emailController.sendWarnDesempenho({
+                        username: 'administração - class.gntp',
+                        para: destinatarios,
+                        assunto: `Aviso: Frequência Baixa na Turma ${turma.codigo}`,
+                        texto: `Olá ${aluno.name}, sua frequência é de ${frequenciaPercentual.toFixed(2)}%, abaixo de ${limiteFaltas}%.`,
+                        html: '',  // Ignorado, pois usamos template interno
+                        alunoName: aluno.name,
+                        tipoAviso: 'frequência',
+                        valor: `${frequenciaPercentual.toFixed(2)}%`,
+                        limite: `${limiteFaltas}%`
+                    });
+
+                    avisosEnviados.frequencia.push({ aluno: aluno.name, turma: turma.codigo, frequencia: frequenciaPercentual });
+                }
+            }
+
+            // Verificar notas por aluno (média geral)
+            for (const aluno of turma.alunos) {
+                const notas = await Nota.find({ aluno: aluno._id });
+                if (notas.length > 0) {
+                    const media = notas.reduce((sum, n) => sum + n.nota, 0) / notas.length;
+                    if (media < 6) {
+                        // Enviar e-mail de aviso de média baixa
+                        const responsavelEmail = aluno.roleData?.responsavelEmail;
+                        const destinatarios = [aluno.email];
+                        if (responsavelEmail) destinatarios.push(responsavelEmail);
+
+                        // Para média baixa:
+                        await emailController.sendWarnDesempenho({
+                            username: 'administração - class.gntp',
+                            para: destinatarios,
+                            assunto: `Aviso: Média Baixa na Turma ${turma.codigo}`,
+                            texto: `Olá ${aluno.name}, sua média é de ${media.toFixed(2)}, abaixo de 6.`,
+                            html: '',  // Ignorado
+                            alunoName: aluno.name,
+                            tipoAviso: 'nota',
+                            valor: media.toFixed(2),
+                            limite: '6'
+                        });
+
+                        avisosEnviados.notas.push({ aluno: aluno.name, turma: turma.codigo, media: media });
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({
+            msg: 'Verificação concluída.',
+            avisosEnviados
+        });
+    } catch (error) {
+        console.error('Erro ao verificar frequência e notas:', error);
+        res.status(500).json({ msg: 'Erro ao verificar frequência e notas.', error: error.message });
     }
 };

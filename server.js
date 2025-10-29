@@ -3,6 +3,9 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require('path');
 const app = express();
+const cron = require('node-cron');
+const reportController = require('./controllers/reportController');
+
 
 const emailRoutes = require("./routes/emailRoutes");
 const pictureRouter = require("./routes/pictureRoutes");
@@ -53,7 +56,26 @@ app.get("/professorhtml", (req, res) => {
 });
 
 
-
+cron.schedule('37 2 * * *', async () => {
+    console.log('[CRON] Iniciando verificação automática de frequência e notas...');
+    try {
+        // Simular req e res para o método do controller
+        const req = { body: {} }; // Sem parâmetros adicionais
+        const res = {
+            status: (code) => ({
+                json: (data) => {
+                    console.log(`[CRON] Resposta (${code}):`, data);
+                }
+            })
+        };
+        await reportController.verificarFrequenciaENotasEEnviarAvisos(req, res);
+        console.log('[CRON] Verificação concluída com sucesso.');
+    } catch (error) {
+        console.error('[CRON] Erro na verificação:', error);
+    }
+}, {
+    timezone: "America/Sao_Paulo" // Ajuste para seu fuso horário (ex.: UTC-3)
+});
 
 
 const porta = process.env.PORT || 9090;

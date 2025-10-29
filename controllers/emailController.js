@@ -310,3 +310,111 @@ exports.sendWelcomeEmail = async (email, name, type, password) => {
 
     console.log(`[EMAIL LOG] E-mail de boas-vindas personalizado enviado para: ${email} (${type})`);
 };
+
+exports.sendWarnDesempenho = async ({ username, para, assunto, texto, html, alunoName, tipoAviso, valor, limite }) => {
+    if (!para || !assunto || (!texto && !html)) {
+        throw new Error("Campos obrigatórios: para, assunto e texto ou html.");
+    }
+
+    // Ajuste para aceitar múltiplos destinatários
+    const destinatarios = Array.isArray(para) ? para : [para];
+    const emailsValidos = destinatarios.filter(email => email && email.trim()).join(",");
+
+    if (!emailsValidos) {
+        throw new Error("Nenhum e-mail válido fornecido.");
+    }
+
+    // Personalizar conteúdo baseado no tipo de aviso
+    let customTitle = '';
+    let customDescription = '';
+    let customSteps = '';
+    let customIcon = '';
+
+    if (tipoAviso === 'frequência') {
+        customTitle = 'Aviso de Frequência Baixa';
+        customDescription = `Olá ${alunoName}, notamos que sua frequência está abaixo do esperado. Isso pode impactar seu desempenho acadêmico.`;
+        customSteps = `
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li><strong>Verifique Sua Frequência:</strong> Acesse o sistema para ver detalhes.</li>
+                <li><strong>Entre em Contato:</strong> Fale com seu professor ou coordenação.</li>
+                <li><strong>Melhore a Assiduidade:</strong> Participe das aulas para evitar problemas.</li>
+            </ul>
+        `;
+        customIcon = '📊';
+    } else if (tipoAviso === 'nota') {
+        customTitle = 'Aviso de Média Baixa';
+        customDescription = `Olá ${alunoName}, sua média de notas está abaixo de 6. Vamos trabalhar juntos para melhorar!`;
+        customSteps = `
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li><strong>Revise Seus Estudos:</strong> Foque nas matérias com dificuldades.</li>
+                <li><strong>Busque Ajuda:</strong> Converse com professores ou tutores.</li>
+                <li><strong>Acompanhe o Progresso:</strong> Monitore suas notas no sistema.</li>
+            </ul>
+        `;
+        customIcon = '📚';
+    }
+
+    // Construir HTML personalizado (ignora html passado, usa template interno)
+    const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+            <!-- Header com Logo -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="cid:logo@cid" alt="Logo Class.GNTP" style="height: 60px; vertical-align: middle;" />
+                <h1 style="color: #ff6b6b; margin: 10px 0; font-size: 24px;">${customIcon} ${customTitle}</h1>
+            </div>
+
+            <!-- Saudação e Descrição -->
+            <h2 style="color: #333; text-align: center;">Atenção Importante</h2>
+            <p style="font-size: 16px; line-height: 1.5;">${customDescription}</p>
+            <p style="font-size: 16px; line-height: 1.5;">Estamos aqui para apoiá-lo(a) no seu caminho acadêmico. Vamos resolver isso juntos!</p>
+
+            <!-- Seção: Detalhes do Aviso -->
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #ff6b6b;">
+                <h3 style="color: #333; margin-top: 0;">📋 Detalhes do Aviso</h3>
+                <p><strong>Tipo:</strong> ${tipoAviso.charAt(0).toUpperCase() + tipoAviso.slice(1)}</p>
+                <p><strong>Valor Atual:</strong> ${valor}</p>
+                <p><strong>Limite:</strong> ${limite}</p>
+            </div>
+
+            <!-- Seção: Próximos Passos -->
+            <div style="background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #333; margin-top: 0;">🚀 O Que Fazer Agora</h3>
+                ${customSteps}
+            </div>
+
+            <!-- Seção: Suporte -->
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <p style="font-size: 16px; margin: 0;">Precisa de ajuda? Entre em contato com nosso suporte: <a href="mailto:suporte@classgntp.com" style="color: #007bff;">suporte@classgntp.com</a></p>
+            </div>
+
+            <!-- Rodapé -->
+            <div style="margin-top: 30px; text-align: center; font-size: 14px; color: #666;">
+                <p>Atenciosamente,<br><strong>Equipe Class.GNTP</strong><br>Plataforma de Gestão Escolar</p>
+                <p>Enviado por: ${username}</p>
+            </div>
+        </div>
+    `;
+
+    const transportador = createTransporter();
+    const imagePath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+    let attachments = [];
+    if (fs.existsSync(imagePath)) {
+        attachments.push({
+            filename: 'logo_v2.jpeg',
+            path: imagePath,
+            cid: 'logo@cid'
+        });
+    }
+
+    await transportador.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: emailsValidos,
+        subject: assunto,
+        text: texto,  // Mantém o texto plano passado
+        html: emailHtml,  // Usa o HTML personalizado
+        attachments: attachments
+    });
+
+    console.log(`[EMAIL LOG] Aviso de desempenho aprimorado enviado para: ${emailsValidos} (${tipoAviso})`);
+};
+
