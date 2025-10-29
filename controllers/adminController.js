@@ -38,8 +38,6 @@ exports.updateAdmin = async (req, res) => {
   }
 };
 
-//alteração de senha, devem ter mais verificações!
-
 exports.updatePasswordByEmail = async (req, res) => {
   const { email, newPassword, confirmPassword } = req.body;
 

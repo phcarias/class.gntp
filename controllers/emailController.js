@@ -198,3 +198,115 @@ exports.enviarParaDestinatarios = async (req, res) => {
     res.status(500).json({ msg: "Erro ao enviar e-mails.", erro: erro.message });
   }
 };
+
+exports.sendWelcomeEmail = async (email, name, type, password) => {
+    if (!email || !name || !type || !password) {
+        throw new Error("E-mail, nome, tipo e senha são obrigatórios!");
+    }
+
+    const subject = "Bem-vindo ao Sistema Class.GNTP!";
+
+    // Personalizar texto baseado no tipo
+    let customGreeting = '';
+    let customDescription = '';
+    let customSteps = '';
+    let customIcon = '';
+
+    if (type === 'aluno') {
+        customGreeting = 'Bem-vindo(a) à nossa comunidade de estudantes!';
+        customDescription = 'Parabéns! Sua conta foi criada com sucesso como <strong style="color: #007bff;">aluno</strong> na plataforma <strong>Class.GNTP</strong>, o sistema de frequência escolar que facilita o acompanhamento de aulas, notas e comunicações.';
+        customSteps = `
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li><strong>Faça Login:</strong> Acesse <a href="localhost:9090/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
+                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
+                <li><strong>Explore o Sistema:</strong> Como aluno, você pode acompanhar frequência, notas e muito mais!</li>
+            </ul>
+        `;
+        customIcon = 'school';
+    } else if (type === 'professor') {
+        customGreeting = 'Bem-vindo(a) à equipe docente!';
+        customDescription = 'Parabéns! Sua conta foi criada com sucesso como <strong style="color: #007bff;">professor</strong> na plataforma <strong>Class.GNTP</strong>, o sistema de frequência escolar que facilita o gerenciamento de aulas, frequência e notas.';
+        customSteps = `
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li><strong>Faça Login:</strong> Acesse <a href="localhost:9090/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
+                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
+                <li><strong>Explore o Sistema:</strong> Como professor, você pode gerenciar frequência, lançar notas e acompanhar turmas!</li>
+            </ul>
+        `;
+        customIcon = 'person';
+    } else if (type === 'admin') {
+        customGreeting = 'Bem-vindo(a) à administração!';
+        customDescription = 'Parabéns! Sua conta foi criada com sucesso como <strong style="color: #007bff;">administrador</strong> na plataforma <strong>Class.GNTP</strong>, o sistema de frequência escolar que oferece controle total sobre usuários, turmas e relatórios.';
+        customSteps = `
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li><strong>Faça Login:</strong> Acesse <a href="https://seusite.com/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
+                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
+                <li><strong>Explore o Sistema:</strong> Como administrador, você pode gerenciar usuários, turmas, relatórios e muito mais!</li>
+            </ul>
+        `;
+        customIcon = 'admin_panel_settings';
+    }
+
+    const text = `Olá ${name}, você foi registrado como ${type}. Seu e-mail é ${email} e senha temporária é ${password}. Altere a senha no primeiro login. Acesse: https://seusite.com/login`;
+
+    const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+            <!-- Header com Logo -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="cid:logo@cid" alt="Logo Class.GNTP" style="height: 60px; vertical-align: middle;" />
+                <h1 style="color: #007bff; margin: 10px 0; font-size: 24px;">${customGreeting}</h1>
+            </div>
+
+            <!-- Saudação Personalizada -->
+            <h2 style="color: #333; text-align: center;">Olá ${name}!</h2>
+            <p style="font-size: 16px; line-height: 1.5;">${customDescription}</p>
+            <p style="font-size: 16px; line-height: 1.5;">Estamos felizes em tê-lo conosco! Nossa plataforma ajuda alunos, professores e administradores a gerenciar o dia a dia escolar de forma simples e eficiente.</p>
+
+            <!-- Seção: Credenciais -->
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #007bff;">
+                <h3 style="color: #333; margin-top: 0;">🚀 Suas Credenciais de Acesso</h3>
+                <p><strong>E-mail:</strong> ${email}</p>
+                <p><strong>Senha:</strong> ${password}</p>
+            </div>
+
+            <!-- Seção: Próximos Passos -->
+            <div style="background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #333; margin-top: 0;">📋 Próximos Passos</h3>
+                ${customSteps}
+            </div>
+
+            <!-- Seção: Suporte -->
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <p style="font-size: 16px; margin: 0;">Precisa de ajuda? Entre em contato com nosso suporte: <a href="mailto:suporte@classgntp.com" style="color: #007bff;">suporte@classgntp.com</a></p>
+            </div>
+
+            <!-- Rodapé -->
+            <div style="margin-top: 30px; text-align: center; font-size: 14px; color: #666;">
+                <p>Atenciosamente,<br><strong>Equipe Class.GNTP</strong><br>Plataforma de Gestão Escolar</p>
+                <p>Enviado por: administração - class.gntp</p>
+            </div>
+        </div>
+    `;
+
+    const transportador = createTransporter();
+    const imagePath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+    let attachments = [];
+    if (fs.existsSync(imagePath)) {
+        attachments.push({
+            filename: 'logo_v2.jpeg',
+            path: imagePath,
+            cid: 'logo@cid'
+        });
+    }
+
+    await transportador.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: email,
+        subject: subject,
+        text: text,
+        html: html,
+        attachments: attachments
+    });
+
+    console.log(`[EMAIL LOG] E-mail de boas-vindas personalizado enviado para: ${email} (${type})`);
+};

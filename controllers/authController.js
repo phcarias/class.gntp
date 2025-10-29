@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const Picture = require("../models/PictureModel");
 const TurmaModel = require("../models/TurmaModel");
+const emailController = require("../controllers/emailController");
 
 
 exports.register = async (req, res) => {
@@ -76,28 +77,34 @@ exports.register = async (req, res) => {
     // Adicionar os professores às turmas especificadas, se houver
     if (type === 'professor' && turmas && turmas.length > 0) {
       await Promise.all(
-      turmas.map(async (turmaId) => {
-        const turma = await TurmaModel.findById(turmaId);
-        if (!turma) {
-          throw new Error(`Turma ${turmaId} não encontrada para professor.`);
-        }
-        turma.professores.push(newUser._id);
-        await turma.save();
-      })
+        turmas.map(async (turmaId) => {
+          const turma = await TurmaModel.findById(turmaId);
+          if (!turma) {
+            throw new Error(`Turma ${turmaId} não encontrada para professor.`);
+          }
+          turma.professores.push(newUser._id);
+          await turma.save();
+        })
       );
     }
-        // Adicionar o aluno às turmas especificadas, se houver
+    // Adicionar o aluno às turmas especificadas, se houver
     if (type === 'aluno' && turmas && turmas.length > 0) {
       await Promise.all(
-      turmas.map(async (turmaId) => {
-        const turma = await TurmaModel.findById(turmaId);
-        if (!turma) {
-          throw new Error(`Turma ${turmaId} não encontrada para aluno.`);
-        }
-        turma.alunos.push(newUser._id);
-        await turma.save();
-      })
+        turmas.map(async (turmaId) => {
+          const turma = await TurmaModel.findById(turmaId);
+          if (!turma) {
+            throw new Error(`Turma ${turmaId} não encontrada para aluno.`);
+          }
+          turma.alunos.push(newUser._id);
+          await turma.save();
+        })
       );
+    }
+
+    try {
+      await emailController.sendWelcomeEmail(email, name, type, password);
+    } catch (emailError) {
+      console.error("Erro ao enviar e-mail de boas-vindas:", emailError);
     }
 
     res.status(201).json({
@@ -108,7 +115,7 @@ exports.register = async (req, res) => {
         email: newUser.email,
         type: newUser.type,
         roleData: newUser.roleData,
-      },  
+      },
     });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
@@ -133,7 +140,7 @@ exports.login = async (req, res) => {
     const type = user.type;
 
     // Verificar se o tipo de usuário é professor ou admin
-    if (type !== "professor" && type !== "admin" && type !== "aluno"  ) {
+    if (type !== "professor" && type !== "admin" && type !== "aluno") {
       return res.status(403).json({ msg: "Acesso negado. Apenas professores, administradores e alunos podem acessar." });
     }
 
@@ -151,14 +158,14 @@ exports.login = async (req, res) => {
         type: user.type,
       },
       secret,
-      { expiresIn: '24h' } 
+      { expiresIn: '24h' }
     );
 
-    res.status(200).json({ 
-      msg: "Autenticação realizada com sucesso!", 
-      token, 
-      type, 
-      _id: user._id, 
+    res.status(200).json({
+      msg: "Autenticação realizada com sucesso!",
+      token,
+      type,
+      _id: user._id,
       name: user.name,
       active: user.active
     });
