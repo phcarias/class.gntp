@@ -1,5 +1,4 @@
 // ...existing code...
-
 const API_BASE = "http://127.0.0.1:9090";
 
 /* ----------------- Utils ----------------- */
@@ -17,6 +16,25 @@ function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
+function getUserId() {
+  const stored = localStorage.getItem("userId") || localStorage.getItem("id") || localStorage.getItem("_id");
+  if (stored) return stored;
+  return tryDecodeTokenId(localStorage.getItem("token"));
+}
+async function fetchTurmas(qParams = {}) {
+  const parts = [];
+  for (const k of Object.keys(qParams || {})) {
+    if (qParams[k] != null && qParams[k] !== "") parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(qParams[k])}`);
+  }
+  const q = parts.length ? `?${parts.join("&")}` : "";
+  const res = await fetch(`${API_BASE}/turma/listar${q}`, { headers: getAuthHeaders() });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Erro ao buscar turmas: ${res.status} ${txt}`);
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
 
 /* ----------------- Navegação ----------------- */
 document.querySelectorAll(".menu-lateral a").forEach(link => {
@@ -29,14 +47,9 @@ document.querySelectorAll(".menu-lateral a").forEach(link => {
     document.querySelectorAll(".menu-lateral li").forEach(item => item.classList.remove("ativo"));
     link.parentElement.classList.add("ativo");
 
-    // initialize dynamic sections
-    if (targetId === "minhas-turmas") {
-      // nothing extra
-    } else if (targetId === "frequencia-alunos") {
-      carregarTurmasDropdown(); // load professor's turmas for frequency
-    } else if (targetId === "avisos") {
-      carregarTurmasParaAvisos();
-    }
+    if (targetId === "frequencia-alunos") carregarTurmasDropdown();
+    if (targetId === "avisos") carregarTurmasParaAvisos();
+    if (targetId === "minhas-turmas") buscarTurmas();
   });
 });
 
@@ -60,9 +73,14 @@ function exibirTurmas(turmas) {
   turmas.forEach((turma) => {
     const turmaCard = document.createElement("article");
     turmaCard.classList.add("cartao-turma");
+
     const disciplinasText = Array.isArray(turma.disciplinas) ? turma.disciplinas.join(", ") : (turma.disciplina || "");
-    const horariosText = Array.isArray(turma.horarios) ? turma.horarios.map(h => `${h.diaSemana} (${h.horarioInicio} - ${h.horarioFim})`).join(", ") : "";
+    const horariosText = Array.isArray(turma.horarios) ? turma.horarios.map(h => `${h.diaSemana || h.dia || ""} (${h.horarioInicio || h.inicio || ""} - ${h.horarioFim || h.fim || ""})`).join(", ") : "";
     const profsText = Array.isArray(turma.professores) ? turma.professores.map(p => (p && (p.name || p.nome) ? (p.name || p.nome) : (typeof p === "string" ? p : ""))).join(", ") : "";
+
+    // adiciona atributo data-days para filtro por dia (se existir informação de dia)
+    const days = Array.isArray(turma.horarios) ? turma.horarios.map(h => (h.diaSemana || h.dia || "")).filter(Boolean) : [];
+    if (days.length) turmaCard.setAttribute("data-days", days.join(","));
 
     turmaCard.innerHTML = `
       <header>
@@ -88,7 +106,7 @@ async function exibirDetalhesTurma(turmaId) {
       <h3>Detalhes da Turma</h3>
       <p><strong>Código:</strong> ${turma.codigo || "-"}</p>
       <p><strong>Disciplina:</strong> ${turma.disciplina || turma.disciplinas || "-"}</p>
-      <p><strong>Horários:</strong> ${(turma.horarios || []).map(h => `${h.diaSemana} (${h.horarioInicio} - ${h.horarioFim})`).join(", ")}</p>
+      <p><strong>Horários:</strong> ${(turma.horarios || []).map(h => `${h.diaSemana || h.dia || ""} (${h.horarioInicio || h.inicio || ""} - ${h.horarioFim || h.fim || ""})`).join(", ")}</p>
       <p><strong>Professores:</strong> ${(turma.professores || []).map(p => p && (p.name || p.nome) ? (p.name || p.nome) : (typeof p === "string" ? p : "")).join(", ")}</p>
       <p><strong>Alunos:</strong> ${(turma.alunos || []).map(a => a && (a.name || a.nome) ? (a.name || a.nome) : (typeof a === "string" ? a : "")).join(", ")}</p>
       <button id="fechar-detalhes" class="botao-limpar">Fechar</button>
@@ -105,22 +123,24 @@ async function exibirDetalhesTurma(turmaId) {
   }
 }
 
+// buscar turmas — tenta pedir ao backend já filtrado por professorId; fallback filtra no cliente
 async function buscarTurmas(diaSemana) {
   try {
-    const q = diaSemana ? `?diaSemana=${encodeURIComponent(diaSemana)}` : "";
-    const res = await fetch(`${API_BASE}/turma/listar${q}`, { headers: getAuthHeaders() });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Erro ao buscar turmas: ${res.status} ${txt}`);
+    const userId = getUserId();
+    const qParams = {};
+    if (diaSemana) qParams.diaSemana = diaSemana;
+    if (userId) qParams.professorId = userId;
+
+    let turmas = [];
+    try {
+      turmas = await fetchTurmas(qParams);
+    } catch (e) {
+      console.warn("buscarTurmas: fetchTurmas falhou, tentando sem query:", e.message);
+      const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
+      turmas = res.ok ? await res.json() : [];
     }
-    let turmas = await res.json();
-    if (!Array.isArray(turmas)) turmas = [];
 
-    // filtrar apenas turmas que o professor leciona
-    const storedId = localStorage.getItem("userId") || localStorage.getItem("id") || localStorage.getItem("_id");
-    const token = localStorage.getItem("token");
-    const userId = storedId || tryDecodeTokenId(token);
-
+    // fallback cliente: caso backend ignore professorId, aplica filtro local
     if (userId) {
       turmas = turmas.filter(t => {
         const profs = t.professores || t.professor || t.professorId || [];
@@ -132,8 +152,6 @@ async function buscarTurmas(diaSemana) {
           return false;
         });
       });
-    } else {
-      console.warn("buscarTurmas: userId não encontrado; retornando sem filtrar por professor.");
     }
 
     exibirTurmas(turmas);
@@ -149,32 +167,31 @@ async function carregarTurmasDropdown() {
   if (!turmaSelect) return;
   turmaSelect.innerHTML = '<option value="">Carregando turmas...</option>';
   try {
-    const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error("Erro ao carregar turmas");
-    let turmas = await res.json();
-    if (!Array.isArray(turmas)) turmas = [];
-
-    // filtrar apenas turmas do professor
-    const storedId = localStorage.getItem("userId") || localStorage.getItem("id") || localStorage.getItem("_id");
-    const token = localStorage.getItem("token");
-    const userId = storedId || tryDecodeTokenId(token);
-    if (userId) {
-      turmas = turmas.filter(t => {
-        const profs = t.professores || t.professor || [];
-        if (!Array.isArray(profs)) return false;
-        return profs.some(p => {
-          if (!p) return false;
-          if (typeof p === "string") return String(p) === String(userId);
-          if (typeof p === "object") return String(p._id || p.id || p) === String(userId);
-          return false;
-        });
-      });
+    const userId = getUserId();
+    let turmas = [];
+    try {
+      turmas = await fetchTurmas(userId ? { professorId: userId } : {});
+    } catch (e) {
+      const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
+      turmas = res.ok ? await res.json() : [];
     }
 
-    turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>' + turmas.map(t => {
+    // filtro cliente por segurança
+    const filtered = userId ? turmas.filter(t => {
+      const profs = t.professores || t.professor || [];
+      if (!Array.isArray(profs)) return false;
+      return profs.some(p => {
+        if (!p) return false;
+        if (typeof p === "string") return String(p) === String(userId);
+        if (typeof p === "object") return String(p._id || p.id || p) === String(userId);
+        return false;
+      });
+    }) : turmas;
+
+    turmaSelect.innerHTML = '<option value="">Selecione uma turma</option>' + (filtered.length ? filtered.map(t => {
       const label = t.codigo ? `${t.codigo} - ${t.disciplina || (t.disciplinas || []).join ? (t.disciplinas || []).join(", ") : ""}` : (t.disciplina || t._id);
       return `<option value="${t._id}">${label}</option>`;
-    }).join("");
+    }).join("") : '<option value="">Nenhuma turma encontrada</option>');
   } catch (err) {
     console.error("Erro ao carregar turmas:", err);
     turmaSelect.innerHTML = '<option value="">Erro ao carregar turmas</option>';
@@ -208,7 +225,6 @@ async function carregarAlunos(turmaId) {
   }
 }
 
-// ...existing code...
 async function salvarFrequencia() {
   const turmaSelect = document.getElementById("turma-select");
   const listaAlunos = document.getElementById("lista-alunos");
@@ -231,7 +247,7 @@ async function salvarFrequencia() {
       body: JSON.stringify({
         turmaId,
         registros: frequencia,
-        data: new Date().toISOString().slice(0,10) // opcional: data YYYY-MM-DD
+        data: new Date().toISOString().slice(0,10)
       })
     });
 
@@ -251,7 +267,6 @@ async function salvarFrequencia() {
     alert("Erro de conexão ao salvar frequência.");
   }
 }
-// ...existing code...
 
 /* ----------------- Avisos (carregar apenas turmas do professor) ----------------- */
 async function carregarTurmasParaAvisos() {
@@ -259,39 +274,31 @@ async function carregarTurmasParaAvisos() {
   if (!select) return;
   select.innerHTML = '<option value="">Carregando turmas...</option>';
   try {
-    const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error("Falha ao carregar turmas");
-    let turmas = await res.json();
-    if (!Array.isArray(turmas)) turmas = [];
-
-    const storedId = localStorage.getItem("userId") || localStorage.getItem("id") || localStorage.getItem("_id");
-    const token = localStorage.getItem("token");
-    const userId = storedId || tryDecodeTokenId(token);
-
-    if (userId) {
-      turmas = turmas.filter(t => {
-        const profs = t.professores || t.professor || [];
-        if (!Array.isArray(profs)) return false;
-        return profs.some(p => {
-          if (!p) return false;
-          if (typeof p === "string") return String(p) === String(userId);
-          if (typeof p === "object") return String(p._id || p.id || p) === String(userId);
-          return false;
-        });
-      });
-    } else {
-      // fallback: if no userId, try username/email match
-      const userEmail = localStorage.getItem("email");
-      if (userEmail) {
-        turmas = turmas.filter(t => Array.isArray(t.professores) && t.professores.some(p => (p.email || "").toLowerCase() === userEmail.toLowerCase()));
-      }
+    const userId = getUserId();
+    let turmas = [];
+    try {
+      turmas = await fetchTurmas(userId ? { professorId: userId } : {});
+    } catch (e) {
+      const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
+      turmas = res.ok ? await res.json() : [];
     }
 
-    if (turmas.length === 0) {
+    const filtered = userId ? turmas.filter(t => {
+      const profs = t.professores || t.professor || [];
+      if (!Array.isArray(profs)) return false;
+      return profs.some(p => {
+        if (!p) return false;
+        if (typeof p === "string") return String(p) === String(userId);
+        if (typeof p === "object") return String(p._id || p.id || p) === String(userId);
+        return false;
+      });
+    }) : (localStorage.getItem("email") ? turmas.filter(t => Array.isArray(t.professores) && t.professores.some(p => (p.email || "").toLowerCase() === localStorage.getItem("email").toLowerCase())) : turmas);
+
+    if (filtered.length === 0) {
       select.innerHTML = '<option value="">Nenhuma turma encontrada</option>';
       return;
     }
-    select.innerHTML = '<option value="">Selecione a turma</option>' + turmas.map(t => {
+    select.innerHTML = '<option value="">Selecione a turma</option>' + filtered.map(t => {
       const label = t.disciplina || t.nome || t.codigo || t._id;
       return `<option value="${t._id}">${label}</option>`;
     }).join("");
@@ -301,13 +308,132 @@ async function carregarTurmasParaAvisos() {
   }
 }
 
+/* ----------------- Notas (carregar turmas do professor, alunos e salvar) ----------------- */
+async function carregarTurmasParaNotas() {
+  const seletorTurma = document.getElementById("turma-select-nota");
+  if (!seletorTurma) return;
+  seletorTurma.innerHTML = '<option value="">Carregando turmas...</option>';
+
+  try {
+    const userId = getUserId();
+    let turmas = [];
+    try {
+      turmas = await fetchTurmas(userId ? { professorId: userId } : {});
+    } catch (e) {
+      const res = await fetch(`${API_BASE}/turma/listar`, { headers: getAuthHeaders() });
+      turmas = res.ok ? await res.json() : [];
+    }
+
+    const filtered = userId ? turmas.filter(t => {
+      const profs = t.professores || t.professor || [];
+      if (!Array.isArray(profs)) return false;
+      return profs.some(p => {
+        if (!p) return false;
+        if (typeof p === "string") return String(p) === String(userId);
+        if (typeof p === "object") return String(p._id || p.id || p) === String(userId);
+        return false;
+      });
+    }) : turmas;
+
+    if (filtered.length === 0) {
+      seletorTurma.innerHTML = '<option value="">Nenhuma turma encontrada</option>';
+      return;
+    }
+
+    seletorTurma.innerHTML = '<option value="">Selecione uma turma</option>' + filtered.map(t => {
+      const label = t.codigo ? `${t.codigo} - ${t.disciplina || (t.disciplinas || []).join ? (t.disciplinas || []).join(", ") : ""}` : (t.disciplina || t._id);
+      return `<option value="${t._id}">${label}</option>`;
+    }).join("");
+  } catch (err) {
+    console.error("Erro ao carregar turmas para notas:", err);
+    seletorTurma.innerHTML = '<option value="">Erro ao carregar turmas</option>';
+  }
+}
+
+async function carregarAlunosParaNotas(turmaId) {
+  const seletor = document.getElementById("aluno-select-nota");
+  if (!seletor) return;
+  seletor.innerHTML = '<option value="">Carregando alunos...</option>';
+  try {
+    const res = await fetch(`${API_BASE}/turma/detalhes/${turmaId}`, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error("Erro ao carregar turma");
+    const turma = await res.json();
+    const alunos = turma.alunos || [];
+    seletor.innerHTML = '<option value="">Selecione um aluno</option>' + alunos.map(a => {
+      const id = a._id || a.id || a;
+      const nome = (a.name || a.nome) || id;
+      return `<option value="${id}">${nome}</option>`;
+    }).join("");
+  } catch (err) {
+    console.error("carregarAlunosParaNotas erro:", err);
+    seletor.innerHTML = '<option value="">Erro ao carregar alunos</option>';
+  }
+}
+
+async function initNotasUI() {
+  const turmaSelect = document.getElementById("turma-select-nota");
+  const alunoSelect = document.getElementById("aluno-select-nota");
+  const disciplinaInput = document.getElementById("disciplina-input");
+  const tipoSelect = document.getElementById("tipo-avaliacao-select");
+  const notaInput = document.getElementById("nota-input");
+  const btnSalvar = document.getElementById("btn-salvar-nota");
+
+  if (turmaSelect) await carregarTurmasParaNotas();
+
+  if (turmaSelect) {
+    turmaSelect.addEventListener("change", (e) => {
+      const id = e.target.value;
+      if (id) carregarAlunosParaNotas(id);
+      else if (alunoSelect) alunoSelect.innerHTML = '<option value="">Selecione uma turma primeiro</option>';
+    });
+  }
+
+  if (btnSalvar) {
+    btnSalvar.addEventListener("click", async () => {
+      const turmaId = document.getElementById("turma-select-nota")?.value;
+      const alunoId = document.getElementById("aluno-select-nota")?.value;
+      const disciplina = document.getElementById("disciplina-input")?.value?.trim();
+      const tipoAvaliacao = document.getElementById("tipo-avaliacao-select")?.value;
+      const notaVal = Number(document.getElementById("nota-input")?.value);
+
+      if (!turmaId) { alert("Selecione uma turma."); return; }
+      if (!alunoId) { alert("Selecione um aluno."); return; }
+      if (!disciplina) { alert("Informe a disciplina."); return; }
+      if (Number.isNaN(notaVal) || notaVal < 0 || notaVal > 10) { alert("Informe uma nota válida entre 0 e 10."); return; }
+
+      try {
+        const res = await fetch(`${API_BASE}/nota/criar`, {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, getAuthHeaders()),
+          body: JSON.stringify({ turmaId, alunoId, disciplina, nota: notaVal, tipoAvaliacao })
+        });
+        const text = await res.text();
+        let body;
+        try { body = JSON.parse(text); } catch (e) { body = { raw: text }; }
+        console.log("salvarNota response:", res.status, body);
+        if (!res.ok) {
+          alert(body.msg || body.error || "Erro ao salvar nota");
+          return;
+        }
+        alert("Nota salva com sucesso.");
+        document.getElementById("disciplina-input").value = "";
+        document.getElementById("nota-input").value = "";
+      } catch (err) {
+        console.error("Erro ao enviar nota:", err);
+        alert("Erro de conexão ao salvar nota.");
+      }
+    });
+  }
+}
+
 /* ----------------- Eventos e inicialização ----------------- */
 document.addEventListener("DOMContentLoaded", () => {
-  // iniciar calendário / carregar turmas iniciais para frequência e avisos
   carregarTurmasDropdown();
   carregarTurmasParaAvisos();
+  if (document.getElementById("secao-notas") || document.getElementById("notas-content")) {
+    initNotasUI();
+  }
 
-  // filtro por dia (minhas turmas)
   const filtroDia = document.getElementById("filtro-dia");
   const btnFiltrar = document.getElementById("btn-filtrar");
   const btnLimpar = document.getElementById("btn-limpar");
@@ -328,7 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // events for frequency UI
   const btnCarregarAlunos = document.getElementById("btn-carregar-alunos");
   if (btnCarregarAlunos) btnCarregarAlunos.addEventListener("click", () => {
     const turmaId = document.getElementById("turma-select")?.value;
@@ -338,99 +463,4 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSalvarFrequencia = document.getElementById("btn-salvar-frequencia");
   if (btnSalvarFrequencia) btnSalvarFrequencia.addEventListener("click", salvarFrequencia);
 });
-
-
-// Função para carregar turmas no seletor
-// Reutilizar a função para carregar turmas
-function carregarTurmasParaNotas() {
-  const seletorTurma = document.getElementById("turma-select"); // Reutilizando o seletor existente
-  if (!seletorTurma) return;
-
-  fetch("/turma/listar") // Endpoint já utilizado para listar turmas
-    .then(resposta => resposta.json())
-    .then(turmas => {
-      seletorTurma.innerHTML = "<option value=''>-- Selecione --</option>"; // Limpar opções anteriores
-      turmas.forEach(turma => {
-        const opcao = document.createElement("option");
-        opcao.value = turma.id;
-        opcao.textContent = turma.nome;
-        seletorTurma.appendChild(opcao);
-      });
-    })
-    .catch(erro => console.error("Erro ao carregar turmas:", erro));
-}
-
-// Reutilizar a função para carregar alunos
-function carregarAlunosParaNotas(turmaId) {
-  const seletorAluno = document.getElementById("aluno-select"); // Reutilizando o seletor existente
-  if (!seletorAluno) return;
-
-  fetch(`/turma/detalhes/${turmaId}/alunos`) // Endpoint já utilizado para carregar alunos
-    .then(resposta => resposta.json())
-    .then(alunos => {
-      seletorAluno.innerHTML = "<option value=''>-- Selecione --</option>"; // Limpar opções anteriores
-      alunos.forEach(aluno => {
-        const opcao = document.createElement("option");
-        opcao.value = aluno.id;
-        opcao.textContent = aluno.nome;
-        seletorAluno.appendChild(opcao);
-      });
-    })
-    .catch(erro => console.error("Erro ao carregar alunos:", erro));
-}
-
-// Função para salvar a nota do aluno selecionado
-function salvarNota() {
-  const turmaId = document.getElementById("turma-select")?.value; // Reutilizando o seletor existente
-  const alunoId = document.getElementById("aluno-select")?.value; // Reutilizando o seletor existente
-  const nota = parseFloat(document.getElementById("nota-input")?.value);
-
-  if (!turmaId) {
-    alert("Selecione uma turma.");
-    return;
-  }
-  if (!alunoId) {
-    alert("Selecione um aluno.");
-    return;
-  }
-  if (isNaN(nota) || nota < 0 || nota > 10) {
-    alert("Insira uma nota válida entre 0 e 10.");
-    return;
-  }
-
-  fetch(`/turma/detalhes/${turmaId}/alunos/${alunoId}/notas`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nota }),
-  })
-    .then(resposta => {
-      if (resposta.ok) {
-        alert("Nota salva com sucesso!");
-      } else {
-        alert("Erro ao salvar a nota.");
-      }
-    })
-    .catch(erro => console.error("Erro ao salvar nota:", erro));
-}
-
-// Adicionar eventos e carregar turmas ao carregar a página
-document.addEventListener("DOMContentLoaded", () => {
-  carregarTurmasParaNotas(); // Reutilizar o carregamento de turmas
-
-  const botaoCarregarAlunos = document.getElementById("btn-carregar-alunos"); // Reutilizando o botão existente
-  if (botaoCarregarAlunos) {
-    botaoCarregarAlunos.addEventListener("click", () => {
-      const turmaId = document.getElementById("turma-select")?.value;
-      if (!turmaId) {
-        alert("Selecione uma turma.");
-        return;
-      }
-      carregarAlunosParaNotas(turmaId);
-    });
-  }
-
-  const botaoSalvarNota = document.getElementById("btn-salvar-nota"); // Novo botão para salvar nota
-  if (botaoSalvarNota) {
-    botaoSalvarNota.addEventListener("click", salvarNota);
-  }
-});
+// ...existing code...

@@ -25,7 +25,7 @@
         <ul>
             <li class="ativo"><a href="#minhas-turmas">Minhas Turmas</a></li>
             <li><a href="#frequencia-alunos">Frequência Alunos</a></li>
-            <li><a href="#Notas">Notas</a></li>
+            <li><a href="#secao-notas">Notas</a></li>
             <li><a href="#avisos">Avisos</a></li>
             <li><a href="#configuracoes">Configurações</a></li>
         </ul>
@@ -76,26 +76,46 @@
     <button id="btn-salvar-frequencia" class="botao-salvar" style="display:none;">Salvar Frequência</button>
 </section> 
 
-<section id="Notas">
-    <h2>Notas</h2>
-    <div>
-        <label for="turma-select">Selecione a Turma:</label>
-        <select id="turma-select">
-          <option value="">-- Selecione --</option>
-        </select>
-        <button id="btn-carregar-alunos">Carregar Alunos</button>
-      
-        <label for="aluno-select">Selecione o Aluno:</label>
-        <select id="aluno-select">
-          <option value="">-- Selecione --</option>
-        </select>
-      
-        <label for="nota-input">Nota:</label>
-        <input type="number" id="nota-input" step="0.1" min="0" max="10" />
-      
-        <button id="btn-salvar-nota">Salvar Nota</button>
-      </div>
-  </section>
+<section id="secao-notas" class="secao-notas">
+  <h2>Registrar Nota</h2>
+
+  <div class="form-row">
+    <label for="turma-select-nota">Turma</label>
+    <select id="turma-select-nota" aria-label="Selecionar turma"></select>
+  </div>
+
+  <div class="form-row">
+    <label for="aluno-select-nota">Aluno</label>
+    <select id="aluno-select-nota" aria-label="Selecionar aluno">
+      <option value="">Selecione uma turma primeiro</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="disciplina-input">Disciplina</label>
+    <input id="disciplina-input" type="text" placeholder="Nome da disciplina" />
+  </div>
+
+  <div class="form-row">
+    <label for="tipo-avaliacao-select">Tipo de avaliação</label>
+    <select id="tipo-avaliacao-select">
+      <option value="prova">Prova</option>
+      <option value="trabalho">Trabalho</option>
+      <option value="atividade">Atividade</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="nota-input">Nota (0–10)</label>
+    <input id="nota-input" type="number" min="0" max="10" step="0.1" placeholder="0 - 10" />
+  </div>
+
+  <div class="form-row">
+    <button id="btn-salvar-nota" class="botao-principal">Salvar Nota</button>
+  </div>
+
+  <div id="notas-mensagem" aria-live="polite"></div>
+</section>
     
 <section id="avisos" class="secao-avisos" style="display:none;">
     <h2>Avisos</h2>

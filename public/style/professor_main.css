@@ -365,3 +365,102 @@ body.modal-aberto::before {
 .botao-salvar:hover {
     background: #2980b9;
 }
+
+
+.secao-notas {
+  max-width: 920px;
+  margin: 1.5rem auto;
+  background: #ffffff;
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+.secao-notas h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.form-row label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-row select,
+.form-row input[type="text"],
+.form-row input[type="number"] {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: #ffffff;
+  transition: border-color .12s ease, box-shadow .12s ease;
+  outline: none;
+}
+
+.form-row select:focus,
+.form-row input[type="text"]:focus,
+.form-row input[type="number"]:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 6px 20px rgba(59,130,246,0.08);
+}
+
+.botao-principal {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(180deg,#2563eb,#1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(29,78,216,0.12);
+  transition: transform .09s ease, box-shadow .09s ease, opacity .09s;
+}
+
+.botao-principal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(29,78,216,0.14);
+}
+
+#notas-mensagem {
+  margin-top: 0.6rem;
+  min-height: 1.2rem;
+  font-size: 0.95rem;
+  color: #065f46;
+}
+
+/* helper text */
+.form-row .help {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* layout para telas maiores: label à esquerda, controle à direita */
+@media (min-width: 720px) {
+  .form-row {
+    flex-direction: row;
+    align-items: center;
+  }
+  .form-row label {
+    width: 180px;
+    margin-right: 0.8rem;
+    text-align: right;
+  }
+  .form-row > *:last-child {
+    flex: 1 1 auto;
+  }
+}
