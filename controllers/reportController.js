@@ -22,22 +22,26 @@ exports.getRelatorioFrequenciaTurma = async (req, res) => {
     try {
         const pipeline = [
             { $match: { turma: new mongoose.Types.ObjectId(turmaId), data: { $gte: start, $lt: end } } },
-            { $group: { 
-                _id: '$aluno', 
-                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
-                totalAulas: { $sum: 1 } 
-            } },
+            {
+                $group: {
+                    _id: '$aluno',
+                    totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } },
+                    totalAulas: { $sum: 1 }
+                }
+            },
             { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'aluno' } },
             { $unwind: '$aluno' },
             { $project: { aluno: '$aluno.name', frequencia: { $multiply: [{ $divide: ['$totalPresencas', '$totalAulas'] }, 100] } } }
         ];
         const data = await Frequencia.aggregate([
             { $match: { turma: turmaId, data: { $gte: start, $lt: end } } },
-            { $group: { 
-                _id: '$aluno', 
-                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
-                totalAulas: { $sum: 1 } 
-            } }
+            {
+                $group: {
+                    _id: '$aluno',
+                    totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } },
+                    totalAulas: { $sum: 1 }
+                }
+            }
         ]);
         res.status(200).json(data);
     } catch (error) {
@@ -52,11 +56,13 @@ exports.getRelatorioFrequenciaAluno = async (req, res) => {
     try {
         const pipeline = [
             { $match: { aluno: new mongoose.Types.ObjectId(alunoId), data: { $gte: start, $lt: end } } },
-            { $group: { 
-                _id: '$turma', 
-                totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } }, 
-                totalAulas: { $sum: 1 } 
-            } },
+            {
+                $group: {
+                    _id: '$turma',
+                    totalPresencas: { $sum: { $cond: [{ $eq: ['$status', 'presente'] }, 1, 0] } },
+                    totalAulas: { $sum: 1 }
+                }
+            },
             { $lookup: { from: 'turmas', localField: '_id', foreignField: '_id', as: 'turma' } },
             { $unwind: '$turma' },
             { $project: { turma: '$turma.codigo', frequencia: { $multiply: [{ $divide: ['$totalPresencas', '$totalAulas'] }, 100] } } }
@@ -155,9 +161,9 @@ exports.exportRelatorioFrequenciaTurmaPDF = async (req, res) => {
 
         // Criação do PDF
         const doc = new PDFDocument();
-        const filePath = path.join(__dirname, `../../exports/Relatorio_Frequencia_Turma_${turma.codigo}.pdf`);
-        const stream = fs.createWriteStream(filePath);
-        doc.pipe(stream);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="Relatorio_Frequencia_Turma_${turma.codigo}.pdf"`);
+        doc.pipe(res);
 
         // Título (negrito)
         doc.font('Times-Bold').fontSize(18).text(`Relatório de Frequência da Turma ${turma.codigo}`, { align: 'center' });
@@ -197,14 +203,6 @@ exports.exportRelatorioFrequenciaTurmaPDF = async (req, res) => {
 
         doc.end();
 
-        stream.on('finish', () => {
-            res.download(filePath, `Relatorio_Frequencia_Turma_${turma.codigo}.pdf`, (err) => {
-                if (err) {
-                    console.error('Erro ao enviar o arquivo:', err);
-                }
-                fs.unlinkSync(filePath); // Remove o arquivo após o download
-            });
-        });
     } catch (error) {
         console.error('Erro ao gerar relatório de frequência da turma:', error);
         res.status(500).json({ msg: 'Erro ao gerar relatório de frequência da turma.', error });
@@ -274,83 +272,6 @@ exports.exportRelatorioNotasPDF = async (req, res) => {
     }
 };
 
-// Função para exportar relatório combinado de desempenho (frequência + notas) como PDF
-exports.exportRelatorioDesempenhoPDF = async (req, res) => {
-    try {
-        // Buscar frequências com populate (incluir _id explicitamente)
-        const frequencias = await Frequencia.find({}).populate('aluno', '_id name').sort({ data: 1 });
-
-
-        // Agrupar frequência por aluno (em JS)
-        const freqMap = {};
-        frequencias.forEach(freq => {
-            const alunoId = freq.aluno?._id?.toString();
-            const alunoName = freq.aluno?.name || 'Usuário não encontrado';
-            if (!freqMap[alunoId]) {
-                freqMap[alunoId] = { aluno: alunoName, totalPresencas: 0, totalAulas: 0, alunoId };  // Adicionado alunoId
-            }
-            freqMap[alunoId].totalAulas += 1;
-            if (freq.status === 'presente') freqMap[alunoId].totalPresencas += 1;
-        });
-        const freqData = Object.values(freqMap).map(item => ({
-            _id: item.alunoId,  // Agora acessível
-            aluno: item.aluno,
-            frequencia: item.totalAulas > 0 ? (item.totalPresencas / item.totalAulas) * 100 : 0
-        }));
-
-        // Agregação para notas (mantido)
-        const notasData = await Nota.aggregate([{ $group: { _id: '$aluno', mediaNotas: { $avg: '$nota' } } }]);
-
-        // Combinar dados
-        const combinedData = freqData.map(f => {
-            const nota = notasData.find(n => n._id.toString() === f._id);
-            return { aluno: f.aluno, frequencia: f.frequencia, mediaNotas: nota ? nota.mediaNotas : 0 };
-        });
-
-        // Logs para debug (remover após teste)
-
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        doc.font('Times-Roman');
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="relatorio-desempenho.pdf"');
-        doc.pipe(res);
-
-        // Header
-        const logoPath = path.join(__dirname, '../public/img/logo_v2.jpeg');
-        if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 30, { width: 80 });
-        doc.fontSize(14).text('Class.GNTP', 65, 40, { align: 'center' });
-        doc.moveDown(2);
-
-        // Título
-        doc.font('Times-Bold').fontSize(18).text('Relatório de Desempenho Geral', { align: 'center' });
-        doc.font('Times-Roman');
-        doc.moveDown();
-
-        // Tabela
-        if (combinedData.length === 0) {
-            doc.fontSize(12).text('Nenhum dado encontrado.', { align: 'center' });
-        } else {
-            const tableData = [["Aluno", "Frequência (%)", "Média Notas"], ...combinedData.map(item => [item.aluno, item.frequencia.toFixed(2), item.mediaNotas.toFixed(2)])];
-            doc.table({
-                defaultStyle: { border: 1, borderColor: "gray", align: 'center', fontSize: 9 },
-                columnStyles: (i) => ({ align: 'center' }),
-                rowStyles: (i) => ({ align: 'center' }),
-                data: tableData,
-            });
-        }
-
-        // Footer
-        const pageCount = doc.bufferedPageRange().count;
-        const dataHoraImpressao = new Date().toLocaleString('pt-BR');
-        doc.fontSize(10).text(`Página 1 de ${pageCount}`, 450, 750, { align: 'right' });
-        doc.text(`Impresso em ${dataHoraImpressao}`, 50, 770, { align: 'left' });
-
-        doc.end();
-    } catch (error) {
-        console.error('Erro ao gerar PDF de desempenho:', error);
-        res.status(500).json({ msg: 'Erro ao gerar PDF de desempenho.', error: error.message });
-    }
-};
 
 // Função para exportar relatório combinado de desempenho (frequência + notas) como PDF, agrupado por turma
 exports.exportRelatorioDesempenhoPDF = async (req, res) => {
@@ -501,6 +422,7 @@ exports.exportRelatorioFrequenciaAlunoPDF = async (req, res) => {
     const { start, end } = getDateRange(req);
 
     try {
+        console.log('Iniciando busca de frequências para aluno:', alunoId);
         const frequencias = await Frequencia.find({
             aluno: alunoId,
             data: { $gte: start, $lt: end }
@@ -508,67 +430,79 @@ exports.exportRelatorioFrequenciaAlunoPDF = async (req, res) => {
             .populate('turma', 'codigo') // Popula o código da turma
             .sort({ data: 1 }); // Ordena por data
 
-        const aluno = await User.findById(alunoId);
+        console.log('Frequências encontradas:', frequencias.length, 'registros');
 
+        const aluno = await User.findById(alunoId);
         if (!aluno) {
+            console.log('Aluno não encontrado');
             return res.status(404).json({ msg: 'Aluno não encontrado.' });
         }
+        console.log('Aluno encontrado:', aluno.name);
 
         // Criação do PDF
+        console.log('Criando PDFDocument');
         const doc = new PDFDocument();
-        const filePath = path.join(__dirname, `../../exports/Relatorio_Frequencia_${aluno.name}.pdf`);
-        const stream = fs.createWriteStream(filePath);
-        doc.pipe(stream);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="relatorio-frequencia-${aluno.name.replace(/\s+/g, '_')}.pdf"`);
+        
+        console.log('Fazendo doc.pipe(res)');
+        doc.pipe(res);
 
         // Título (negrito)
+        console.log('Adicionando título');
         doc.font('Times-Bold').fontSize(18).text(`Relatório de Frequência de ${aluno.name}`, { align: 'center' });
         doc.font('Times-Roman');
         doc.moveDown();
 
         // Informações do aluno (justificadas)
+        console.log('Adicionando informações do aluno');
         doc.fontSize(12).text(`Nome: ${aluno.name}`, { align: 'justify' });
         doc.text(`E-mail: ${aluno.email || 'N/A'}`, { align: 'justify' });
-        doc.text(`E-mail do Responsável: ${aluno.responsavelEmail || 'N/A'}`, { align: 'justify' });
+        doc.text(`E-mail do Responsável: ${aluno.responsavelEmail}`, { align: 'justify' });
         doc.moveDown();
 
         // Tabela de frequência (centralizada por padrão)
         if (frequencias.length === 0) {
+            console.log('Nenhuma frequência, adicionando mensagem');
             doc.fontSize(12).text('Nenhum registro encontrado no período selecionado.', { align: 'center' });
         } else {
-            // Preparar dados da tabela
-            const tableData = [
-                ["Data", "Turma", "Status", "Justificativa/Observação", "Data Registro"],
-                ...frequencias.map(freq => {
-                    const dataFormatada = new Date(freq.data).toLocaleDateString('pt-BR');
-                    const status = freq.status === 'presente' ? 'Presente' : 'Falta';
-                    const justificativa = freq.justificativa || 'N/A';
-                    const dataRegistro = new Date(freq.createdAt).toLocaleDateString('pt-BR');
-                    return [dataFormatada, freq.turma?.codigo || 'N/A', status, justificativa, dataRegistro];
-                })
-            ];
+            console.log('Preparando dados da tabela');
+            try {
+                // Preparar dados da tabela
+                const tableData = [
+                    ["Data", "Turma", "Status", "Data Registro"],
+                    ...frequencias.map(freq => {
+                        console.log('Processando frequência:', freq);  // Log para depurar cada freq
+                        const dataFormatada = new Date(freq.data).toLocaleDateString('pt-BR');
+                        const status = freq.status === 'presente' ? 'Presente' : 'Falta';
+                        const dataRegistro = new Date(freq.createdAt).toLocaleDateString('pt-BR');
+                        const turmaCodigo = freq.turma?.codigo || 'N/A';
+                        const alunoName = freq.aluno?.name || 'N/A';  // Verificar se populate funcionou
+                        return [dataFormatada, turmaCodigo, status, dataRegistro];
+                    })
+                ];
 
-            // Adicionar tabela (centralizada, com texto das células centralizado)
-            doc.table({
-                headers: tableData[0],
-                rows: tableData.slice(1),
-                options: {
-                    border: 1,
-                    borderColor: "gray",
-                    align: 'center'
-                }
-            });
+                console.log('Dados da tabela preparados:', tableData.length, 'linhas');
+                console.log('Adicionando tabela');
+                // Adicionar tabela (centralizada, com texto das células centralizado)
+                doc.table({
+                    headers: tableData[0],
+                    rows: tableData.slice(1),
+                    options: {
+                        border: 1,
+                        borderColor: "gray",
+                        align: 'center'
+                    }
+                });
+            } catch (tableError) {
+                console.error('Erro ao adicionar tabela:', tableError);
+                return res.status(500).json({ msg: 'Erro ao gerar tabela do PDF.', error: tableError.message });
+            }
         }
 
+        console.log('Finalizando PDF');
         doc.end();
 
-        stream.on('finish', () => {
-            res.download(filePath, `Relatorio_Frequencia_${aluno.name}.pdf`, (err) => {
-                if (err) {
-                    console.error('Erro ao enviar o arquivo:', err);
-                }
-                fs.unlinkSync(filePath); // Remove o arquivo após o download
-            });
-        });
     } catch (error) {
         console.error('Erro ao gerar relatório de frequência do aluno:', error);
         res.status(500).json({ msg: 'Erro ao gerar relatório de frequência do aluno.', error });

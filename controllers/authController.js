@@ -100,8 +100,6 @@ exports.register = async (req, res) => {
       );
     }
 
-await emailController.sendWelcomeEmailAdmin(email, name, password);
-
     res.status(201).json({
       msg: "Usuário criado com sucesso!",
       user: {

@@ -561,7 +561,6 @@ exports.getFrequenciaMedia = async (req, res) => {
 
     const diferenca = freqAtual - freqAnterior;
 
-    console.log('Frequência atual:', freqAtual, 'Frequência anterior:', freqAnterior, 'Diferença:', diferenca);
     return res.status(200).json({
       frequenciaMedia: freqAtual,
       diferencaFrequencia: diferenca

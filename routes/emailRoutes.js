@@ -8,6 +8,9 @@ const emailController = require("../controllers/emailController");
 router.post("/registrar", emailController.registrar);
 router.post("/enviar-aviso", emailController.enviarAviso);
 router.post("/enviar-para-destinatario", emailController.enviarParaDestinatarios);
+router.post("/sendwarn", emailController.sendWarn);
+
+router.post("/sendemail" , emailController.enviarEmail); // Rota legada
 
 // Único endpoint público /enviar-email — delega conforme payload
 router.post("/enviar-email", async (req, res, next) => {
