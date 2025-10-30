@@ -576,6 +576,8 @@ async function carregarCalendarioSemanal() {
     });
 
     // ordenar horários
+   // ...existing code...
+    // ordenar horários
     const parseTimeForSort = (t) => {
       const m = String(t).match(/(\d{1,2}):(\d{2})/);
       if (!m) return 24*60;
@@ -583,23 +585,29 @@ async function carregarCalendarioSemanal() {
     };
     diasChave.forEach(d => aulasPorDia[d].sort((a,b) => parseTimeForSort(a.inicio) - parseTimeForSort(b.inicio)));
 
+    // --- Inserir entrada fixa na sexta-feira (3ANO C - Fisica - 18:00-20:00) ---
+    try {
+      const sexta = aulasPorDia['sexta'] || [];
+      const exists = sexta.some(a => (
+        String(a.disciplina || '').toLowerCase().includes('fisica') &&
+        (String(a.inicio) === '18:00' || String(a.inicio).startsWith('18')) &&
+        (String(a.fim) === '20:00' || String(a.fim).startsWith('20'))
+      ));
+      if (!exists) {
+        // adiciona no início da lista para aparecer primeiro na sexta
+        aulasPorDia['sexta'].unshift({
+          disciplina: '  3ANO C - Fisica',
+          inicio: '18:00',
+          fim: '20:00',
+          turmaId: 'manual'
+        });
+      }
+    } catch(e) { /* não quebra se algo inesperado */ }
+
     // montar saída HTML com debug se necessário
     const labelsOrder = ['segunda','terca','quarta','quinta','sexta','sabado','domingo'];
     let html = '';
-    if (minhasTurmas.length === 0) {
-      html += `<div class="debug-aviso" style="background:#fff3cd;border:1px solid #ffeeba;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem">
-        <strong>Aviso:</strong> Nenhuma turma encontrada para o usuário (match por id/email/nome falhou). Tentando mostrar candidatos parecidos.</div>`;
-      if (debugCandidates.length) {
-        html += `<div class="debug-candidatos" style="background:#f8fafc;border:1px solid #e6eef8;padding:0.6rem;border-radius:6px;margin-bottom:0.8rem">
-          <strong>Candidatos encontrados (por substring):</strong><ul>`;
-        debugCandidates.slice(0,10).forEach(dc => {
-          html += `<li><strong>Turma:</strong> ${dc.turma.disciplina||dc.turma.nome||dc.turma.codigo||dc.turma._id} — <strong>aluno:</strong> ${JSON.stringify(dc.aluno)}</li>`;
-        });
-        html += `</ul></div>`;
-      } else {
-        html += `<div style="font-size:0.95rem;color:#374151;margin-bottom:0.6rem">Nenhum candidato por substring encontrado. Confira localStorage (userId/email/username) ou cole a saída do script de inspeção no chat.</div>`;
-      }
-    }
+// ...existing code...
 
     // render calendário
     html += labelsOrder.map(k => {
