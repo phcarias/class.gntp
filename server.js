@@ -56,7 +56,7 @@ app.get("/professorhtml", (req, res) => {
 });
 
 
-cron.schedule('57 21 * * *', async () => {
+cron.schedule('16 23 * * *', async () => {
     console.log('[CRON] Iniciando verificação automática de frequência e notas...');
     try {
         // Simular req e res para o método do controller
