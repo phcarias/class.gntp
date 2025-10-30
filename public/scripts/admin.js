@@ -860,8 +860,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         confirmarBtn.onclick = () => {
             if (tipo === 'turma') deleteTurma(tipo, id);
-            else if (tipo === 'admin') deleteUser(id);  // Adicione suporte para 'usuario'
-            else deleteUser(id);  // Para aluno/professor
+            else if (tipo === 'admin') deleteUser(tipo, id);  // Adicione suporte para 'usuario'
+            else deleteUser(tipo, id);  // Para aluno/professor
             modal.style.display = 'none';
         };
 
@@ -870,6 +870,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Novo: função para deletar usuário (aluno ou professor)
     async function deleteUser(tipo, id) {
+
+        console.log(`Deletando ${tipo} com ID:`, id);
         try {
             const res = await fetch(`${api}/administrador/userremove/${id}`, {
                 method: 'DELETE',
@@ -886,7 +888,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             alert(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} deletado com sucesso!`);
             if (tipo === 'aluno') await loadAlunos();
-            else await loadProfessores();
+            else if (tipo === 'professor') await loadProfessores();
+            else await loadUsers();
         } catch (e) {
             console.error(`Erro ao deletar ${tipo}:`, e);
             alert(`Erro de conexão ao deletar ${tipo}.`);
@@ -1605,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (btn.dataset.action === 'delete') {
 
 
-                        openConfirmacaoModal('admin', id);  // Mude para usar o modal personalizado
+                        openConfirmacaoModal(tipo, id);  // Mude para usar o modal personalizado
                     }
                 });
                 tbody.dataset.bound = '1';
@@ -1627,7 +1630,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td class="actions">
                     <button class="btn-icon btn-view" data-action="view" data-id="${user._id}"><span class="material-icons">visibility</span></button>
                     <button class="btn-icon btn-edit" data-action="edit" data-id="${user._id}"><span class="material-icons">edit</span></button>
-                    <button class="btn-icon danger" data-action="delete" data-id="${user._id}-${user.type}"><span class="material-icons">delete</span></button>
+                    <button class="btn-icon danger" data-action="delete" data-id="${user._id}" data-type="${user.type}"><span class="material-icons">delete</span></button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -1638,6 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const btn = e.target.closest('button[data-action]');
                 if (!btn) return;
                 const id = btn.dataset.id;
+                const tipo = btn.dataset.type;
 
                 if (btn.dataset.action === 'view') {
                     if (typeof openUserModal === 'function') openUserModal('view', id);
@@ -1648,7 +1652,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     else alert('Edição não implementada.');
                 }
                 if (btn.dataset.action === 'delete') {
-                    openConfirmacaoModal(type, id);  // Mude para usar o modal personalizado
+                    openConfirmacaoModal(tipo, id);  // Mude para usar o modal personalizado
                 }
             });
             tbody.dataset.bound = '1';
@@ -1689,7 +1693,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Novo: deletar usuário
+    /*
+   // Novo: deletar usuário
     async function deleteUser(id) {
         try {
             const res = await fetch(`${api}/administrador/userremove/${id}`, {
@@ -1706,7 +1711,7 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Erro ao deletar usuário.');
         }
     }
-
+*/
     // Novo: função para abrir modal de usuário
     function openUserModal(mode, id) {
         const user = usersCache.find(u => String(u._id) === String(id));
@@ -1917,58 +1922,58 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     // Em admin.js, na função enviarAviso (dentro do bloco DOMContentLoaded)
-async function enviarAviso(destinatariosInputId, assuntoId, corpoId) {
-    const destinatariosInput = document.getElementById(destinatariosInputId).value.trim();
-    const assunto = document.getElementById(assuntoId).value.trim();
-    const corpo = document.getElementById(corpoId).value.trim();
+    async function enviarAviso(destinatariosInputId, assuntoId, corpoId) {
+        const destinatariosInput = document.getElementById(destinatariosInputId).value.trim();
+        const assunto = document.getElementById(assuntoId).value.trim();
+        const corpo = document.getElementById(corpoId).value.trim();
 
-    if (!destinatariosInput || !assunto || !corpo) {
-        alert('Preencha todos os campos.');
-        return;
-    }
-
-    // Separar destinatários por vírgula e filtrar vazios
-    const destinatarios = destinatariosInput.split(',').map(email => email.trim()).filter(email => email);
-
-    if (destinatarios.length === 0) {
-        alert('Insira pelo menos um e-mail válido.');
-        return;
-    }
-
-    try {
-        // Usar sendWarn: passar username, para (array), assunto, texto e html
-        const res = await fetch(`${api}/email/sendwarn`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                username:  `${username}`,  // Nome do remetente
-                para: destinatarios,  // Array de e-mails
-                assunto: assunto,
-                texto: corpo,  // Corpo em texto plano
-                html: `<p>${corpo}</p>`,  // Corpo em HTML para incluir logo
-            }),
-        });
-
-        if (res.ok) {
-            alert('Aviso enviado com sucesso!');
-            // Limpar campos
-            document.getElementById(destinatariosInputId).value = '';
-            document.getElementById(assuntoId).value = '';
-            document.getElementById(corpoId).value = '';
-        } else {
-            const error = await res.json();
-            alert(`Erro ao enviar aviso: ${error.msg || 'Erro desconhecido'}`);
+        if (!destinatariosInput || !assunto || !corpo) {
+            alert('Preencha todos os campos.');
+            return;
         }
-    } catch (error) {
-        console.error('Erro ao enviar aviso:', error);
-        alert('Erro ao enviar aviso.');
-    }
-}
 
-// No event listener para o botão
-document.getElementById('enviar-admin').addEventListener('click', () => enviarAviso('destinatario', 'assunto-admin', 'corpo-admin'));
+        // Separar destinatários por vírgula e filtrar vazios
+        const destinatarios = destinatariosInput.split(',').map(email => email.trim()).filter(email => email);
+
+        if (destinatarios.length === 0) {
+            alert('Insira pelo menos um e-mail válido.');
+            return;
+        }
+
+        try {
+            // Usar sendWarn: passar username, para (array), assunto, texto e html
+            const res = await fetch(`${api}/email/sendwarn`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    username: `${username}`,  // Nome do remetente
+                    para: destinatarios,  // Array de e-mails
+                    assunto: assunto,
+                    texto: corpo,  // Corpo em texto plano
+                    html: `<p>${corpo}</p>`,  // Corpo em HTML para incluir logo
+                }),
+            });
+
+            if (res.ok) {
+                alert('Aviso enviado com sucesso!');
+                // Limpar campos
+                document.getElementById(destinatariosInputId).value = '';
+                document.getElementById(assuntoId).value = '';
+                document.getElementById(corpoId).value = '';
+            } else {
+                const error = await res.json();
+                alert(`Erro ao enviar aviso: ${error.msg || 'Erro desconhecido'}`);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar aviso:', error);
+            alert('Erro ao enviar aviso.');
+        }
+    }
+
+    // No event listener para o botão
+    document.getElementById('enviar-admin').addEventListener('click', () => enviarAviso('destinatario', 'assunto-admin', 'corpo-admin'));
 
 });

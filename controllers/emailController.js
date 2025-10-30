@@ -218,7 +218,6 @@ exports.sendWelcomeEmail = async (email, name, type, password) => {
         customSteps = `
             <ul style="font-size: 16px; line-height: 1.8;">
                 <li><strong>Faça Login:</strong> Acesse <a href="localhost:9090/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
-                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
                 <li><strong>Explore o Sistema:</strong> Como aluno, você pode acompanhar frequência, notas e muito mais!</li>
             </ul>
         `;
@@ -229,7 +228,6 @@ exports.sendWelcomeEmail = async (email, name, type, password) => {
         customSteps = `
             <ul style="font-size: 16px; line-height: 1.8;">
                 <li><strong>Faça Login:</strong> Acesse <a href="localhost:9090/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
-                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
                 <li><strong>Explore o Sistema:</strong> Como professor, você pode gerenciar frequência, lançar notas e acompanhar turmas!</li>
             </ul>
         `;
@@ -240,7 +238,6 @@ exports.sendWelcomeEmail = async (email, name, type, password) => {
         customSteps = `
             <ul style="font-size: 16px; line-height: 1.8;">
                 <li><strong>Faça Login:</strong> Acesse <a href="https://seusite.com/login" style="color: #007bff; text-decoration: none;">nosso portal</a> com seu e-mail e senha.</li>
-                <li><strong>Altere Sua Senha:</strong> Vá para as configurações da conta após o login.</li>
                 <li><strong>Explore o Sistema:</strong> Como administrador, você pode gerenciar usuários, turmas, relatórios e muito mais!</li>
             </ul>
         `;
@@ -343,7 +340,7 @@ exports.sendWarnDesempenho = async ({ username, para, assunto, texto, html, alun
         customIcon = '📊';
     } else if (tipoAviso === 'nota') {
         customTitle = 'Aviso de Média Baixa';
-        customDescription = `Olá ${alunoName}, sua média de notas está abaixo de 6. Vamos trabalhar juntos para melhorar!`;
+        customDescription = `Olá ${alunoName}, sua média de notas está abaixo do esperado. Vamos trabalhar juntos para melhorar!`;
         customSteps = `
             <ul style="font-size: 16px; line-height: 1.8;">
                 <li><strong>Revise Seus Estudos:</strong> Foque nas matérias com dificuldades.</li>
