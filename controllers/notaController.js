@@ -2,6 +2,7 @@
 const Turma = require("../models/TurmaModel");
 const User = require("../models/UserModel");
 const Nota = require("../models/NotaModel");
+const emailController = require("./emailController");
 
 exports.createNota = async (req, res) => {
   try {
@@ -44,6 +45,24 @@ exports.createNota = async (req, res) => {
       data: data ? new Date(data) : new Date(),
       dataRegistro: new Date()
     });
+
+    // Após criar a nota, popular dados para o e-mail
+    const populatedNota = await Nota.findById(doc._id).populate('aluno', 'name email roleData').populate('turma', 'codigo');
+    const aluno = populatedNota.aluno;
+
+    // Enviar e-mail de notificação (não bloquear se falhar)
+    try {
+      await emailController.sendNotaNotification({
+        username: 'Sistema',
+        nota: populatedNota,
+        aluno: aluno,
+        responsavelEmail: aluno.roleData?.responsavelEmail
+      });
+    } catch (emailError) {
+      console.error('Erro ao enviar e-mail de notificação de nota:', emailError);
+      // Não retorna erro para o usuário, apenas loga
+    }
+
 
     return res.status(201).json({ msg: "Nota registrada.", nota: doc });
   } catch (err) {

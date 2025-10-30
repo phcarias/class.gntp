@@ -937,3 +937,4 @@ exports.verificarFrequenciaENotasEEnviarAvisos = async (req, res) => {
         res.status(500).json({ msg: 'Erro ao verificar frequência e notas.', error: error.message });
     }
 };
+

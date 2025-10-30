@@ -418,3 +418,76 @@ exports.sendWarnDesempenho = async ({ username, para, assunto, texto, html, alun
     console.log(`[EMAIL LOG] Aviso de desempenho aprimorado enviado para: ${emailsValidos} (${tipoAviso})`);
 };
 
+exports.sendNotaNotification = async ({ username, nota, aluno, responsavelEmail }) => {
+  if (!nota || !aluno || !aluno.email) {
+    throw new Error("Nota, aluno e e-mail do aluno são obrigatórios para notificação.");
+  }
+
+  const assunto = `Nova Nota Registrada - ${nota.disciplina}`;
+
+  // Montar destinatários: aluno + responsável (se existir)
+  const destinatarios = [aluno.email];
+  if (responsavelEmail) destinatarios.push(responsavelEmail);
+
+  // Personalizar conteúdo baseado no tipo (nota registrada)
+  let customTitle = 'Nova Nota Registrada';
+  let customDescription = `Olá ${aluno.name}, uma nova nota foi registrada para você na disciplina de ${nota.disciplina}.`;
+  let customSteps = `
+    <ul style="font-size: 16px; line-height: 1.8;">
+      <li><strong>Disciplina:</strong> ${nota.disciplina}</li>
+      <li><strong>Nota:</strong> ${nota.nota}</li>
+      <li><strong>Tipo de Avaliação:</strong> ${nota.tipoAvaliacao}</li>
+      <li><strong>Data da Avaliação:</strong> ${nota.data.toLocaleDateString('pt-BR')}</li>
+    </ul>
+    <p>Verifique seu desempenho no sistema Class.GNTP para mais detalhes.</p>
+  `;
+  let customIcon = '📚';  // Ícone para educação
+
+  // Construir HTML personalizado (baseado no template de sendWarnDesempenho)
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="cid:logo@cid" alt="Logo Class.GNTP" style="height: 60px; vertical-align: middle;" />
+        <h1 style="color: #007bff; margin: 0;">${customTitle} ${customIcon}</h1>
+      </div>
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="font-size: 16px; margin: 0;">${customDescription}</p>
+      </div>
+      <div style="background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #333; margin-top: 0;">Detalhes da Nota</h3>
+        ${customSteps}
+      </div>
+      <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <p style="font-size: 16px; margin: 0;">Precisa de ajuda? Entre em contato com nosso suporte: <a href="mailto:suporte@classgntp.com" style="color: #007bff;">suporte@classgntp.com</a></p>
+      </div>
+      <div style="margin-top: 30px; text-align: center; font-size: 14px; color: #666;">
+        <p>Atenciosamente,<br><strong>Equipe Class.GNTP</strong><br>Plataforma de Gestão Escolar</p>
+        <p>Enviado por: ${username || 'Sistema'}</p>
+      </div>
+    </div>
+  `;
+
+
+  const transportador = createTransporter();
+  const imagePath = path.join(__dirname, '../public/img/logo_v2.jpeg');
+  let attachments = [];
+  if (fs.existsSync(imagePath)) {
+    attachments.push({
+      filename: 'logo_v2.jpeg',
+      path: imagePath,
+      cid: 'logo@cid'
+    });
+  }
+
+  await transportador.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: destinatarios.join(","),
+    subject: assunto,
+    text: `Nova nota registrada: Disciplina: ${nota.disciplina}, Nota: ${nota.nota}, Tipo: ${nota.tipoAvaliacao}, Data: ${nota.data.toLocaleDateString('pt-BR')}. Registrada por: ${username || 'Sistema'}.`,
+    html: emailHtml,
+    attachments: attachments
+  });
+
+  console.log(`[EMAIL LOG] Notificação de nota enviada para: ${destinatarios.join(", ")} (Nota: ${nota.nota} em ${nota.disciplina})`);
+};
+
