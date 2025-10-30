@@ -117,30 +117,28 @@
   <div id="notas-mensagem" aria-live="polite"></div>
 </section>
     
-<section id="avisos" class="secao-avisos" style="display:none;">
+<section id="avisos" class="avisos-section" style="display:none;">
     <h2>Avisos</h2>
 
-    <div class="form-avisos">
-        <p>Envie notificações por email para os responsáveis dos alunos (faltas, notas, etc.).</p>
+            <div class="avisos-grid">
+                <!-- Card para Administrador (já existente, mas ajustado) -->
+                <div class="avisos-card">
+                    <h3>Enviar aviso para...</h3>
+                    <br>
+                    <div class="avisos-form">
+                        <label>Destinatários:</label>
+                        <input id="destinatario" placeholder="Ex: email1@exemplo.com, email2@exemplo.com" />
+                        <!-- Mude para input de texto para múltiplos e-mails -->
+                        <label>Assunto do aviso:</label>
+                        <input type="text" id="assunto-admin" placeholder="Ex: Assunto importante..." />
+                        <label>Corpo do Aviso:</label>
+                        <textarea id="corpo-admin"
+                            placeholder="Ex: Informo a todos que devemos tomar atenção..."></textarea>
+                        <button class="btn-primary" id="enviar-admin">Enviar aviso</button>
+                    </div>
+                </div>
 
-        <label for="avisos-turma">Selecionar turma</label>
-        <select id="avisos-turma">
-            <option value="">Carregando turmas...</option>
-        </select>
-
-        <label for="avisos-assunto">Assunto</label>
-        <input id="avisos-assunto" type="text" placeholder="Ex: Aviso sobre faltas / Notas" />
-
-        <label for="avisos-mensagem">Mensagem</label>
-        <textarea id="avisos-mensagem" rows="6" placeholder="Escreva sua mensagem aqui..."></textarea>
-
-        <div class="acoes-avisos">
-            <button id="btn-enviar-aviso" class="botao-filtrar">Enviar aviso</button>
-            <button id="btn-limpar-aviso" class="botao-limpar">Limpar</button>
-        </div>
-
-        <p id="status-aviso" style="display:none;margin-top:0.75rem;"></p>
-    </div>
+            </div>
 </section>
 
 

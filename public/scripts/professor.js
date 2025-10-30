@@ -1,5 +1,6 @@
 // ...existing code...
 const API_BASE = "http://127.0.0.1:9090";
+const token = localStorage.getItem("token");
 
 /* ----------------- Utils ----------------- */
 function tryDecodeTokenId(token) {
@@ -462,6 +463,63 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   const btnSalvarFrequencia = document.getElementById("btn-salvar-frequencia");
   if (btnSalvarFrequencia) btnSalvarFrequencia.addEventListener("click", salvarFrequencia);
+
+  async function enviarAviso(destinatariosInputId, assuntoId, corpoId) {
+    const destinatariosInput = document.getElementById(destinatariosInputId).value.trim();
+    const assunto = document.getElementById(assuntoId).value.trim();
+    const corpo = document.getElementById(corpoId).value.trim();
+
+    if (!destinatariosInput || !assunto || !corpo) {
+        alert('Preencha todos os campos.');
+        return;
+    }
+
+    // Separar destinatários por vírgula e filtrar vazios
+    const destinatarios = destinatariosInput.split(',').map(email => email.trim()).filter(email => email);
+
+    if (destinatarios.length === 0) {
+        alert('Insira pelo menos um e-mail válido.');
+        return;
+    }
+
+    
+    try {
+        // Usar sendWarn: passar username, para (array), assunto, texto e html
+        const res = await fetch(`${API_BASE}/email/sendwarn`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                username:  `${username}`,  // Nome do remetente
+                para: destinatarios,  // Array de e-mails
+                assunto: assunto,
+                texto: corpo,  // Corpo em texto plano
+                html: `<p>${corpo}</p>`,  // Corpo em HTML para incluir logo
+            }),
+        });
+
+        if (res.ok) {
+            alert('Aviso enviado com sucesso!');
+            // Limpar campos
+            document.getElementById(destinatariosInputId).value = '';
+            document.getElementById(assuntoId).value = '';
+            document.getElementById(corpoId).value = '';
+        } else {
+            const error = await res.json();
+            alert(`Erro ao enviar aviso: ${error.msg || 'Erro desconhecido'}`);
+        }
+    } catch (error) {
+        console.error('Erro ao enviar aviso:', error);
+        alert('Erro ao enviar aviso.');
+    }
+}
+
+// No event listener para o botão
+document.getElementById('enviar-admin').addEventListener('click', () => enviarAviso('destinatario', 'assunto-admin', 'corpo-admin'));
+
+
 })
 
 
